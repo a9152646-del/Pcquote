@@ -12,19 +12,20 @@
         .tab-active { border-bottom: 4px solid #3b82f6; color: #3b82f6; font-weight: bold; }
         .card { background: white; border-radius: 12px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); }
         .hidden { display: none !important; }
-        input, select, textarea { border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; }
+        input, select, textarea { border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 14px; }
         .seller-bg { background-color: #eff6ff; }
+        .item-row:hover { background-color: #f8fafc; border-color: #3b82f6; }
         .selected-badge { background: #f1f5f9; color: #334155; padding: 4px 10px; border-radius: 6px; font-size: 12px; margin: 2px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid #e2e8f0; }
+        .hide-price .price-tag { display: none !important; }
         #mainBody.screenshot-mode { background: #fff !important; padding: 20px !important; }
         .screenshot-mode .no-screenshot { display: none !important; }
-        .screenshot-mode .card { box-shadow: none !important; border: 2px solid #334155 !important; border-radius: 0 !important; }
         @media print { .no-print, button, .no-screenshot { display: none !important; } }
     </style>
 </head>
 <body class="p-2 md:p-6" id="mainBody">
 
 <script>
-// --- Firebase 金鑰 ---
+// --- Firebase 配置 ---
 const firebaseConfig = {
   apiKey: "AIzaSyDeCI3yFPr1v9KxOmko-qim2a7EtllEHKM",
   authDomain: "magic-conch-gaming.firebaseapp.com",
@@ -49,22 +50,24 @@ const db = firebase.database();
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <div class="lg:col-span-3 space-y-4">
                 <div class="card p-6">
-                    <h2 class="font-bold text-xl text-blue-600 mb-4">電腦配置區</h2>
-                    <div id="configRows" class="divide-y"></div>
-                </div>
-                <div class="card p-6 no-screenshot">
-                    <h2 class="font-bold mb-4 border-b pb-2">客戶資訊</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input type="text" id="custName" placeholder="客戶名稱">
-                        <input type="text" id="custPhone" placeholder="電話">
+                    <div class="flex justify-between items-center mb-6 no-screenshot">
+                        <h2 class="font-bold text-xl text-blue-600">電腦配置區</h2>
+                        <button onclick="toggleSellerMode()" id="sellerBtn" class="text-xs bg-blue-100 text-blue-600 px-4 py-2 rounded-full font-bold">管理員模式: ON</button>
                     </div>
+                    <div id="configRows" class="divide-y"></div>
                 </div>
             </div>
             <div class="lg:col-span-1 no-screenshot">
-                <div class="card p-6 sticky top-20 text-center">
-                    <h3 class="text-gray-400 text-sm">含稅總計</h3>
-                    <div id="ui-totalSale" class="text-4xl font-black text-blue-600 my-2">$0</div>
-                    <button onclick="saveRecord('order')" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold mb-2">✅ 儲存訂單</button>
+                <div class="card p-6 sticky top-20">
+                    <h3 class="font-bold border-b pb-2 mb-4 text-gray-600">報價總計</h3>
+                    <div id="ui-totalSale" class="text-4xl font-black text-blue-600 mb-4">$0</div>
+                    
+                    <div id="sellerBox" class="seller-bg p-4 rounded-lg mb-4 border border-blue-100">
+                        <div class="flex justify-between text-sm text-blue-500"><span>總成本</span><span id="ui-totalCost">$0</span></div>
+                        <div class="flex justify-between text-lg font-bold text-green-600 border-t mt-2 pt-2"><span>預計淨利</span><span id="ui-totalProfit">$0</span></div>
+                    </div>
+
+                    <button onclick="saveRecord()" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold mb-2">儲存訂單至雲端</button>
                     <button onclick="enterScreenshotMode()" class="w-full bg-orange-500 text-white py-3 rounded-xl font-bold">📸 截圖模式</button>
                 </div>
             </div>
@@ -77,36 +80,39 @@ const db = firebase.database();
 
     <div id="tab-inventory" class="page-content hidden">
         <div class="card p-6">
-            <div class="flex justify-between mb-4">
-                <h2 class="font-bold text-xl">⚙️ 雲端品項庫</h2>
-                <button onclick="saveInv()" class="bg-blue-600 text-white px-4 py-2 rounded">同步到雲端</button>
+            <div class="flex justify-between mb-6">
+                <h2 class="font-bold text-2xl text-gray-800">⚙️ 雲端品項管理</h2>
+                <button onclick="saveInv()" class="bg-blue-600 text-white px-8 py-2 rounded-lg font-bold">同步到雲端</button>
             </div>
-            <div id="inventoryEditor" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            <div id="inventoryEditor" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
         </div>
     </div>
 </div>
 
-<button id="exitBtn" onclick="exitScreenshotMode()" style="display:none; position:fixed; bottom:30px; left:30px; z-index:9999;" class="bg-red-600 text-white px-8 py-4 rounded-full font-bold">❌ 退出截圖</button>
+<button id="exitBtn" onclick="exitScreenshotMode()" style="display:none; position:fixed; bottom:30px; left:30px; z-index:9999;" class="bg-red-600 text-white px-8 py-4 rounded-full font-bold shadow-2xl">❌ 退出截圖</button>
 
 <div id="selectionModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-4">
-        <div id="modalList" class="max-h-96 overflow-y-auto space-y-2"></div>
-        <button onclick="closeModal()" class="w-full mt-4 bg-gray-200 py-2 rounded">關閉</button>
+    <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col p-4">
+        <div id="modalList" class="overflow-y-auto flex-1 space-y-2"></div>
+        <button onclick="closeModal()" class="mt-4 w-full bg-gray-200 py-3 rounded-xl font-bold">關閉</button>
     </div>
 </div>
 
 <script>
-let inv = { "處理器(CPU)": [], "主機板(MB)": [], "記憶體(RAM)": [], "顯示卡(VGA)": [], "固態硬碟(SSD)": [], "電源供應器(PSU)": [], "機殼(Case)": [] };
+let inv = { "處理器(CPU)": [], "主機板(MB)": [], "記憶體(RAM)": [], "顯示卡(VGA)": [], "固態硬碟(SSD)": [], "電源供應器(PSU)": [], "機殼(Case)": [], "服務費/其他": [] };
 let records = [];
 let currentSelections = {};
+let isSellerMode = true;
 
-// 初始化：從雲端抓資料
+// 雲端資料監聽
 db.ref('inventory').on('value', s => { if(s.exists()) inv = s.val(); renderConfig(); });
 db.ref('records').on('value', s => { records = []; s.forEach(c => records.push(c.val())); renderRecords(); });
 
 function showTab(t) {
     document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
+    document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active'));
     document.getElementById('tab-'+t).classList.remove('hidden');
+    document.getElementById('btn-'+t).classList.add('tab-active');
     if(t==='inventory') renderInventoryEditor();
 }
 
@@ -115,19 +121,20 @@ function renderConfig() {
     container.innerHTML = '';
     Object.keys(inv).forEach(cat => {
         const sel = currentSelections[cat] || [];
-        container.innerHTML += `<div class="py-4 cursor-pointer" onclick="openSelection('${cat}')">
-            <div class="text-xs text-blue-500 font-bold">${cat}</div>
-            <div class="mt-1">${sel.length ? sel.map(s => `<span class="selected-badge">${inv[cat][s].name} ($${inv[cat][s].p})</span>`).join('') : '<span class="text-gray-300">尚未選擇</span>'}</div>
+        container.innerHTML += `<div class="py-4 border-b item-row cursor-pointer ${!isSellerMode ? 'hide-price' : ''}" onclick="openSelection('${cat}')">
+            <div class="text-[10px] font-black text-blue-500 uppercase">${cat}</div>
+            <div class="mt-1 flex flex-wrap gap-1">${sel.length ? sel.map(idx => `<span class="selected-badge">${inv[cat][idx].name} <span class="price-tag text-blue-400">($${inv[cat][idx].p})</span></span>`).join('') : '<span class="text-gray-300 italic text-xs">尚未選擇</span>'}</div>
         </div>`;
     });
 }
 
 function openSelection(cat) {
     const list = document.getElementById('modalList');
-    list.innerHTML = `<h3 class="font-bold mb-2">${cat}</h3>`;
-    inv[cat].forEach((item, idx) => {
-        list.innerHTML += `<div onclick="togglePick('${cat}', ${idx})" class="p-3 border rounded mb-2 cursor-pointer hover:bg-blue-50">
-            ${item.name} <span class="text-blue-500 font-bold">$${item.p}</span>
+    list.innerHTML = `<h3 class="font-bold text-lg mb-4 text-blue-600">${cat}</h3>`;
+    (inv[cat] || []).forEach((item, idx) => {
+        list.innerHTML += `<div onclick="togglePick('${cat}', ${idx})" class="p-3 border rounded-xl mb-2 cursor-pointer hover:bg-blue-50 flex justify-between">
+            <div class="font-bold">${item.name}</div>
+            <div class="text-blue-600">$${item.p}</div>
         </div>`;
     });
     document.getElementById('selectionModal').classList.remove('hidden');
@@ -142,47 +149,65 @@ function togglePick(cat, idx) {
 }
 
 function calculate() {
-    let total = 0;
+    let sale = 0, cost = 0;
     for(let c in currentSelections) {
-        currentSelections[c].forEach(idx => { total += Number(inv[c][idx].p); });
+        currentSelections[c].forEach(idx => {
+            sale += Number(inv[c][idx].p || 0);
+            cost += Number(inv[c][idx].c || 0); // 計算成本
+        });
     }
-    document.getElementById('ui-totalSale').innerText = `$${total.toLocaleString()}`;
+    document.getElementById('ui-totalSale').innerText = `$${sale.toLocaleString()}`;
+    document.getElementById('ui-totalCost').innerText = `$${cost.toLocaleString()}`;
+    document.getElementById('ui-totalProfit').innerText = `$${(sale - cost).toLocaleString()}`;
 }
 
-function saveRecord(status) {
-    const id = Date.now();
-    const data = { id, name: document.getElementById('custName').value, total: document.getElementById('ui-totalSale').innerText, time: new Date().toLocaleString() };
-    db.ref('records/'+id).set(data).then(() => alert('儲存成功！'));
-}
-
-function renderRecords() {
-    const list = document.getElementById('orderList');
-    list.innerHTML = '';
-    records.forEach(r => {
-        list.innerHTML += `<div class="card p-4"><b>${r.name}</b> <span class="text-blue-600">${r.total}</span><br><small>${r.time}</small></div>`;
-    });
-}
-
+// 品項編輯器 (包含 名稱、售價、成本)
 function renderInventoryEditor() {
     const area = document.getElementById('inventoryEditor'); area.innerHTML = '';
     Object.keys(inv).forEach(cat => {
-        area.innerHTML += `<div class="border p-2 rounded"><b>${cat}</b>
-            <div id="edit-${cat}"></div>
-            <button onclick="addInvItem('${cat}')" class="text-xs text-blue-500">+ 新增零件</button>
-        </div>`;
+        const div = document.createElement('div');
+        div.className = "bg-white p-4 rounded-xl border";
+        div.innerHTML = `<div class="font-bold text-blue-500 mb-3 border-b pb-1">${cat}</div>
+            <div id="edit-${cat}" class="space-y-2"></div>
+            <button onclick="addInvItem('${cat}')" class="w-full text-xs text-blue-400 mt-2 border-dashed border p-1 rounded">+ 新增零件</button>`;
+        area.appendChild(div);
+        
         inv[cat].forEach((item, idx) => {
-            document.getElementById('edit-'+cat).innerHTML += `<div class="flex gap-1 mb-1">
-                <input class="w-full text-xs" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value">
-                <input class="w-20 text-xs" value="${item.p}" onchange="inv['${cat}'][${idx}].p=this.value">
-            </div>`;
+            const row = document.createElement('div'); row.className = "flex flex-col gap-1 p-2 bg-gray-50 rounded-lg relative";
+            row.innerHTML = `
+                <input class="text-xs font-bold" placeholder="名稱" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value">
+                <div class="flex gap-1">
+                    <input type="number" class="w-1/2 text-[10px]" placeholder="售價" value="${item.p}" onchange="inv['${cat}'][${idx}].p=this.value">
+                    <input type="number" class="w-1/2 text-[10px] text-red-500" placeholder="成本" value="${item.c || 0}" onchange="inv['${cat}'][${idx}].c=this.value">
+                </div>
+                <button onclick="removeInvItem('${cat}', ${idx})" class="absolute top-1 right-1 text-gray-300">×</button>`;
+            document.getElementById('edit-'+cat).appendChild(row);
         });
     });
 }
-function addInvItem(c) { inv[c].push({name:"", p:0}); renderInventoryEditor(); }
-function saveInv() { db.ref('inventory').set(inv).then(() => alert('雲端同步成功！')); }
+
+function addInvItem(c) { inv[c].push({name:"", p:0, c:0}); renderInventoryEditor(); }
+function removeInvItem(c, i) { inv[c].splice(i, 1); renderInventoryEditor(); }
+function saveInv() { db.ref('inventory').set(inv).then(() => alert('雲端品項庫已同步！')); }
+function toggleSellerMode() { isSellerMode = !isSellerMode; document.getElementById('sellerBox').classList.toggle('hidden'); renderConfig(); }
 function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
 function enterScreenshotMode() { document.getElementById('mainBody').classList.add('screenshot-mode'); document.getElementById('exitBtn').style.display='block'; }
 function exitScreenshotMode() { document.getElementById('mainBody').classList.remove('screenshot-mode'); document.getElementById('exitBtn').style.display='none'; }
+function saveRecord() {
+    const id = Date.now();
+    const data = { id, name: document.getElementById('custName').value || '未命名', total: document.getElementById('ui-totalSale').innerText, time: new Date().toLocaleString() };
+    db.ref('records/'+id).set(data).then(() => alert('訂單已儲存至雲端！'));
+}
+function renderRecords() {
+    const list = document.getElementById('orderList'); list.innerHTML = '';
+    records.sort((a,b)=>b.id-a.id).forEach(r => {
+        list.innerHTML += `<div class="card p-4 flex justify-between items-center">
+            <div><div class="font-bold">${r.name}</div><div class="text-xs text-gray-400">${r.time}</div></div>
+            <div class="text-blue-600 font-bold">${r.total}</div>
+        </div>`;
+    });
+}
+initData();
 </script>
 </body>
 </html>
