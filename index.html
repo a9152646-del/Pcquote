@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v7.8</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v7.9</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -28,32 +28,14 @@
         .screenshot-mode .item-row { border: none; border-bottom: 1px dashed #ccc; padding: 8px 0; }
         .screenshot-mode .selected-badge { border: none; background: none; padding: 0; font-size: 14px; color: #000; }
         
-        /* 截圖模式標頭：強制分行與對齊 */
-        .screenshot-mode #screenshot-header { 
-            display: flex; 
-            flex-direction: column; /* 垂直排列 */
-            align-items: center;    /* 預設置中 */
-            margin-bottom: 20px; 
-            border-bottom: 2px solid #334155; 
-            padding-bottom: 10px;
-        }
-        .screenshot-mode #screenshot-header .ss-title {
-            width: 100%;
-            text-align: center;
-            font-size: 1.5rem;
-            font-weight: 900;
-            margin-bottom: 8px;
-        }
-        .screenshot-mode #screenshot-header #ss-time {
-            width: 100%;            /* 寬度撐滿 */
-            text-align: left;       /* 文字靠左 */
-            font-size: 0.875rem;
-            color: #4b5563;
-        }
+        .screenshot-mode #screenshot-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #334155; padding-bottom: 10px; }
+        .screenshot-mode #screenshot-header .ss-title { width: 100%; text-align: center; font-size: 1.5rem; font-weight: 900; margin-bottom: 8px; }
+        .screenshot-mode #screenshot-header #ss-time { width: 100%; text-align: left; font-size: 0.875rem; color: #4b5563; }
+        .screenshot-mode #screenshot-footer { display: block; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; }
 
-        .screenshot-mode #screenshot-footer { 
-            display: block; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; 
-        }
+        /* 複選列表樣式 */
+        .pick-item { transition: all 0.2s; border: 1px solid #e5e7eb; }
+        .pick-item.active { background-color: #eff6ff; border-color: #3b82f6; }
 
         @media print { .no-print, button, #sellerBox, .no-screenshot { display: none !important; } }
     </style>
@@ -172,9 +154,26 @@ const db = firebase.database();
 </div>
 
 <div id="selectionModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col p-4">
-        <div id="modalList" class="overflow-y-auto flex-1 space-y-2"></div>
-        <button onclick="closeModal()" class="mt-4 bg-blue-600 text-white py-3 rounded-xl font-bold">完成</button>
+    <div class="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="p-4 border-b flex justify-between items-center bg-gray-50">
+            <h3 id="modalTitle" class="font-bold text-blue-600">選擇品項</h3>
+            <button onclick="closeModal()" class="text-gray-400 text-xl">×</button>
+        </div>
+        <div id="modalList" class="overflow-y-auto flex-1 p-4 space-y-2"></div>
+        
+        <div class="p-4 border-t bg-gray-50 space-y-2">
+            <div class="text-xs font-bold text-gray-500">快速臨時新增品項</div>
+            <div class="flex gap-2">
+                <input type="text" id="tempName" class="flex-1" placeholder="零件名稱">
+                <input type="number" id="tempPrice" class="w-20" placeholder="售價">
+                <input type="number" id="tempCost" class="w-20" placeholder="成本">
+                <button onclick="addTempItem()" class="bg-orange-500 text-white px-3 py-1 rounded text-sm font-bold">新增</button>
+            </div>
+        </div>
+        
+        <div class="p-4 border-t flex gap-2">
+            <button onclick="closeModal()" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">確認完成</button>
+        </div>
     </div>
 </div>
 
@@ -192,24 +191,29 @@ db.ref('records').on('value', s => {
 function calculate() {
     let subP = 0, subC = 0, disc = parseFloat(document.getElementById('discountAmt')?.value || 0);
     let noCard = parseFloat(document.getElementById('noCardTotal').value) || 0;
+    
     catOrder.forEach(cat => {
         (currentSelections[cat] || []).forEach(s => {
-            const item = (inv[cat] || [])[s.idx];
-            if(item) {
-                if(!s.isGift) subP += (Number(item.p) * (s.qty || 1));
-                subC += (Number(item.c || 0) * (s.qty || 1));
+            let p = 0, c = 0;
+            // 判斷是庫存品項還是臨時品項
+            if (s.isTemp) {
+                p = Number(s.p || 0); c = Number(s.c || 0);
+            } else {
+                const item = (inv[cat] || [])[s.idx];
+                if(item) { p = Number(item.p || 0); c = Number(item.c || 0); }
             }
+            
+            if(!s.isGift) subP += (p * (s.qty || 1));
+            subC += (c * (s.qty || 1));
         });
     });
+
     const finalSale = subP - disc;
     const untaxed = Math.round(finalSale / 1.05);
-    
     document.getElementById('ui-untaxed').innerText = `$${untaxed.toLocaleString()}`;
     document.getElementById('ui-totalSale').innerText = `$${finalSale.toLocaleString()}`;
     document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`;
     document.getElementById('ui-totalProfit').innerText = `$${(noCard > 0 ? (noCard - subC) : (finalSale - subC)).toLocaleString()}`;
-
-    // 截圖模式時間日期
     document.getElementById('ss-time').innerText = `報價時間：${new Date().toLocaleString()}`;
     document.getElementById('ss-discount').innerText = disc > 0 ? `折扣：-$${disc.toLocaleString()}` : "折扣";
     document.getElementById('ss-untaxed').innerText = `未稅金額：$${untaxed.toLocaleString()}`;
@@ -221,9 +225,20 @@ function renderConfig() {
     container.innerHTML = '';
     catOrder.forEach(cat => {
         const items = currentSelections[cat] || [];
-        const badges = items.map(sel => {
-            const targetItem = (inv[cat] || [])[sel.idx];
-            return targetItem ? `<div class="selected-badge">${sel.isGift?'[贈]':''}${targetItem.name} <span class="price-tag text-blue-500">($${Number(targetItem.p).toLocaleString()})</span></div>` : '';
+        const badges = items.map((sel, sIdx) => {
+            let name = "", p = 0;
+            if(sel.isTemp) {
+                name = sel.name; p = sel.p;
+            } else {
+                const target = (inv[cat] || [])[sel.idx];
+                if(!target) return '';
+                name = target.name; p = target.p;
+            }
+            const qtyStr = sel.qty > 1 ? `<span class="text-orange-600 font-bold ml-1">x${sel.qty}</span>` : '';
+            return `<div class="selected-badge">
+                ${sel.isGift?'[贈]':''}${name}${qtyStr} 
+                <span class="price-tag text-blue-500 ml-1">($${Number(p).toLocaleString()})</span>
+            </div>`;
         }).join('');
         container.innerHTML += `<div class="p-3 border-b item-row cursor-pointer ${!isSellerMode?'hide-price':''}" onclick="openSelection('${cat}')">
             <div class="text-[10px] font-black text-blue-500 uppercase">${cat}</div>
@@ -233,6 +248,95 @@ function renderConfig() {
     calculate();
 }
 
+// 複選選單與臨時新增
+function openSelection(cat) {
+    currentCat = cat; document.getElementById('modalTitle').innerText = `選擇${cat}品項 (可複選)`;
+    renderModalList();
+    document.getElementById('selectionModal').classList.remove('hidden');
+}
+
+function renderModalList() {
+    const list = document.getElementById('modalList'); list.innerHTML = '';
+    const selections = currentSelections[currentCat] || [];
+
+    // 1. 庫存品項列表
+    (inv[currentCat] || []).forEach((item, idx) => {
+        const sel = selections.find(s => !s.isTemp && s.idx === idx);
+        list.innerHTML += `
+            <div class="pick-item p-3 rounded-lg flex justify-between items-center ${sel?'active':''}" onclick="togglePick(${idx}, false)">
+                <div class="flex-1">
+                    <div class="font-bold text-sm">${item.name}</div>
+                    <div class="text-xs text-blue-500 font-bold">$${Number(item.p).toLocaleString()}</div>
+                </div>
+                <div class="flex items-center gap-3" onclick="event.stopPropagation()">
+                    <label class="text-xs flex items-center gap-1"><input type="checkbox" ${sel?.isGift?'checked':''} onchange="updateSubItem(${idx}, 'gift', this.checked, false)"> 贈</label>
+                    <div class="flex items-center border rounded bg-white overflow-hidden">
+                        <button class="px-2 py-1 bg-gray-50 text-xs" onclick="updateSubItem(${idx}, 'qty', -1, false)">-</button>
+                        <span class="px-3 text-xs font-bold">${sel?.qty || 1}</span>
+                        <button class="px-2 py-1 bg-gray-50 text-xs" onclick="updateSubItem(${idx}, 'qty', 1, false)">+</button>
+                    </div>
+                </div>
+            </div>`;
+    });
+
+    // 2. 顯示已新增的臨時品項
+    selections.filter(s => s.isTemp).forEach((temp, tIdx) => {
+        list.innerHTML += `
+            <div class="pick-item p-3 rounded-lg flex justify-between items-center active border-orange-200 bg-orange-50">
+                <div class="flex-1">
+                    <div class="font-bold text-sm text-orange-700">[臨時] ${temp.name}</div>
+                    <div class="text-xs text-orange-500 font-bold">$${Number(temp.p).toLocaleString()}</div>
+                </div>
+                <div class="flex items-center gap-3">
+                   <div class="flex items-center border rounded bg-white overflow-hidden">
+                        <button class="px-2 py-1 bg-gray-50 text-xs" onclick="updateSubItem(${tIdx}, 'qty', -1, true)">-</button>
+                        <span class="px-3 text-xs font-bold">${temp.qty || 1}</span>
+                        <button class="px-2 py-1 bg-gray-50 text-xs" onclick="updateSubItem(${tIdx}, 'qty', 1, true)">+</button>
+                    </div>
+                    <button onclick="removeTempItem(${tIdx})" class="text-red-400 text-lg ml-2">×</button>
+                </div>
+            </div>`;
+    });
+}
+
+function togglePick(idx, isTemp) {
+    if(!currentSelections[currentCat]) currentSelections[currentCat] = [];
+    const i = currentSelections[currentCat].findIndex(s => !s.isTemp && s.idx === idx);
+    if(i > -1) currentSelections[currentCat].splice(i,1); 
+    else currentSelections[currentCat].push({idx, isGift:false, qty:1, isTemp: false});
+    renderConfig(); renderModalList();
+}
+
+function updateSubItem(idx, type, val, isTemp) {
+    const selList = currentSelections[currentCat];
+    const sel = isTemp ? selList.filter(s => s.isTemp)[idx] : selList.find(s => !s.isTemp && s.idx === idx);
+    if(!sel) return;
+    if(type === 'qty') sel.qty = Math.max(1, (sel.qty || 1) + val);
+    if(type === 'gift') sel.isGift = val;
+    renderConfig(); renderModalList();
+}
+
+function addTempItem() {
+    const name = document.getElementById('tempName').value;
+    const p = document.getElementById('tempPrice').value;
+    const c = document.getElementById('tempCost').value || 0;
+    if(!name || !p) return alert('名稱與售價必填');
+    if(!currentSelections[currentCat]) currentSelections[currentCat] = [];
+    currentSelections[currentCat].push({ name, p, c, qty: 1, isGift: false, isTemp: true });
+    document.getElementById('tempName').value = ""; document.getElementById('tempPrice').value = ""; document.getElementById('tempCost').value = "";
+    renderConfig(); renderModalList();
+}
+
+function removeTempItem(tIdx) {
+    const all = currentSelections[currentCat];
+    const tempItems = all.filter(s => s.isTemp);
+    const target = tempItems[tIdx];
+    const realIdx = all.indexOf(target);
+    all.splice(realIdx, 1);
+    renderConfig(); renderModalList();
+}
+
+// 其餘功能（庫存管理等）保持原樣
 function renderInventoryEditor() {
     const area = document.getElementById('inventoryEditor'); area.innerHTML = '';
     catOrder.forEach((cat, cIdx) => {
@@ -263,7 +367,6 @@ function renderInventoryEditor() {
         });
     });
 }
-
 function moveCat(i, d) { let n = i+d; if(n>=0 && n<catOrder.length) { [catOrder[i], catOrder[n]] = [catOrder[n], catOrder[i]]; renderInventoryEditor(); } }
 function moveItem(cat, i, d) { let n = i+d; if(n>=0 && n<inv[cat].length) { [inv[cat][i], inv[cat][n]] = [inv[cat][n], inv[cat][i]]; renderInventoryEditor(); } }
 function addNewCategory() { const name = prompt("請輸入新大項名稱"); if(name) { catOrder.push(name); inv[name] = []; renderInventoryEditor(); } }
@@ -305,13 +408,7 @@ function editRecord(id) {
 
 function enterScreenshotMode() { calculate(); document.getElementById('mainBody').classList.add('screenshot-mode'); document.getElementById('screenshotNav').style.display='flex'; }
 function exitScreenshotMode() { document.getElementById('mainBody').classList.remove('screenshot-mode'); document.getElementById('screenshotNav').style.display='none'; }
-
-function exitToOrdersWithoutSaving() {
-    if(confirm("確定不儲存直接返回訂單列表嗎？目前的變更將會丟失。")) {
-        resetForm();
-        showTab('orders');
-    }
-}
+function exitToOrdersWithoutSaving() { if(confirm("確定不儲存直接返回訂單列表嗎？")) { resetForm(); showTab('orders'); } }
 
 function showTab(t) { 
     document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); 
@@ -320,36 +417,8 @@ function showTab(t) {
     document.getElementById('btn-'+t).classList.add('tab-active');
     if(t==='inventory') renderInventoryEditor(); 
 }
-
-function openSelection(cat) {
-    currentCat = cat; const list = document.getElementById('modalList'); list.innerHTML = '';
-    (inv[cat] || []).forEach((item, idx) => {
-        const selObj = (currentSelections[cat] || []).find(s => s.idx === idx);
-        list.innerHTML += `<div onclick="togglePick(${idx})" class="p-3 border rounded-lg mb-2 flex justify-between cursor-pointer ${selObj?'bg-blue-50 border-blue-200':''}">
-            <div><div class="font-bold">${item.name}</div><div class="text-xs text-blue-500">$${item.p}</div></div>
-            <div class="flex items-center gap-2"><label onclick="event.stopPropagation()"><input type="checkbox" ${selObj?.isGift?'checked':''} onchange="toggleGift(${idx},this.checked)"> 贈</label></div>
-        </div>`;
-    });
-    document.getElementById('selectionModal').classList.remove('hidden');
-}
-
-function togglePick(idx) {
-    if(!currentSelections[currentCat]) currentSelections[currentCat] = [];
-    const i = currentSelections[currentCat].findIndex(s => s.idx === idx);
-    if(i > -1) currentSelections[currentCat].splice(i,1); else currentSelections[currentCat].push({idx, isGift:false, qty:1});
-    renderConfig(); openSelection(currentCat);
-}
-function toggleGift(idx, checked) { const sel = currentSelections[currentCat]?.find(s => s.idx === idx); if(sel) sel.isGift = checked; renderConfig(); }
 function toggleSellerMode() { isSellerMode = !isSellerMode; document.getElementById('sellerBox').classList.toggle('hidden'); renderConfig(); }
-function resetForm() { 
-    editingRecordId = null; currentSelections = {}; 
-    document.getElementById('custName').value = "";
-    document.getElementById('custPhone').value = "";
-    document.getElementById('custAddr').value = "";
-    document.getElementById('discountAmt').value = 0;
-    document.getElementById('noCardTotal').value = "";
-    calculate(); renderConfig(); 
-}
+function resetForm() { editingRecordId = null; currentSelections = {}; document.getElementById('custName').value = ""; document.getElementById('custPhone').value = ""; document.getElementById('custAddr').value = ""; document.getElementById('discountAmt').value = 0; document.getElementById('noCardTotal').value = ""; calculate(); renderConfig(); }
 function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
 window.onload = () => { renderConfig(); };
 </script>
