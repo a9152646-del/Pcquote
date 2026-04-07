@@ -3,36 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神奇海螺電競 | 雲端同步系統</title>
+    <title>神鰭海螺電競 | 雲端同步系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        .tab-active { border-bottom: 4px solid #2563eb; color: #2563eb; font-weight: bold; }
+        .hidden { display: none !important; }
+    </style>
 </head>
-<body class="p-4 bg-gray-50">
+<body class="p-4 bg-slate-50 min-h-screen">
 
-<div id="app" class="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-6">
-    <h1 class="text-2xl font-bold mb-4">🐚 神鰭海螺報價系統</h1>
-    
-    <div class="flex border-b mb-4">
-        <button onclick="tab('calc')" class="p-2 border-b-2 border-blue-500">電腦估價</button>
-        <button onclick="tab('admin')" class="p-2 ml-4">品項管理</button>
+<div class="max-w-4xl mx-auto bg-white shadow-xl rounded-2xl overflow-hidden">
+    <div class="bg-blue-600 p-6 text-white">
+        <h1 class="text-2xl font-bold flex items-center gap-2">🐚 神鰭海螺報價系統 v7.5</h1>
+        <p class="text-blue-100 text-sm">雲端資料同步中...</p>
     </div>
 
-    <div id="view-calc">
-        <p class="text-gray-500">正在從雲端下載最新價格...</p>
-        <div id="item-list" class="space-y-2 mt-4"></div>
+    <div class="flex border-b bg-white overflow-x-auto">
+        <button onclick="showTab('calc')" id="t-calc" class="tab-active px-6 py-4 flex-1">🖥️ 電腦估價</button>
+        <button onclick="showTab('admin')" id="t-admin" class="px-6 py-4 flex-1">📦 品項管理</button>
     </div>
 
-    <div id="view-admin" class="hidden">
-        <h2 class="font-bold">新增/修改品項</h2>
-        <input type="text" id="itemName" placeholder="零件名稱" class="border p-2 w-full mb-2">
-        <input type="number" id="itemPrice" placeholder="價格" class="border p-2 w-full mb-2">
-        <button onclick="addItem()" class="bg-blue-500 text-white p-2 rounded w-full">同步到雲端</button>
+    <div class="p-6">
+        <div id="view-calc" class="space-y-4">
+            <div id="item-list" class="divide-y divide-gray-100">
+                <p class="text-center py-10 text-gray-400">目前雲端沒有零件資料，請至品項管理新增。</p>
+            </div>
+        </div>
+
+        <div id="view-admin" class="hidden space-y-4">
+            <div class="bg-blue-50 p-4 rounded-xl space-y-3">
+                <h3 class="font-bold text-blue-800">新增零件至雲端</h3>
+                <input type="text" id="itemName" placeholder="零件名稱 (例如: RTX 4060)" class="w-full p-2 border rounded-lg">
+                <input type="number" id="itemPrice" placeholder="價格" class="w-full p-2 border rounded-lg">
+                <button onclick="addItem()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700">同步至資料庫</button>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-// --- 你的專屬金鑰 ---
 const firebaseConfig = {
   apiKey: "AIzaSyDeCI3yFPr1v9KxOmko-qim2a7EtllEHKM",
   authDomain: "magic-conch-gaming.firebaseapp.com",
@@ -43,38 +54,42 @@ const firebaseConfig = {
   appId: "1:105735978925:web:3ec77acbfd344475322b24"
 };
 
-// 初始化
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// 基本切換邏輯
-function tab(name) {
+function showTab(name) {
     document.getElementById('view-calc').classList.toggle('hidden', name !== 'calc');
     document.getElementById('view-admin').classList.toggle('hidden', name !== 'admin');
+    document.getElementById('t-calc').className = (name === 'calc' ? 'tab-active px-6 py-4 flex-1' : 'px-6 py-4 flex-1');
+    document.getElementById('t-admin').className = (name === 'admin' ? 'tab-active px-6 py-4 flex-1' : 'px-6 py-4 flex-1');
 }
 
-// 同步資料邏輯
 function addItem() {
     const name = document.getElementById('itemName').value;
     const price = document.getElementById('itemPrice').value;
     if(name && price) {
-        db.ref('items').push({ name, price });
-        alert('同步成功！');
-        location.reload();
+        db.ref('items').push({ name, price }).then(() => {
+            alert('同步成功！');
+            document.getElementById('itemName').value = '';
+            document.getElementById('itemPrice').value = '';
+            showTab('calc');
+        });
     }
 }
 
-// 讀取資料
 db.ref('items').on('value', (snapshot) => {
     const list = document.getElementById('item-list');
+    if (!snapshot.exists()) return;
     list.innerHTML = "";
     snapshot.forEach((child) => {
         const data = child.val();
-        list.innerHTML += `<div class="flex justify-between border-b py-2"><span>${data.name}</span><span class="text-blue-600">$${data.price}</span></div>`;
+        list.innerHTML += `
+            <div class="flex justify-between items-center py-4">
+                <span class="font-medium text-gray-700">${data.name}</span>
+                <span class="text-blue-600 font-bold font-mono">$${Number(data.price).toLocaleString()}</span>
+            </div>`;
     });
 });
 </script>
-
-<style>.hidden { display: none; }</style>
 </body>
 </html>
