@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v7.4 雲端修正版</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v7.4</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -92,15 +92,13 @@ const db = firebase.database();
                     </div>
 
                     <div id="sellerBox" class="seller-bg p-4 rounded-lg mb-6 border border-blue-100 space-y-3">
-                        <div>
-                            <label class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">無卡分期金額 (編輯用)</label>
-                            <input type="number" id="noCardTotal" class="w-full mt-1 border-blue-200" placeholder="填入實際分期總價" oninput="calculate()">
-                        </div>
+                        <label class="text-[10px] font-bold text-blue-400 uppercase">無卡分期金額</label>
+                        <input type="number" id="noCardTotal" class="w-full mt-1 border-blue-200" placeholder="編輯用" oninput="calculate()">
                         <div class="flex justify-between text-sm text-blue-500 border-t pt-2"><span>總成本</span><span id="ui-totalCost">$0</span></div>
                         <div class="flex justify-between text-lg font-bold text-green-600 border-t mt-2 pt-2"><span>預計淨利</span><span id="ui-totalProfit">$0</span></div>
                     </div>
 
-                    <button onclick="saveRecord('current')" class="w-full bg-blue-500 text-white py-3 rounded-xl font-bold mb-2 shadow-lg">儲存/更新</button>
+                    <button onclick="saveRecord('current')" class="w-full bg-blue-500 text-white py-3 rounded-xl font-bold mb-2">儲存/更新</button>
                     <button id="convertOrderBtn" onclick="saveRecord('order')" class="hidden w-full bg-green-600 text-white py-3 rounded-xl font-bold mb-2">✅ 轉為正式訂單</button>
                     <button onclick="enterScreenshotMode()" class="w-full bg-orange-500 text-white py-3 rounded-xl font-bold mb-2">📸 進入截圖模式</button>
                     <button onclick="resetForm()" class="w-full text-gray-400 text-xs mt-2">清空重填</button>
@@ -135,14 +133,13 @@ const db = firebase.database();
 
 <div id="screenshotNav" style="display: none; position: fixed; top: 20px; right: 20px; z-index: 999999;" class="flex gap-2">
     <button onclick="exitScreenshotMode()" class="bg-blue-600 text-white px-6 py-2 rounded-full font-bold shadow-xl">返回編輯</button>
-    <button onclick="exitScreenshotToOrders()" class="bg-red-600 text-white px-6 py-2 rounded-full font-bold shadow-xl">❌ 退出並回訂單頁</button>
+    <button onclick="exitScreenshotToOrders()" class="bg-red-600 text-white px-6 py-2 rounded-full font-bold shadow-xl">❌ 返回訂單頁</button>
 </div>
 
-<div id="selectionModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col">
-        <div class="p-4 border-b bg-gray-50 flex justify-between items-center"><h3 id="modalTitle" class="font-bold text-lg">選擇品項</h3><button onclick="closeModal()" class="text-2xl text-gray-400">&times;</button></div>
-        <div id="modalList" class="p-4 overflow-y-auto flex-1 space-y-2"></div>
-        <button onclick="closeModal()" class="m-4 bg-blue-600 text-white py-3 rounded-xl font-bold">完成</button>
+<div id="selectionModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col p-4">
+        <div id="modalList" class="overflow-y-auto flex-1 space-y-2"></div>
+        <button onclick="closeModal()" class="mt-4 bg-blue-600 text-white py-3 rounded-xl font-bold">完成</button>
     </div>
 </div>
 
@@ -152,11 +149,9 @@ let catOrder = Object.keys(inv);
 let records = [];
 let currentSelections = {};
 let editingRecordId = null;
-let currentCat = "";
+let currentEditingStatus = 'draft';
 let isSellerMode = true;
-let currentEditingStatus = 'draft'; // 追蹤目前編輯的紀錄狀態
 
-// --- Firebase 監聽 ---
 db.ref('inventory').on('value', s => { if(s.exists()) inv = s.val(); renderConfig(); });
 db.ref('records').on('value', s => {
     records = []; if(s.exists()) { const data = s.val(); for(let id in data) records.push(data[id]); }
@@ -176,25 +171,17 @@ function calculate() {
         });
     }
     const finalSale = subP - disc;
-    const untaxed = Math.round(finalSale / 1.05);
-    let profit = finalSale - subC;
-    if(noCard > 0) profit = noCard - subC;
-
-    document.getElementById('ui-untaxed').innerText = `$${untaxed.toLocaleString()}`;
+    document.getElementById('ui-untaxed').innerText = `$${Math.round(finalSale / 1.05).toLocaleString()}`;
     document.getElementById('ui-totalSale').innerText = `$${finalSale.toLocaleString()}`;
     document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`;
-    document.getElementById('ui-totalProfit').innerText = `$${profit.toLocaleString()}`;
+    document.getElementById('ui-totalProfit').innerText = `$${(noCard > 0 ? (noCard - subC) : (finalSale - subC)).toLocaleString()}`;
 }
 
 function renderConfig() {
-    const container = document.getElementById('configRows');
-    container.innerHTML = '';
+    const container = document.getElementById('configRows'); container.innerHTML = '';
     catOrder.forEach(cat => {
         const items = currentSelections[cat] || [];
-        const badges = items.map((sel, idx) => {
-            const item = inv[cat] ? inv[cat][sel.idx] : null;
-            return `<div class="selected-badge">${sel.isGift?'[贈]':''}${item.name} <span class="price-tag text-blue-500">($${Number(item.p).toLocaleString()})</span></div>`;
-        }).join('');
+        const badges = items.map((sel) => `<div class="selected-badge">${sel.isGift?'[贈]':''}${inv[cat][sel.idx].name} <span class="price-tag text-blue-500">($${Number(inv[cat][sel.idx].p).toLocaleString()})</span></div>`).join('');
         container.innerHTML += `<div class="p-3 border-b item-row cursor-pointer ${!isSellerMode ? 'hide-price' : ''}" onclick="openSelection('${cat}')">
             <div class="text-[10px] font-black text-blue-500 uppercase">${cat}</div>
             <div class="mt-1 flex flex-wrap gap-1">${badges || '<span class="text-gray-300 italic text-xs">尚未選擇</span>'}</div>
@@ -206,19 +193,14 @@ function renderRecords() {
     const dList = document.getElementById('draftList'), oList = document.getElementById('orderList');
     dList.innerHTML = ''; oList.innerHTML = '';
     records.sort((a,b)=>b.id-a.id).forEach(r => {
-        let priceInfo = `<div class="text-blue-600 font-bold">${r.total}</div>`;
-        // 如果有填無卡分期，則顯示分期金額
-        if(r.noCard && r.noCard > 0) {
-            priceInfo = `
-                <div class="text-xs text-gray-400">售價: ${r.total}</div>
-                <div class="text-purple-600 font-bold">分期: $${Number(r.noCard).toLocaleString()}</div>
-            `;
-        }
+        const priceHTML = (r.noCard && r.noCard > 0) 
+            ? `<div class="text-xs text-gray-400 italic">售價: ${r.total}</div><div class="text-purple-600 font-bold">分期: $${Number(r.noCard).toLocaleString()}</div>`
+            : `<div class="text-blue-600 font-bold">${r.total}</div>`;
         const div = `<div class="p-4 border rounded-xl bg-white flex justify-between items-center shadow-sm">
             <div>
                 <div class="text-[10px] text-gray-400 font-bold">${r.time}</div>
-                <div class="text-sm font-bold mt-1 mb-1">[${r.source || '無'}] ${r.name}</div>
-                ${priceInfo}
+                <div class="text-sm font-bold mt-1">[${r.source || '無'}] ${r.name}</div>
+                ${priceHTML}
             </div>
             <div class="flex gap-2">
                 <button onclick="editDraft(${r.id})" class="px-3 py-1 bg-blue-500 text-white text-xs rounded">編輯</button>
@@ -233,40 +215,17 @@ function renderRecords() {
 
 function saveRecord(type) {
     const id = editingRecordId || Date.now();
-    // 如果 type 為 'current'，則沿用目前的狀態，如果是正式訂單編輯中就維持正式，如果是草稿就維持草稿
     const status = type === 'current' ? currentEditingStatus : type;
-    
-    const r = { 
-        id, 
-        time: new Date().toLocaleString(), 
-        name: document.getElementById('custName').value || '未命名', 
-        source: document.getElementById('custSource').value,
-        phone: document.getElementById('custPhone').value, 
-        memo: document.getElementById('orderMemo').value, 
-        selections: currentSelections, 
-        discount: document.getElementById('discountAmt').value, 
-        noCard: document.getElementById('noCardTotal').value, 
-        total: document.getElementById('ui-totalSale').innerText, 
-        status 
-    };
-    db.ref('records/' + id).set(r).then(() => { 
-        alert('雲端儲存成功'); 
-        resetForm(); 
-        showTab('orders'); 
-    });
+    const r = { id, time: new Date().toLocaleString(), name: document.getElementById('custName').value || '未命名', source: document.getElementById('custSource').value, phone: document.getElementById('custPhone').value, memo: document.getElementById('orderMemo').value, selections: currentSelections, discount: document.getElementById('discountAmt').value, noCard: document.getElementById('noCardTotal').value, total: document.getElementById('ui-totalSale').innerText, status };
+    db.ref('records/' + id).set(r).then(() => { alert('雲端已同步'); resetForm(); showTab('orders'); });
 }
 
 function editDraft(id) {
     const r = records.find(x => x.id === id); if(!r) return;
-    editingRecordId = id; 
-    currentEditingStatus = r.status; // 記錄原始狀態
-    currentSelections = r.selections || {};
-    document.getElementById('custName').value = r.name || '';
-    document.getElementById('custSource').value = r.source || 'FB';
-    document.getElementById('custPhone').value = r.phone || '';
-    document.getElementById('orderMemo').value = r.memo || '';
-    document.getElementById('discountAmt').value = r.discount || 0;
-    document.getElementById('noCardTotal').value = r.noCard || '';
+    editingRecordId = id; currentEditingStatus = r.status; currentSelections = r.selections || {};
+    document.getElementById('custName').value = r.name; document.getElementById('custPhone').value = r.phone;
+    document.getElementById('orderMemo').value = r.memo; document.getElementById('discountAmt').value = r.discount;
+    document.getElementById('noCardTotal').value = r.noCard;
     document.getElementById('convertOrderBtn').classList.toggle('hidden', r.status !== 'draft');
     calculate(); renderConfig(); showTab('calc');
 }
@@ -287,7 +246,6 @@ function exitScreenshotToOrders() {
     showTab('orders');
 }
 
-// 其餘功能保持不變
 function showTab(t) {
     document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
     document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active'));
@@ -295,14 +253,36 @@ function showTab(t) {
     document.getElementById('btn-' + t).classList.add('tab-active');
     if(t === 'inventory') renderInventoryEditor();
 }
+
+function renderInventoryEditor() {
+    const area = document.getElementById('inventoryEditor'); area.innerHTML = '';
+    catOrder.forEach((cat) => {
+        const sec = document.createElement('div'); sec.className = "bg-white p-4 rounded-xl border shadow-sm";
+        sec.innerHTML = `<div class="font-bold text-blue-500 mb-2">${cat}</div><div id="edit-${cat}" class="space-y-2"></div><button onclick="addInvItem('${cat}')" class="w-full text-xs text-gray-400 border-dashed border mt-2 py-1">+ 零件</button>`;
+        area.appendChild(sec);
+        (inv[cat] || []).forEach((item, idx) => {
+            const row = document.createElement('div'); row.className = "flex flex-col gap-1 bg-gray-50 p-2 rounded relative";
+            row.innerHTML = `<input type="text" class="text-xs font-bold" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value">
+                <div class="flex gap-1"><input type="number" class="w-1/2 text-xs" value="${item.p}" onchange="inv['${cat}'][${idx}].p=this.value">
+                <input type="number" class="w-1/2 text-xs text-red-500" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=this.value"></div>
+                <button onclick="removeInvItem('${cat}',${idx})" class="absolute top-1 right-1 text-gray-300">×</button>`;
+            document.getElementById(`edit-${cat}`).appendChild(row);
+        });
+    });
+}
+function addInvItem(c) { inv[c].push({name:"", p:0, c:0}); renderInventoryEditor(); }
+function removeInvItem(c, i) { inv[c].splice(i,1); renderInventoryEditor(); }
+function saveInventory() { db.ref('inventory').set(inv).then(()=>alert('雲端同步成功')); }
+function toggleSellerMode() { isSellerMode = !isSellerMode; document.getElementById('sellerBox').classList.toggle('hidden'); renderConfig(); }
+function resetForm() { currentSelections = {}; editingRecordId = null; calculate(); renderConfig(); }
+function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
 function openSelection(cat) {
-    currentCat = cat; const list = document.getElementById('modalList');
-    list.innerHTML = '';
+    currentCat = cat; const list = document.getElementById('modalList'); list.innerHTML = '';
     (inv[cat] || []).forEach((item, idx) => {
         const selObj = (currentSelections[cat] || []).find(s => s.idx === idx);
         list.innerHTML += `<div onclick="togglePick(${idx})" class="p-3 border rounded-lg mb-2 flex justify-between ${selObj?'bg-blue-50 border-blue-200':''}">
             <div><div class="font-bold">${item.name}</div><div class="text-xs text-blue-500">$${item.p}</div></div>
-            <div class="flex items-center gap-2"><label onclick="event.stopPropagation()"><input type="checkbox" ${selObj?.isGift?'checked':''} onchange="toggleGift(${idx},this.checked)"> 贈</label>${selObj?'✅':''}</div>
+            <div class="flex items-center gap-2"><label onclick="event.stopPropagation()"><input type="checkbox" ${selObj?.isGift?'checked':''} onchange="toggleGift(${idx},this.checked)"> 贈</label></div>
         </div>`;
     });
     document.getElementById('selectionModal').classList.remove('hidden');
@@ -314,32 +294,7 @@ function togglePick(idx) {
     else currentSelections[currentCat].push({idx, isGift:false, qty:1});
     calculate(); renderConfig(); openSelection(currentCat);
 }
-function toggleGift(idx, checked) {
-    const sel = currentSelections[currentCat]?.find(s => s.idx === idx);
-    if(sel) sel.isGift = checked; calculate(); renderConfig();
-}
-function renderInventoryEditor() {
-    const area = document.getElementById('inventoryEditor'); area.innerHTML = '';
-    catOrder.forEach((cat, cIdx) => {
-        const sec = document.createElement('div'); sec.className = "bg-white p-4 rounded-xl border shadow-sm";
-        sec.innerHTML = `<div class="flex justify-between items-center mb-2 font-bold text-blue-500 text-sm">${cat}</div><div id="edit-${cat}" class="space-y-2"></div><button onclick="addInvItem('${cat}')" class="w-full text-xs text-gray-400 border-dashed border mt-2 py-1">+ 零件</button>`;
-        area.appendChild(sec);
-        (inv[cat] || []).forEach((item, idx) => {
-            const row = document.createElement('div'); row.className = "flex flex-col gap-1 bg-gray-50 p-2 rounded relative";
-            row.innerHTML = `<input type="text" class="text-xs font-bold" value="${item.name}" placeholder="名稱" onchange="inv['${cat}'][${idx}].name=this.value">
-                <div class="flex gap-1"><input type="number" class="w-1/2 text-xs" value="${item.p}" placeholder="售價" onchange="inv['${cat}'][${idx}].p=this.value">
-                <input type="number" class="w-1/2 text-xs text-red-500" value="${item.c||0}" placeholder="成本" onchange="inv['${cat}'][${idx}].c=this.value"></div>
-                <button onclick="removeInvItem('${cat}',${idx})" class="absolute top-1 right-1 text-gray-300">×</button>`;
-            document.getElementById(`edit-${cat}`).appendChild(row);
-        });
-    });
-}
-function addInvItem(c) { inv[c].push({name:"", p:0, c:0}); renderInventoryEditor(); }
-function removeInvItem(c, i) { inv[c].splice(i,1); renderInventoryEditor(); }
-function saveInventory() { db.ref('inventory').set(inv).then(()=>alert('雲端已同步')); }
-function toggleSellerMode() { isSellerMode = !isSellerMode; document.getElementById('sellerBox').classList.toggle('hidden'); renderConfig(); }
-function resetForm() { currentSelections = {}; editingRecordId = null; currentEditingStatus = 'draft'; document.getElementById('custName').value=''; document.getElementById('noCardTotal').value=''; calculate(); renderConfig(); }
-function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
+function toggleGift(idx, checked) { const sel = currentSelections[currentCat]?.find(s => s.idx === idx); if(sel) sel.isGift = checked; calculate(); renderConfig(); }
 window.onload = () => { calculate(); renderConfig(); };
 </script>
 </body>
