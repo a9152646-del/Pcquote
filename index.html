@@ -32,22 +32,27 @@ const firebaseConfig = {
   authDomain: "magic-conch-gaming.firebaseapp.com",
   databaseURL: "https://magic-conch-gaming-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "magic-conch-gaming",
+  <script>
+// --- Firebase 配置開始 ---
+const firebaseConfig = {
+  apiKey: "AIzaSyDeCI3yFPr1v9KxOmko-qim2a7EtllEHKM",
+  authDomain: "magic-conch-gaming.firebaseapp.com",
+  databaseURL: "https://magic-conch-gaming-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "magic-conch-gaming",
   storageBucket: "magic-conch-gaming.firebasestorage.app",
   messagingSenderId: "105735978925",
   appId: "1:105735978925:web:3ec77acbfd344475322b24",
   measurementId: "G-SQGQY6YPE9"
 };
 
-// 初始化 Firebase
-firebase.initializeApp(firebaseConfig);
+// 初始化 Firebase (這幾行絕對不能少)
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 const db = firebase.database();
+// --- Firebase 配置結束 ---
 </script>
 
-<div class="max-w-7xl mx-auto">
-    <div class="flex border-b mb-6 no-screenshot overflow-x-auto whitespace-nowrap">
-        <button onclick="showTab('calc')" id="tab-calc" class="tab-active px-6 py-3">🖥️ 電腦估價</button>
-        <button onclick="showTab('orders')" id="tab-orders" class="px-6 py-3">📋 歷史訂單</button>
-        <button onclick="showTab('inventory')" id="tab-inventory" class="px-6 py-3">📦 品項庫管理</button>
     </div>
 
     <div id="content-calc" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
