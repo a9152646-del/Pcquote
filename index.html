@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v7.6</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v7.7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -28,9 +28,9 @@
         .screenshot-mode .item-row { border: none; border-bottom: 1px dashed #ccc; padding: 8px 0; }
         .screenshot-mode .selected-badge { border: none; background: none; padding: 0; font-size: 14px; color: #000; }
         
-        /* 1. 截圖模式修正：標題無空格 */
+        /* 1. 截圖模式修正：兩行佈局 */
         .screenshot-mode #screenshot-header { 
-            display: flex; justify-content: space-between; align-items: center; 
+            display: block; /* 改為區塊顯示以分兩行 */
             margin-bottom: 20px; border-bottom: 2px solid #334155; padding-bottom: 10px;
         }
         .screenshot-mode #screenshot-footer { 
@@ -58,9 +58,8 @@ const db = firebase.database();
 
 <div class="max-w-7xl mx-auto">
     <div id="screenshot-header">
-        <div id="ss-time" class="text-sm text-gray-600"></div>
-        <div class="text-2xl font-black">《報價單》</div>
-        <div style="width: 150px"></div>
+        <div class="text-2xl font-black text-center w-full mb-2">《報價單》</div>
+        <div id="ss-time" class="text-sm text-gray-600 text-left"></div>
     </div>
 
     <div class="flex border-b mb-6 no-screenshot overflow-x-auto bg-white sticky top-0 z-10">
@@ -110,7 +109,9 @@ const db = firebase.database();
                     </div>
                     <button onclick="saveRecord('current')" class="w-full bg-blue-500 text-white py-3 rounded-xl font-bold mb-2">儲存/更新</button>
                     <button onclick="enterScreenshotMode()" class="w-full bg-orange-500 text-white py-3 rounded-xl font-bold mb-2">📸 進入截圖模式</button>
-                    <button onclick="exitToOrdersWithoutSaving()" class="w-full bg-gray-200 text-gray-600 py-3 rounded-xl font-bold mb-2">🔙 不儲存並返回</button>
+                    
+                    <button onclick="exitToOrdersWithoutSaving()" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold mb-2 shadow-lg">❌ 不儲存並返回</button>
+                    
                     <button onclick="resetForm()" class="w-full text-gray-400 text-xs mt-2">清空重填</button>
                 </div>
             </div>
@@ -192,9 +193,8 @@ function calculate() {
     document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`;
     document.getElementById('ui-totalProfit').innerText = `$${(noCard > 0 ? (noCard - subC) : (finalSale - subC)).toLocaleString()}`;
 
-    // 1. 截圖模式頁尾邏輯優化
+    // 截圖模式頁尾邏輯
     document.getElementById('ss-time').innerText = `報價時間：${new Date().toLocaleString()}`;
-    // 如果金額為 0 或負數，只顯示「折扣」，否則顯示「折扣：-$XXX」
     document.getElementById('ss-discount').innerText = disc > 0 ? `折扣：-$${disc.toLocaleString()}` : "折扣";
     document.getElementById('ss-untaxed').innerText = `未稅金額：$${untaxed.toLocaleString()}`;
     document.getElementById('ss-total').innerText = `含稅總計：$${finalSale.toLocaleString()}`;
@@ -290,7 +290,7 @@ function editRecord(id) {
 function enterScreenshotMode() { calculate(); document.getElementById('mainBody').classList.add('screenshot-mode'); document.getElementById('screenshotNav').style.display='flex'; }
 function exitScreenshotMode() { document.getElementById('mainBody').classList.remove('screenshot-mode'); document.getElementById('screenshotNav').style.display='none'; }
 
-// 3. 不儲存並返回邏輯
+// 3. 不儲存並返回邏輯 (編輯頁面按鈕觸發)
 function exitToOrdersWithoutSaving() {
     if(confirm("確定不儲存直接返回訂單列表嗎？目前的變更將會丟失。")) {
         resetForm();
