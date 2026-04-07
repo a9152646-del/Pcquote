@@ -32,14 +32,23 @@
 </head>
 <body class="p-2 md:p-6" id="mainBody">
 
-apiKey: "AIzaSyDeCI3yFPr1v9KxOmko-qim2a7EtllEHKM",
+<script>
+// --- Firebase 配置 ---
+const firebaseConfig = {
+  apiKey: "AIzaSyDeCI3yFPr1v9KxOmko-qim2a7Etl1EHKc8",
   authDomain: "magic-conch-gaming.firebaseapp.com",
   databaseURL: "https://magic-conch-gaming-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "magic-conch-gaming",
-  storageBucket: "magic-conch-gaming.firebasestorage.app",
-  messagingSenderId: "105735978925",
-  appId: "1:105735978925:web:a4f998970f4051af322b24",
-  measurementId: "G-7W2C2LLFBF"
+  storageBucket: "magic-conch-gaming.appspot.com",
+  messagingSenderId: "367332213765",
+  appId: "1:367332213765:web:8655079a4053676646cc26"
+};
+
+// 初始化 Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+</script>
+
     storageBucket: "你的專案ID.appspot.com",
     messagingSenderId: "你的傳送ID",
     appId: "你的APPID"
