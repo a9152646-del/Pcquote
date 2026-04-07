@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v7.5</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v7.6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -17,7 +17,6 @@
         .item-row:hover { background-color: #f8fafc; border-color: #3b82f6; }
         .selected-badge { background: #f1f5f9; color: #334155; padding: 4px 10px; border-radius: 6px; font-size: 12px; margin: 2px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid #e2e8f0; }
         
-        /* 1. 截圖模式修正與新增元素 */
         #screenshot-header { display: none; }
         #screenshot-footer { display: none; }
 
@@ -29,7 +28,7 @@
         .screenshot-mode .item-row { border: none; border-bottom: 1px dashed #ccc; padding: 8px 0; }
         .screenshot-mode .selected-badge { border: none; background: none; padding: 0; font-size: 14px; color: #000; }
         
-        /* 截圖模式下的頁首頁尾顯示 */
+        /* 1. 截圖模式修正：標題無空格 */
         .screenshot-mode #screenshot-header { 
             display: flex; justify-content: space-between; align-items: center; 
             margin-bottom: 20px; border-bottom: 2px solid #334155; padding-bottom: 10px;
@@ -60,8 +59,9 @@ const db = firebase.database();
 <div class="max-w-7xl mx-auto">
     <div id="screenshot-header">
         <div id="ss-time" class="text-sm text-gray-600"></div>
-        <div class="text-2xl font-black">《 報 價 單 》</div>
-        <div style="width: 150px"></div> </div>
+        <div class="text-2xl font-black">《報價單》</div>
+        <div style="width: 150px"></div>
+    </div>
 
     <div class="flex border-b mb-6 no-screenshot overflow-x-auto bg-white sticky top-0 z-10">
         <button onclick="showTab('calc')" id="btn-calc" class="px-6 py-3 tab-active">🐚 報價配單</button>
@@ -110,6 +110,7 @@ const db = firebase.database();
                     </div>
                     <button onclick="saveRecord('current')" class="w-full bg-blue-500 text-white py-3 rounded-xl font-bold mb-2">儲存/更新</button>
                     <button onclick="enterScreenshotMode()" class="w-full bg-orange-500 text-white py-3 rounded-xl font-bold mb-2">📸 進入截圖模式</button>
+                    <button onclick="exitToOrdersWithoutSaving()" class="w-full bg-gray-200 text-gray-600 py-3 rounded-xl font-bold mb-2">🔙 不儲存並返回</button>
                     <button onclick="resetForm()" class="w-full text-gray-400 text-xs mt-2">清空重填</button>
                 </div>
             </div>
@@ -117,7 +118,7 @@ const db = firebase.database();
     </div>
 
     <div id="screenshot-footer" class="text-right space-y-1">
-        <div id="ss-discount" class="text-sm text-red-500"></div>
+        <div id="ss-discount" class="text-sm text-red-500 font-bold"></div>
         <div id="ss-untaxed" class="text-sm text-gray-600"></div>
         <div id="ss-total" class="text-2xl font-bold text-blue-700"></div>
     </div>
@@ -150,7 +151,6 @@ const db = firebase.database();
 </div>
 
 <div id="screenshotNav" style="display: none; position: fixed; top: 20px; right: 20px; z-index: 999999;" class="flex gap-2">
-    <button onclick="exitScreenshotToOrders()" class="bg-red-600 text-white px-6 py-2 rounded-full font-bold shadow-xl">❌ 不儲存並返回</button>
     <button onclick="exitScreenshotMode()" class="bg-blue-600 text-white px-6 py-2 rounded-full font-bold shadow-xl">返回編輯</button>
 </div>
 
@@ -187,15 +187,15 @@ function calculate() {
     const finalSale = subP - disc;
     const untaxed = Math.round(finalSale / 1.05);
     
-    // 更新 UI
     document.getElementById('ui-untaxed').innerText = `$${untaxed.toLocaleString()}`;
     document.getElementById('ui-totalSale').innerText = `$${finalSale.toLocaleString()}`;
     document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`;
     document.getElementById('ui-totalProfit').innerText = `$${(noCard > 0 ? (noCard - subC) : (finalSale - subC)).toLocaleString()}`;
 
-    // 更新截圖模式顯示資訊
+    // 1. 截圖模式頁尾邏輯優化
     document.getElementById('ss-time').innerText = `報價時間：${new Date().toLocaleString()}`;
-    document.getElementById('ss-discount').innerText = disc > 0 ? `折扣金額：-$${disc.toLocaleString()}` : "";
+    // 如果金額為 0 或負數，只顯示「折扣」，否則顯示「折扣：-$XXX」
+    document.getElementById('ss-discount').innerText = disc > 0 ? `折扣：-$${disc.toLocaleString()}` : "折扣";
     document.getElementById('ss-untaxed').innerText = `未稅金額：$${untaxed.toLocaleString()}`;
     document.getElementById('ss-total').innerText = `含稅總計：$${finalSale.toLocaleString()}`;
 }
@@ -217,7 +217,6 @@ function renderConfig() {
     calculate();
 }
 
-// 2. 品項管理強化：新增大項、細項、調整順序
 function renderInventoryEditor() {
     const area = document.getElementById('inventoryEditor'); area.innerHTML = '';
     catOrder.forEach((cat, cIdx) => {
@@ -232,13 +231,12 @@ function renderInventoryEditor() {
         </div>
         <div id="edit-${cat}" class="space-y-2"></div><button onclick="addInvItem('${cat}')" class="w-full text-xs text-gray-500 font-bold border-dashed border-2 mt-2 py-2 bg-gray-50 rounded-lg">+ 新增細項零件</button>`;
         area.appendChild(sec);
-        
         (inv[cat] || []).forEach((item, idx) => {
             const row = document.createElement('div'); row.className = "flex flex-col gap-1 bg-gray-50 p-2 rounded relative border border-transparent hover:border-blue-200";
-            row.innerHTML = `<input type="text" class="text-xs font-bold" value="${item.name}" placeholder="零件名稱" onchange="inv['${cat}'][${idx}].name=this.value">
+            row.innerHTML = `<input type="text" class="text-xs font-bold" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value">
                 <div class="flex gap-1">
-                    <input type="number" class="w-1/2 text-xs" value="${item.p}" placeholder="售價" onchange="inv['${cat}'][${idx}].p=this.value">
-                    <input type="number" class="w-1/2 text-xs text-red-500" value="${item.c||0}" placeholder="成本" onchange="inv['${cat}'][${idx}].c=this.value">
+                    <input type="number" class="w-1/2 text-xs" value="${item.p}" onchange="inv['${cat}'][${idx}].p=this.value">
+                    <input type="number" class="w-1/2 text-xs text-red-500" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=this.value">
                 </div>
                 <div class="flex gap-1 mt-1">
                     <button onclick="moveItem('${cat}', ${idx}, -1)" class="text-[9px] bg-white px-1 border">上移</button>
@@ -250,24 +248,10 @@ function renderInventoryEditor() {
     });
 }
 
-// 順序調整邏輯
-function moveCat(i, d) { 
-    let n = i+d; 
-    if(n>=0 && n<catOrder.length) {
-        [catOrder[i], catOrder[n]] = [catOrder[n], catOrder[i]]; 
-        renderInventoryEditor(); 
-    }
-}
-function moveItem(cat, i, d) {
-    let n = i+d;
-    if(n>=0 && n<inv[cat].length) {
-        [inv[cat][i], inv[cat][n]] = [inv[cat][n], inv[cat][i]];
-        renderInventoryEditor();
-    }
-}
-
-function addNewCategory() { const name = prompt("請輸入新大項名稱 (如: 散熱器)"); if(name) { catOrder.push(name); inv[name] = []; renderInventoryEditor(); } }
-function removeCat(i) { if(confirm("確定刪除此大項及其所有零件？")) { delete inv[catOrder[i]]; catOrder.splice(i,1); renderInventoryEditor(); } }
+function moveCat(i, d) { let n = i+d; if(n>=0 && n<catOrder.length) { [catOrder[i], catOrder[n]] = [catOrder[n], catOrder[i]]; renderInventoryEditor(); } }
+function moveItem(cat, i, d) { let n = i+d; if(n>=0 && n<inv[cat].length) { [inv[cat][i], inv[cat][n]] = [inv[cat][n], inv[cat][i]]; renderInventoryEditor(); } }
+function addNewCategory() { const name = prompt("請輸入新大項名稱"); if(name) { catOrder.push(name); inv[name] = []; renderInventoryEditor(); } }
+function removeCat(i) { if(confirm("確定刪除此大項？")) { delete inv[catOrder[i]]; catOrder.splice(i,1); renderInventoryEditor(); } }
 function renameCat(i, newN) { const oldN = catOrder[i]; inv[newN] = inv[oldN]; delete inv[oldN]; catOrder[i] = newN; renderInventoryEditor(); }
 function addInvItem(c) { if(!inv[c]) inv[c]=[]; inv[c].push({name:"", p:0, c:0}); renderInventoryEditor(); }
 function removeInvItem(c, i) { inv[c].splice(i,1); renderInventoryEditor(); }
@@ -303,13 +287,16 @@ function editRecord(id) {
     renderConfig(); showTab('calc');
 }
 
-function enterScreenshotMode() { 
-    calculate(); // 確保截圖前數據最新
-    document.getElementById('mainBody').classList.add('screenshot-mode'); 
-    document.getElementById('screenshotNav').style.display='flex'; 
-}
+function enterScreenshotMode() { calculate(); document.getElementById('mainBody').classList.add('screenshot-mode'); document.getElementById('screenshotNav').style.display='flex'; }
 function exitScreenshotMode() { document.getElementById('mainBody').classList.remove('screenshot-mode'); document.getElementById('screenshotNav').style.display='none'; }
-function exitScreenshotToOrders() { exitScreenshotMode(); showTab('orders'); }
+
+// 3. 不儲存並返回邏輯
+function exitToOrdersWithoutSaving() {
+    if(confirm("確定不儲存直接返回訂單列表嗎？目前的變更將會丟失。")) {
+        resetForm();
+        showTab('orders');
+    }
+}
 
 function showTab(t) { 
     document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); 
@@ -345,6 +332,7 @@ function resetForm() {
     document.getElementById('custPhone').value = "";
     document.getElementById('custAddr').value = "";
     document.getElementById('discountAmt').value = 0;
+    document.getElementById('noCardTotal').value = "";
     calculate(); renderConfig(); 
 }
 function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
