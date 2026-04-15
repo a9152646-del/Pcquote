@@ -76,14 +76,11 @@ const db = firebase.database();
                         <input type="text" id="custName" placeholder="客戶名稱">
                         <input type="text" id="custPhone" placeholder="電話">
                         <select id="custSource"><option value="FB">Facebook</option><option value="IG">Instagram</option><option value="Line">Line</option><option value="其他">其他</option></select>
-                        <div class="flex gap-1">
-                            <select id="infoSeller" class="flex-1">
-                                <option value="朱冠穎">朱冠穎</option>
-                                <option value="江苙翔">江苙翔</option>
-                                <option value="江鈞宇">江鈞宇</option>
-                            </select>
-                            <button onclick="addCustomSeller()" class="bg-gray-100 px-2 rounded text-xs font-bold border">新增</button>
-                        </div>
+                        <select id="infoSeller">
+                            <option value="朱冠穎">朱冠穎</option>
+                            <option value="江苙翔">江苙翔</option>
+                            <option value="江鈞宇">江鈞宇</option>
+                        </select>
                         <input type="text" id="custAddr" placeholder="配送地址" class="md:col-span-4">
                         <textarea id="orderMemo" placeholder="內部備註" class="md:col-span-4 h-24 w-full"></textarea>
                     </div>
@@ -155,7 +152,7 @@ const db = firebase.database();
     </div>
 </div>
 
-<div id="deliveryModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[600]">
+<div id="deliveryModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[1000]">
     <div class="bg-white rounded-2xl max-w-xl w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl">
         <div class="p-4 border-b flex justify-between items-center bg-orange-500 text-white"><h3 class="font-bold">📦 出貨勾選</h3><button onclick="closeDeliveryModal()" class="text-3xl font-bold">×</button></div>
         <div id="deliveryList" class="overflow-y-auto flex-1 p-4 space-y-2 bg-gray-50"></div>
@@ -221,10 +218,9 @@ function renderRecords() {
     const dList = document.getElementById('draftList'), oList = document.getElementById('orderList'), cList = document.getElementById('completedList');
     dList.innerHTML = ''; oList.innerHTML = ''; cList.innerHTML = '';
     records.sort((a,b)=>b.id-a.id).forEach(r => {
-        const sellerSelect = document.getElementById('infoSeller');
-        const sellerOpts = Array.from(sellerSelect.options).map(o => o.value);
+        const sellers = ["朱冠穎", "江苙翔", "江鈞宇"];
         const progressList = ["待處理", "組裝中", "測試中", "已完工", "已寄出"];
-        const sOpts = sellerOpts.map(s => `<option value="${s}" ${r.seller===s?'selected':''}>${s}</option>`).join('');
+        const sOpts = sellers.map(s => `<option value="${s}" ${r.seller===s?'selected':''}>${s}</option>`).join('');
         const pOpts = progressList.map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
         
         let missingItems = [];
@@ -260,21 +256,17 @@ function renderRecords() {
             <div class="flex gap-2 border-t mt-2 pt-2">
                 <button onclick="editRecord(${r.id})" class="flex-1 py-1 bg-blue-500 text-white text-xs rounded font-bold">編輯</button>
                 ${r.status === 'draft' ? `<button onclick="if(confirm('轉為正式訂單？')) db.ref('records/'+${r.id}+'/status').set('order')" class="bg-green-600 text-white px-3 py-1 rounded text-xs font-bold">✅ 轉正式</button>` : ''}
-                <button onclick="openDeliveryFast(${r.id})" class="flex-1 py-1 bg-orange-500 text-white text-xs rounded font-bold">📦 出貨管理</button>
+                
+                ${r.status === 'order' ? `<button onclick="openDeliveryFast(${r.id})" class="flex-1 py-1 bg-orange-500 text-white text-xs rounded font-bold">📦 出貨管理</button>` : ''}
+                
                 ${r.status === 'order' ? `<button onclick="if(confirm('完成結案？')) db.ref('records/'+${r.id}+'/status').set('completed')" class="bg-gray-700 text-white px-3 py-1 rounded text-xs font-bold">🏁 結案</button>` : ''}
                 <button onclick="if(confirm('刪除？')) db.ref('records/'+${r.id}).remove()" class="px-3 py-1 bg-red-50 text-red-400 text-xs rounded">刪除</button>
             </div>
         </div>`;
-        if(r.status === 'draft') dList.innerHTML += div; else if(r.status === 'completed') cList.innerHTML += div; else oList.innerHTML += div;
+        if(r.status === 'draft') dList.innerHTML += div; 
+        else if(r.status === 'completed') cList.innerHTML += div;
+        else oList.innerHTML += div;
     });
-}
-
-function addCustomSeller() {
-    const name = prompt("請輸入新的人員姓名：");
-    if (name) {
-        const select = document.getElementById('infoSeller');
-        const opt = document.createElement('option'); opt.value = name; opt.text = name; opt.selected = true; select.add(opt);
-    }
 }
 
 function renderModalList() {
@@ -283,10 +275,19 @@ function renderModalList() {
     (inv[currentCat] || []).forEach((item, idx) => {
         const sel = selections.find(s => !s.isTemp && s.idx === idx);
         list.innerHTML += `<div class="pick-item p-3 flex justify-between items-center rounded-lg mb-1 ${sel?'active':''}" onclick="togglePick(${idx}, false)">
-            <div class="flex-1"><div class="font-bold text-sm">${item.name}</div><div class="text-xs text-blue-500 font-bold">$${Number(item.p).toLocaleString()}</div></div>
+            <div class="flex-1">
+                <div class="font-bold text-sm">${item.name}</div>
+                <div class="text-xs text-blue-500 font-bold">$${Number(item.p).toLocaleString()}</div>
+            </div>
             <div class="flex items-center gap-3" onclick="event.stopPropagation()">
-                <label class="text-xs flex items-center gap-1 cursor-pointer font-bold"><input type="checkbox" ${sel?.isGift?'checked':''} onchange="updateSubItem(${idx}, 'gift', this.checked, false)"> 贈</label>
-                <div class="flex items-center border rounded bg-white overflow-hidden"><button class="px-2 py-1 bg-gray-50 text-xs font-bold" onclick="updateSubItem(${idx}, 'qty', -1, false)">-</button><span class="px-2 text-xs font-bold min-w-[20px] text-center">${sel?.qty || 1}</span><button class="px-2 py-1 bg-gray-50 text-xs font-bold" onclick="updateSubItem(${idx}, 'qty', 1, false)">+</button></div>
+                <label class="text-xs flex items-center gap-1 cursor-pointer">
+                    <input type="checkbox" ${sel?.isGift?'checked':''} onchange="updateSubItem(${idx}, 'gift', this.checked, false)"> 贈
+                </label>
+                <div class="flex items-center border rounded bg-white overflow-hidden">
+                    <button class="px-2 py-1 bg-gray-50 text-xs font-bold" onclick="updateSubItem(${idx}, 'qty', -1, false)">-</button>
+                    <span class="px-2 text-xs font-bold min-w-[20px] text-center">${sel?.qty || 1}</span>
+                    <button class="px-2 py-1 bg-gray-50 text-xs font-bold" onclick="updateSubItem(${idx}, 'qty', 1, false)">+</button>
+                </div>
             </div>
         </div>`;
     });
@@ -294,8 +295,10 @@ function renderModalList() {
 
 function updateSubItem(idx, type, val, isTemp) {
     if(!currentSelections[currentCat]) return;
-    const sel = currentSelections[currentCat].find(s => !s.isTemp && s.idx === idx); if(!sel) return;
-    if(type==='qty') sel.qty = Math.max(1, (sel.qty||1)+val); if(type==='gift') sel.isGift = val;
+    const sel = currentSelections[currentCat].find(s => !s.isTemp && s.idx === idx);
+    if(!sel) return;
+    if(type==='qty') sel.qty = Math.max(1, (sel.qty||1)+val);
+    if(type==='gift') sel.isGift = val;
     renderConfig(); renderModalList();
 }
 
@@ -319,7 +322,10 @@ function renderInventoryEditor() {
 function editRecord(id) {
     const r = records.find(x => x.id === id); if(!r) return;
     editingRecordId = id; currentStatus = r.status; currentSelections = r.selections || {};
-    document.getElementById('custName').value = r.name || ''; document.getElementById('discountAmt').value = r.discount || 0; document.getElementById('noCardTotal').value = r.noCard || ''; document.getElementById('infoSeller').value = r.seller || '朱冠穎';
+    document.getElementById('custName').value = r.name || ''; 
+    document.getElementById('discountAmt').value = r.discount || 0; 
+    document.getElementById('noCardTotal').value = r.noCard || '';
+    document.getElementById('infoSeller').value = r.seller || '朱冠穎';
     if(r.status === 'draft') document.getElementById('btnConvertToOrder').classList.remove('hidden'); else document.getElementById('btnConvertToOrder').classList.add('hidden');
     renderConfig(); showTab('calc');
 }
