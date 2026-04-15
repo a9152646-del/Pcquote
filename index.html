@@ -3,76 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.02</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.03</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        body { background-color: #f4f9fc; font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; padding-top: 20px !important; }
-        .tab-active { border-bottom: 4px solid #3b82f6; color: #3b82f6; font-weight: bold; }
-        .card { background: white; border-radius: 12px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); }
+        /* 1. 全體介面微縮優化 */
+        body { background-color: #f8fafc; font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; padding-top: 10px !important; font-size: 13px; }
+        .tab-active { border-bottom: 3px solid #3b82f6; color: #3b82f6; font-weight: bold; }
+        .card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #eef2f6; }
         .hidden { display: none !important; }
         .invisible { visibility: hidden !important; }
-        input, select, textarea { border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 14px; outline: none; }
+        input, select, textarea { border: 1px solid #e2e8f0; border-radius: 4px; padding: 4px 8px; font-size: 13px; outline: none; transition: border 0.2s; }
+        input:focus { border-color: #3b82f6; }
+        .item-row { padding: 8px 12px !important; border-bottom: 1px solid #f1f5f9; }
         .item-row:hover { background-color: #f8fafc; }
-        .selected-badge { color: #1e293b; font-size: 14px; margin-right: 12px; display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
-        .price-tag { color: #64748b; font-weight: 500; }
+        .selected-badge { color: #334155; font-size: 13px; margin-right: 8px; display: inline-flex; align-items: center; gap: 3px; font-weight: 600; }
+        .price-tag { color: #94a3b8; font-weight: 500; font-size: 11px; }
         
-        /* 隱藏單價的樣式 */
+        /* 2. 管理員隱藏邏輯 */
         .hide-prices .price-tag { display: none !important; }
 
-        #screenshotNav { position: fixed; bottom: 30px; left: 20px; z-index: 9999999; display: none; }
+        #screenshotNav { position: fixed; bottom: 20px; left: 20px; z-index: 9999999; display: none; }
         .screenshot-mode #screenshotNav { display: block !important; }
-        #screenshotNav button { font-size: 14px; padding: 12px 24px; border-radius: 50px; background: rgba(30, 41, 59, 0.9); color: white; box-shadow: 0 8px 32px rgba(0,0,0,0.2); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1); }
+        #screenshotNav button { font-size: 12px; padding: 8px 16px; border-radius: 50px; background: rgba(30, 41, 59, 0.9); color: white; backdrop-filter: blur(8px); }
 
         #screenshot-header, #screenshot-footer { display: none; }
         .screenshot-mode .no-screenshot { display: none !important; }
-        .screenshot-mode body { background: #fff !important; padding-top: 20px !important; }
-        .screenshot-mode #mainBody { background: #fff !important; padding: 20px !important; }
-        .screenshot-mode .max-w-7xl { max-width: 750px !important; margin: 0 auto !important; }
-        .screenshot-mode .card { box-shadow: none !important; border: 1px solid #eee !important; border-radius: 10px !important; padding: 1rem !important; }
-        .screenshot-mode #screenshot-header { display: flex !important; flex-direction: column; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #3b82f6; padding-bottom: 15px; }
-        .screenshot-mode .ss-title { font-size: 2rem; font-weight: 900; color: #1e3a8a; letter-spacing: 8px; }
-        .screenshot-mode #ss-time { font-size: 0.85rem; color: #666; margin-top: 5px; }
-        .screenshot-mode #screenshot-footer { display: block !important; margin-top: 25px; border-top: 2px solid #3b82f6; padding-top: 15px; }
-        .ss-amount-row { font-size: 1rem; font-weight: 600; color: #475569; display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 4px; }
-        .ss-total-row { font-size: 1.8rem; font-weight: 900; color: #1d4ed8; display: flex; justify-content: flex-end; align-items: baseline; gap: 10px; margin-top: 10px; }
-
-        /* 雲端管理介面修正：防止凸出 */
-        .inv-item-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px; border-radius: 10px; border: 1px solid #f1f5f9; background: #fff; position: relative; }
-        .inv-item-row:hover { border-color: #3b82f6; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .screenshot-mode body { background: #fff !important; }
+        .screenshot-mode .max-w-7xl { max-width: 700px !important; margin: 0 auto !important; }
+        .screenshot-mode .card { box-shadow: none !important; border: 1px solid #eee !important; border-radius: 6px !important; padding: 0.75rem !important; }
+        .screenshot-mode .ss-title { font-size: 1.5rem; font-weight: 900; color: #1e3a8a; letter-spacing: 4px; }
+        
+        /* 3. 雲端庫存縮小修正 */
+        .inv-item-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px; border-radius: 6px; border: 1px solid #f1f5f9; background: #fff; margin-bottom: 4px; }
         .inv-out-of-stock { background-color: #fff1f2 !important; border-color: #fecdd3 !important; }
-        .stock-btn { font-size: 10px; padding: 4px 10px; border-radius: 6px; font-weight: bold; border: 1px solid #e2e8f0; }
-        .stock-btn.active { background: #22c55e; color: white; border-color: #22c55e; }
-        .stock-btn.oos { background: #ef4444; color: white; border-color: #ef4444; }
+        .stock-btn { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; border: 1px solid #e2e8f0; }
+        .stock-btn.active { background: #22c55e; color: white; }
+        .stock-btn.oos { background: #ef4444; color: white; }
 
-        .pick-item { transition: all 0.2s; border: 1px solid #f1f5f9; cursor: pointer; border-radius: 8px; }
+        .pick-item { transition: all 0.2s; border: 1px solid #f1f5f9; cursor: pointer; border-radius: 6px; padding: 8px !important; }
         .pick-item.active { background-color: #eff6ff; border-color: #3b82f6; }
     </style>
 </head>
-<body class="p-2 md:p-6" id="mainBody">
+<body class="p-1 md:p-4 hide-prices" id="mainBody">
 
-<button onclick="location.reload(true)" class="no-screenshot fixed right-4 bottom-24 z-[40] bg-orange-500 text-white shadow-lg w-12 h-12 rounded-full flex items-center justify-center text-xl">🔄</button>
+<button onclick="location.reload(true)" class="no-screenshot fixed right-4 bottom-24 z-[40] bg-orange-500 text-white shadow-lg w-10 h-10 rounded-full flex items-center justify-center text-lg">🔄</button>
 <div id="screenshotNav" class="no-print"><button onclick="exitScreenshotMode()">🔙 返回編輯模式</button></div>
 
 <div class="max-w-7xl mx-auto">
-    <div class="no-screenshot mb-4 flex justify-end">
-        <label class="flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100">
-            <span class="text-xs font-bold text-gray-500">管理員模式 (顯示金額)</span>
-            <input type="checkbox" id="adminToggle" checked onchange="toggleAdminMode()" class="w-4 h-4 text-blue-600">
+    <div class="no-screenshot mb-2 flex justify-end">
+        <label class="flex items-center gap-2 cursor-pointer bg-white px-3 py-1.5 rounded-lg shadow-sm border border-gray-100">
+            <span class="text-[11px] font-bold text-gray-500">管理員顯示模式</span>
+            <input type="checkbox" id="adminToggle" onchange="toggleAdminMode()" class="w-3.5 h-3.5">
         </label>
     </div>
 
-    <div id="screenshot-header"><div class="ss-title">神奇海螺電競 報價單</div><div id="ss-time"></div></div>
+    <div id="screenshot-header" class="mb-4 text-center border-b-2 border-blue-500 pb-3">
+        <div class="ss-title">神奇海螺電競 報價單</div>
+        <div id="ss-time" class="text-xs text-gray-500 mt-1"></div>
+    </div>
     
-    <div class="flex border-b mb-6 no-screenshot overflow-x-auto bg-white sticky top-0 z-10 p-1 rounded-t-xl">
-        <button onclick="showTab('calc')" id="btn-calc" class="px-5 py-4 tab-active whitespace-nowrap">🖥️ 報價配單</button>
-        <button onclick="showTab('drafts')" id="btn-drafts" class="px-5 py-4 whitespace-nowrap">📂 訂單草稿</button>
-        <button onclick="showTab('orders')" id="btn-orders" class="px-5 py-4 whitespace-nowrap">✅ 正式訂單</button>
-        <button onclick="showTab('completed')" id="btn-completed" class="px-5 py-4 whitespace-nowrap">🏁 已結案</button>
-        <button onclick="showTab('inventory')" id="btn-inventory" class="px-5 py-4 whitespace-nowrap">⚙️ 雲端品項</button>
+    <div class="flex border-b mb-4 no-screenshot overflow-x-auto bg-white sticky top-0 z-10 p-0.5 rounded-t-lg">
+        <button onclick="showTab('calc')" id="btn-calc" class="px-4 py-3 tab-active whitespace-nowrap">🖥️ 報價配單</button>
+        <button onclick="showTab('drafts')" id="btn-drafts" class="px-4 py-3 whitespace-nowrap">📂 訂單草稿</button>
+        <button onclick="showTab('orders')" id="btn-orders" class="px-4 py-3 whitespace-nowrap">✅ 正式訂單</button>
+        <button onclick="showTab('completed')" id="btn-completed" class="px-4 py-3 whitespace-nowrap">🏁 已結案</button>
+        <button onclick="showTab('inventory')" id="btn-inventory" class="px-4 py-3 whitespace-nowrap">⚙️ 雲端品項</button>
     </div>
 
     <script>
@@ -82,103 +81,101 @@
     </script>
 
     <div id="tab-calc" class="page-content">
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <div class="lg:col-span-3 space-y-4">
-                <div class="card p-4 md:p-6"><div id="configRows" class="divide-y divide-gray-100"></div></div>
-                <div class="card p-6 no-screenshot">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <input type="text" id="custName" placeholder="客戶名稱">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+            <div class="lg:col-span-3 space-y-3">
+                <div class="card p-2 md:p-3"><div id="configRows" class="divide-y divide-gray-50"></div></div>
+                <div class="card p-4 no-screenshot">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        <input type="text" id="custName" placeholder="客戶名稱" class="w-full">
                         <input type="text" id="custPhone" placeholder="聯繫電話">
-                        <select id="custSource"><option value="FB">Facebook</option><option value="IG">Instagram</option><option value="Line">Line</option><option value="蝦皮">蝦皮</option><option value="其他">其他</option></select>
+                        <select id="custSource"><option value="FB">Facebook</option><option value="IG">Instagram</option><option value="Line">Line</option><option value="蝦皮">蝦皮</option></select>
                         <div class="flex gap-1">
                             <select id="infoSeller" class="flex-1 font-bold text-blue-600"><option value="朱冠穎">朱冠穎</option><option value="江苙翔">江苙翔</option><option value="江鈞宇">江鈞宇</option></select>
-                            <button onclick="addCustomSeller()" class="bg-gray-100 px-2 rounded text-xs font-bold border">新增</button>
+                            <button onclick="addCustomSeller()" class="bg-gray-100 px-2 rounded text-[10px] border">＋</button>
                         </div>
                         <input type="text" id="custAddr" placeholder="配送地址 / 取貨方式" class="md:col-span-4">
-                        <textarea id="orderMemo" placeholder="內部備註" class="md:col-span-4 h-20 w-full"></textarea>
+                        <textarea id="orderMemo" placeholder="內部備註" class="md:col-span-4 h-16 w-full text-xs"></textarea>
                     </div>
                 </div>
             </div>
 
             <div class="lg:col-span-1 no-screenshot">
-                <div class="card p-6 sticky top-24 border-t-4 border-blue-500">
-                    <div class="space-y-3 mb-6">
-                        <div><label class="text-xs text-gray-400 font-bold uppercase">Discount 折扣</label><input type="number" id="discountAmt" class="w-full mt-1 text-red-500 font-bold" value="0" oninput="calculate()"></div>
-                        <div class="pt-2"><div class="text-xs text-gray-400 font-bold uppercase">Pre-tax 未稅金額</div><div id="ui-untaxed" class="text-xl font-bold text-gray-600">$0</div></div>
-                        <div class="pt-2"><div class="text-xs text-blue-400 font-bold uppercase">Total 含稅總額</div><div id="ui-totalSale" class="text-4xl font-black text-blue-600">$0</div></div>
-                        <div id="ui-noCardShow" class="p-2 bg-orange-50 rounded-lg hidden">
-                            <div class="text-xs text-orange-400 font-bold uppercase">無卡分期總額</div>
-                            <div id="ui-noCardVal" class="text-xl font-black text-orange-600">$0</div>
+                <div class="card p-4 sticky top-20 border-t-4 border-blue-500">
+                    <div class="space-y-2 mb-4">
+                        <div><label class="text-[10px] text-gray-400 font-bold">折扣</label><input type="number" id="discountAmt" class="w-full mt-0.5 text-red-500 font-bold" value="0" oninput="calculate()"></div>
+                        <div class="pt-1"><div class="text-[10px] text-gray-400 font-bold">未稅總計</div><div id="ui-untaxed" class="text-sm font-bold text-gray-600">$0</div></div>
+                        <div class="pt-1"><div class="text-[10px] text-blue-400 font-bold uppercase">Total 含稅總額</div><div id="ui-totalSale" class="text-2xl font-black text-blue-600">$0</div></div>
+                        <div id="ui-noCardShow" class="p-1.5 bg-orange-50 rounded hidden mt-1">
+                            <div class="text-[10px] text-orange-400 font-bold">無卡分期金額</div>
+                            <div id="ui-noCardVal" class="text-sm font-black text-orange-600">$0</div>
                         </div>
-                        <div class="pt-4 border-t">
-                            <input type="number" id="noCardTotal" class="w-full mt-1 border-orange-200" placeholder="輸入無卡分期總價" oninput="calculate()">
+                        <div class="pt-2 border-t">
+                            <input type="number" id="noCardTotal" class="w-full mt-1 border-orange-100" placeholder="輸入無卡分期總額" oninput="calculate()">
                         </div>
                     </div>
                     
-                    <div id="sellerBox" class="seller-bg p-4 rounded-xl mb-6 border border-blue-100">
-                        <div class="flex justify-between text-sm text-blue-500 font-medium"><span>總成本</span><span id="ui-totalCost">$0</span></div>
-                        <div class="flex justify-between text-lg font-bold text-green-600 border-t border-blue-200 mt-2 pt-2"><span>預計淨利</span><span id="ui-totalProfit">$0</span></div>
+                    <div id="sellerBox" class="bg-blue-50 p-3 rounded-lg mb-4 invisible">
+                        <div class="flex justify-between text-[11px] text-blue-500"><span>總成本</span><span id="ui-totalCost">$0</span></div>
+                        <div class="flex justify-between text-sm font-bold text-green-600 border-t border-blue-100 mt-1.5 pt-1.5"><span>預計淨利</span><span id="ui-totalProfit">$0</span></div>
                     </div>
 
-                    <div class="space-y-2">
-                        <button onclick="saveRecord('current')" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg">💾 儲存/更新草稿</button>
-                        <button id="btnConvertToOrder" onclick="saveRecord('order')" class="hidden w-full bg-green-600 text-white py-3 rounded-xl font-bold shadow-lg">✅ 轉為正式訂單</button>
-                        <button onclick="enterScreenshotMode()" class="w-full bg-orange-500 text-white py-3 rounded-xl font-bold shadow-lg">📸 進入截圖模式</button>
+                    <div class="space-y-1.5">
+                        <button onclick="saveRecord('current')" class="w-full bg-blue-600 text-white py-2 rounded-lg font-bold text-sm shadow-sm">💾 儲存草稿</button>
+                        <button id="btnConvertToOrder" onclick="saveRecord('order')" class="hidden w-full bg-green-600 text-white py-2 rounded-lg font-bold text-sm shadow-sm">✅ 轉正式訂單</button>
+                        <button onclick="enterScreenshotMode()" class="w-full bg-orange-500 text-white py-2 rounded-lg font-bold text-sm shadow-sm">📸 截圖模式</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="screenshot-footer">
-        <div class="ss-amount-box">
-            <div class="ss-amount-row">折扣：<span id="ss-discount">-$0</span></div>
-            <div class="ss-amount-row text-gray-400">未稅總計：<span id="ss-untaxed">$0</span></div>
-            <div id="ss-nocard-row" class="ss-amount-row text-orange-600 hidden">無卡分期：<span id="ss-nocard-val">$0</span></div>
-            <div class="ss-total-row">應付金額：<span id="ss-total">$0</span></div>
+    <div id="screenshot-footer" class="mt-6 border-t-2 border-blue-500 pt-4">
+        <div class="flex flex-col items-end">
+            <div class="text-xs text-gray-500">折扣：<span id="ss-discount">-$0</span></div>
+            <div class="text-xs text-gray-400">未稅：<span id="ss-untaxed">$0</span></div>
+            <div id="ss-nocard-row" class="text-xs text-orange-600 hidden">無卡分期：<span id="ss-nocard-val">$0</span></div>
+            <div class="text-xl font-black text-blue-700 mt-1">應付總額：<span id="ss-total">$0</span></div>
         </div>
     </div>
 
-    <div id="tab-drafts" class="page-content hidden"><div id="draftList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div></div>
-    <div id="tab-orders" class="page-content hidden"><div id="orderList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div></div>
-    <div id="tab-completed" class="page-content hidden"><div id="completedList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-80"></div></div>
+    <div id="tab-drafts" class="page-content hidden"><div id="draftList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
+    <div id="tab-orders" class="page-content hidden"><div id="orderList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
+    <div id="tab-completed" class="page-content hidden"><div id="completedList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
 
     <div id="tab-inventory" class="page-content hidden">
-        <div class="card p-6">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="font-bold text-2xl">⚙️ 雲端品項管理</h2>
+        <div class="card p-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="font-bold text-lg">⚙️ 品項管理</h2>
                 <div class="flex gap-2">
-                    <button onclick="addNewCategory()" class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow">+ 新增大項</button>
-                    <button onclick="saveInventory()" class="bg-green-600 text-white px-6 py-2 rounded-lg text-sm font-bold shadow">💾 同步至雲端</button>
+                    <button onclick="addNewCategory()" class="bg-blue-500 text-white px-3 py-1.5 rounded text-xs">+ 大項</button>
+                    <button onclick="saveInventory()" class="bg-green-600 text-white px-4 py-1.5 rounded text-xs shadow">💾 同步雲端</button>
                 </div>
             </div>
-            <div id="inventoryEditor" class="space-y-6"></div>
+            <div id="inventoryEditor" class="space-y-4"></div>
         </div>
     </div>
 </div>
 
-<div id="selectionModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[500] backdrop-blur-sm">
-    <div class="bg-white rounded-3xl max-w-xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
-        <div class="p-5 border-b flex justify-between items-center bg-gray-50"><h3 id="modalTitle" class="font-bold text-blue-600 text-lg">選擇品項</h3><button onclick="closeModal()" class="text-gray-300 hover:text-gray-600 text-3xl">×</button></div>
-        <div class="p-4 border-b bg-white"><input type="text" id="modalSearch" class="w-full bg-gray-100 border-none py-3 px-4 rounded-xl" placeholder="🔍 搜尋零件名稱..." oninput="filterModalList()"></div>
-        <div id="modalList" class="overflow-y-auto flex-1 p-4 space-y-2"></div>
-        <div class="p-4 border-t bg-gray-50 space-y-2">
-            <div class="flex gap-2"><input type="text" id="tempName" class="flex-1" placeholder="臨時零件"><input type="number" id="tempPrice" class="w-20" placeholder="售價"><input type="number" id="tempCost" class="w-20" placeholder="成本"><button onclick="addTempItem()" class="bg-orange-500 text-white px-4 py-1 rounded-lg text-sm font-bold">手動新增</button></div>
-        </div>
-        <div class="p-4"><button onclick="closeModal()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg">確認選擇</button></div>
+<div id="selectionModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-2 z-[500] backdrop-blur-sm">
+    <div class="bg-white rounded-xl max-w-lg w-full max-h-[85vh] overflow-hidden flex flex-col shadow-xl">
+        <div class="p-3 border-b flex justify-between items-center bg-gray-50"><h3 id="modalTitle" class="font-bold text-blue-600">選擇品項</h3><button onclick="closeModal()" class="text-gray-400 text-2xl">×</button></div>
+        <div class="p-2 border-b"><input type="text" id="modalSearch" class="w-full bg-gray-100 border-none py-2 px-3 rounded" placeholder="🔍 搜尋..." oninput="filterModalList()"></div>
+        <div id="modalList" class="overflow-y-auto flex-1 p-2 space-y-1"></div>
+        <div class="p-3 border-t bg-gray-50"><div class="flex gap-1"><input type="text" id="tempName" class="flex-1 text-xs" placeholder="臨時零件"><input type="number" id="tempPrice" class="w-16 text-xs" placeholder="售"><input type="number" id="tempCost" class="w-16 text-xs" placeholder="本"><button onclick="addTempItem()" class="bg-orange-500 text-white px-2 py-1 rounded text-[10px]">新增</button></div></div>
+        <div class="p-3"><button onclick="closeModal()" class="w-full bg-blue-600 text-white py-2.5 rounded-lg font-bold text-sm">確認</button></div>
     </div>
 </div>
 
 <div id="deliveryModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[1000] backdrop-blur-sm">
-    <div class="bg-white rounded-2xl max-w-xl w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl">
-        <div class="p-5 border-b flex justify-between items-center bg-orange-500 text-white"><h3 class="font-bold text-lg">📦 出貨品項勾選</h3><button onclick="closeDeliveryModal()" class="text-3xl font-bold">×</button></div>
-        <div id="deliveryList" class="overflow-y-auto flex-1 p-5 space-y-3 bg-gray-50"></div>
-        <div class="p-5 border-t"><button onclick="closeDeliveryModal()" class="w-full bg-green-600 text-white py-4 rounded-xl font-bold shadow-lg">更新並返回</button></div>
+    <div class="bg-white rounded-xl max-w-md w-full max-h-[80vh] overflow-hidden flex flex-col shadow-xl">
+        <div class="p-4 border-b flex justify-between items-center bg-orange-500 text-white"><h3 class="font-bold">📦 出貨勾選</h3><button onclick="closeDeliveryModal()" class="text-2xl font-bold">×</button></div>
+        <div id="deliveryList" class="overflow-y-auto flex-1 p-4 space-y-2 bg-gray-50"></div>
+        <div class="p-4 border-t"><button onclick="closeDeliveryModal()" class="w-full bg-green-600 text-white py-2 rounded-lg font-bold">關閉</button></div>
     </div>
 </div>
 
 <script>
-let inv = {}; let catOrder = []; let records = []; let currentSelections = {}; let editingRecordId = null; let currentCat = ""; let currentStatus = 'draft'; let isSellerMode = true;
+let inv = {}; let catOrder = []; let records = []; let currentSelections = {}; let editingRecordId = null; let currentCat = ""; let currentStatus = 'draft';
 
 db.ref('inventory').on('value', s => { if(s.exists()) inv = s.val(); renderConfig(); });
 db.ref('catOrder').on('value', s => { if(s.exists()) catOrder = s.val(); renderConfig(); });
@@ -199,15 +196,26 @@ function calculate() {
     const untaxed = Math.round(finalSale / 1.05);
     document.getElementById('ui-untaxed').innerText = `$${untaxed.toLocaleString()}`;
     document.getElementById('ui-totalSale').innerText = `$${finalSale.toLocaleString()}`;
-    if(noCard > 0) { document.getElementById('ui-noCardVal').innerText = `$${noCard.toLocaleString()}`; document.getElementById('ui-noCardShow').classList.remove('hidden'); } else { document.getElementById('ui-noCardShow').classList.add('hidden'); }
+    if(noCard > 0) { 
+        document.getElementById('ui-noCardVal').innerText = `$${noCard.toLocaleString()}`; 
+        document.getElementById('ui-noCardShow').classList.remove('hidden'); 
+    } else { 
+        document.getElementById('ui-noCardShow').classList.add('hidden'); 
+    }
     const baseRevenue = noCard > 0 ? noCard : finalSale;
     document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`;
     document.getElementById('ui-totalProfit').innerText = `$${(baseRevenue - subC).toLocaleString()}`;
+    
     document.getElementById('ss-time').innerText = `報價日期：${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`;
     document.getElementById('ss-discount').innerText = `-$${disc.toLocaleString()}`;
     document.getElementById('ss-untaxed').innerText = `$${untaxed.toLocaleString()}`;
     document.getElementById('ss-total').innerText = `$${finalSale.toLocaleString()}`;
-    if(noCard > 0) { document.getElementById('ss-nocard-val').innerText = `$${noCard.toLocaleString()}`; document.getElementById('ss-nocard-row').classList.remove('hidden'); } else { document.getElementById('ss-nocard-row').classList.add('hidden'); }
+    if(noCard > 0) { 
+        document.getElementById('ss-nocard-val').innerText = `$${noCard.toLocaleString()}`; 
+        document.getElementById('ss-nocard-row').classList.remove('hidden'); 
+    } else { 
+        document.getElementById('ss-nocard-row').classList.add('hidden'); 
+    }
 }
 
 function renderConfig() {
@@ -220,9 +228,9 @@ function renderConfig() {
         const badges = items.map(sel => {
             let target = sel.isTemp ? sel : (inv[cat] || [])[sel.idx];
             if(!target) return '';
-            return `<div class="selected-badge">${sel.isGift?'<span class="text-red-500 font-black">[贈] </span>':''}${target.name}${sel.qty>1?`<span class="bg-gray-200 px-1.5 rounded ml-1 text-xs">x${sel.qty}</span>`:''} <span class="price-tag ml-2 text-xs">($${Number(target.p).toLocaleString()})</span></div>`;
+            return `<div class="selected-badge">${sel.isGift?'<span class="text-red-500 font-black">[贈] </span>':''}${target.name}${sel.qty>1?`<span class="bg-gray-100 px-1 rounded ml-1 text-[10px]">x${sel.qty}</span>`:''} <span class="price-tag ml-1">($${Number(target.p).toLocaleString()})</span></div>`;
         }).join('');
-        container.innerHTML += `<div class="py-4 item-row cursor-pointer transition" onclick="openSelection('${cat}')"><div class="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">${cat}</div><div class="flex flex-wrap gap-2">${badges || '<span class="text-gray-300 italic text-sm no-screenshot">尚未選擇品項...</span>'}</div></div>`;
+        container.innerHTML += `<div class="item-row cursor-pointer transition" onclick="openSelection('${cat}')"><div class="text-[9px] font-black text-blue-400 uppercase tracking-wider mb-0.5">${cat}</div><div class="flex flex-wrap gap-1">${badges || '<span class="text-gray-300 italic text-[11px] no-screenshot">點擊選擇...</span>'}</div></div>`;
     });
     calculate();
 }
@@ -231,51 +239,48 @@ function renderRecords() {
     const dList = document.getElementById('draftList'), oList = document.getElementById('orderList'), cList = document.getElementById('completedList');
     dList.innerHTML = ''; oList.innerHTML = ''; cList.innerHTML = '';
     records.sort((a,b)=>b.id-a.id).forEach(r => {
-        const progressList = ["待處理", "組裝中", "測試中", "已完工", "已寄出"];
-        const pOpts = progressList.map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
-        const div = `<div class="p-5 border rounded-2xl bg-white shadow-sm hover:shadow-md transition">
-            <div class="flex justify-between items-start mb-4">
-                <div><div class="text-[10px] text-gray-400 font-bold mb-1">${r.time}</div><div class="text-lg font-black text-gray-800">${r.name || '未填寫客戶'}</div><div class="text-blue-600 font-black text-2xl mt-1">${r.total}</div></div>
-                <div class="text-right"><span class="bg-blue-50 text-blue-600 text-[10px] px-2 py-1 rounded-full font-bold">${r.seller||'無業務'}</span><div class="mt-2"><select onchange="db.ref('records/'+${r.id}+'/progress').set(this.value)" class="text-[10px] border-none bg-gray-100 rounded-lg px-2 py-1">${pOpts}</select></div></div>
+        const pOpts = ["待處理", "組裝中", "測試中", "已完工", "已寄出"].map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
+        const div = `<div class="p-3 border rounded-lg bg-white shadow-sm">
+            <div class="flex justify-between items-start mb-2">
+                <div><div class="text-[9px] text-gray-400 font-bold">${r.time}</div><div class="text-sm font-black text-gray-800">${r.name || '無名氏'}</div><div class="text-blue-600 font-bold text-lg">${r.total}</div></div>
+                <div class="text-right"><span class="bg-blue-50 text-blue-500 text-[9px] px-1.5 py-0.5 rounded font-bold">${r.seller||'未填'}</span><div class="mt-1"><select onchange="db.ref('records/'+${r.id}+'/progress').set(this.value)" class="text-[9px] border-none bg-gray-50 rounded px-1 py-0.5">${pOpts}</select></div></div>
             </div>
-            <div class="flex gap-2 pt-3 border-t border-dashed">
-                <button onclick="editRecord(${r.id})" class="flex-1 py-2 bg-blue-600 text-white text-xs rounded-xl font-bold">編輯配單</button>
-                ${r.status === 'draft' ? `<button onclick="if(confirm('確認轉為正式訂單？')) db.ref('records/'+${r.id}+'/status').set('order')" class="bg-green-600 text-white px-4 py-2 rounded-xl text-xs font-bold">✅ 轉正式</button>` : `<button onclick="openDeliveryFast(${r.id})" class="flex-1 py-2 bg-orange-500 text-white text-xs rounded-xl font-bold shadow-sm">📦 出貨勾選</button>`}
-                <button onclick="if(confirm('確定刪除？')) db.ref('records/'+${r.id}).remove()" class="px-2 text-red-300 hover:text-red-500 text-sm">✕</button>
+            <div class="flex gap-1.5 pt-2 border-t border-dashed">
+                <button onclick="editRecord(${r.id})" class="flex-1 py-1.5 bg-blue-600 text-white text-[10px] rounded-md font-bold">編輯</button>
+                ${r.status === 'draft' ? `<button onclick="if(confirm('轉正式？')) db.ref('records/'+${r.id}+'/status').set('order')" class="bg-green-600 text-white px-2 py-1 rounded-md text-[10px] font-bold">✅ 轉正式</button>` : 
+                `<button onclick="openDeliveryFast(${r.id})" class="bg-orange-500 text-white px-2 py-1 rounded-md text-[10px] font-bold">📦 出貨</button>
+                 <button onclick="if(confirm('結案？')) db.ref('records/'+${r.id}+'/status').set('completed')" class="bg-gray-700 text-white px-2 py-1 rounded-md text-[10px] font-bold">🏁 結案</button>`}
+                <button onclick="if(confirm('刪除？')) db.ref('records/'+${r.id}).remove()" class="text-red-300 text-[11px] ml-auto">✕</button>
             </div></div>`;
         if(r.status === 'draft') dList.innerHTML += div; else if(r.status === 'completed') cList.innerHTML += div; else oList.innerHTML += div;
     });
 }
 
-// 2. 雲端管理介面修正：優化間距與彈性排版
 function renderInventoryEditor() {
     const area = document.getElementById('inventoryEditor'); area.innerHTML = '';
     catOrder.forEach((cat, cIdx) => {
-        const sec = document.createElement('div'); sec.className = "bg-gray-50 p-4 rounded-2xl border border-gray-100 relative mb-4";
+        const sec = document.createElement('div'); sec.className = "bg-gray-50 p-3 rounded-xl border border-gray-100 relative";
         sec.innerHTML = `
-        <div class="flex justify-between items-center mb-4">
-            <div class="flex items-center gap-3">
-                <div class="flex flex-col text-[10px] text-gray-300"><button onclick="moveCat(${cIdx}, -1)">▲</button><button onclick="moveCat(${cIdx}, 1)">▼</button></div>
-                <input class="font-black text-lg text-blue-600 border-none bg-transparent p-0 w-48 focus:ring-0" value="${cat}" onchange="renameCat(${cIdx}, this.value)">
+        <div class="flex justify-between items-center mb-2">
+            <div class="flex items-center gap-2">
+                <div class="flex flex-col text-[8px] text-gray-300"><button onclick="moveCat(${cIdx}, -1)">▲</button><button onclick="moveCat(${cIdx}, 1)">▼</button></div>
+                <input class="font-bold text-sm text-blue-600 border-none bg-transparent p-0 w-32 focus:ring-0" value="${cat}" onchange="renameCat(${cIdx}, this.value)">
             </div>
-            <button onclick="removeCat(${cIdx})" class="text-red-300 hover:text-red-500 text-2xl">×</button>
+            <button onclick="removeCat(${cIdx})" class="text-red-200 hover:text-red-400 text-xl">×</button>
         </div>
-        <div id="edit-${cat}" class="grid grid-cols-1 gap-2"></div>
-        <button onclick="addInvItem('${cat}')" class="w-full text-[11px] bg-white mt-4 py-2 rounded-xl border-dashed border-2 text-gray-400 hover:text-blue-500 transition">+ 新增零件</button>`;
+        <div id="edit-${cat}"></div>
+        <button onclick="addInvItem('${cat}')" class="w-full text-[9px] bg-white mt-2 py-1.5 rounded-lg border-dashed border-2 text-gray-400 hover:text-blue-500 transition">+ 新增零件</button>`;
         area.appendChild(sec);
-        
-        const items = inv[cat] || [];
-        items.forEach((item, idx) => {
-            const row = document.createElement('div'); 
-            row.className = `inv-item-row ${item.outOfStock ? 'inv-out-of-stock' : ''}`;
+        (inv[cat] || []).forEach((item, idx) => {
+            const row = document.createElement('div'); row.className = `inv-item-row ${item.outOfStock ? 'inv-out-of-stock' : ''}`;
             row.innerHTML = `
                 <div class="flex flex-col text-[8px] text-gray-300 px-1"><button onclick="moveItem('${cat}', ${idx}, -1)">▲</button><button onclick="moveItem('${cat}', ${idx}, 1)">▼</button></div>
-                <input class="flex-grow min-w-[120px] text-sm font-bold bg-transparent border-none focus:ring-0" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value">
-                <div class="flex items-center gap-2 ml-auto">
-                    <div class="flex items-center gap-1 border rounded bg-white px-2 py-1"><span class="text-[9px] text-gray-400">售</span><input type="number" class="w-12 text-xs font-bold text-blue-600 border-none p-0" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div>
-                    <div class="flex items-center gap-1 border rounded bg-white px-2 py-1"><span class="text-[9px] text-gray-400">本</span><input type="number" class="w-12 text-xs font-bold text-red-400 border-none p-0" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div>
+                <input class="flex-grow min-w-[100px] text-[11px] font-bold bg-transparent border-none focus:ring-0" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value">
+                <div class="flex items-center gap-1.5 ml-auto">
+                    <div class="flex items-center gap-1 border rounded bg-white px-1 py-0.5"><span class="text-[8px] text-gray-400">售</span><input type="number" class="w-10 text-[10px] font-bold text-blue-600 border-none p-0" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div>
+                    <div class="flex items-center gap-1 border rounded bg-white px-1 py-0.5"><span class="text-[8px] text-gray-400">本</span><input type="number" class="w-10 text-[10px] font-bold text-red-400 border-none p-0" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div>
                     <button onclick="inv['${cat}'][${idx}].outOfStock=!inv['${cat}'][${idx}].outOfStock; renderInventoryEditor();" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button>
-                    <button onclick="inv['${cat}'].splice(${idx}, 1); renderInventoryEditor();" class="text-red-200 hover:text-red-500 text-lg">×</button>
+                    <button onclick="inv['${cat}'].splice(${idx}, 1); renderInventoryEditor();" class="text-red-200 text-lg">×</button>
                 </div>`;
             document.getElementById(`edit-${cat}`).appendChild(row);
         });
@@ -284,24 +289,17 @@ function renderInventoryEditor() {
 
 function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); if(t==='inventory') renderInventoryEditor(); }
 
-// 1. 管理員模式切換（隱藏利潤與細項金額）
 function toggleAdminMode() { 
     const box = document.getElementById('sellerBox');
     const body = document.getElementById('mainBody');
     const isChecked = document.getElementById('adminToggle').checked;
-    
-    if(isChecked) {
-        box.classList.remove('invisible');
-        body.classList.remove('hide-prices');
-    } else {
-        box.classList.add('invisible');
-        body.classList.add('hide-prices');
-    }
+    if(isChecked) { box.classList.remove('invisible'); body.classList.remove('hide-prices'); } 
+    else { box.classList.add('invisible'); body.classList.add('hide-prices'); }
 }
 
 function enterScreenshotMode() { document.getElementById('mainBody').classList.add('screenshot-mode'); renderConfig(); }
 function exitScreenshotMode() { document.getElementById('mainBody').classList.remove('screenshot-mode'); renderConfig(); }
-function openSelection(cat) { currentCat = cat; document.getElementById('modalTitle').innerText = '🔍 選擇 ' + cat; document.getElementById('selectionModal').classList.remove('hidden'); document.getElementById('modalSearch').value = ''; renderModalList(); }
+function openSelection(cat) { currentCat = cat; document.getElementById('modalTitle').innerText = '🔍 ' + cat; document.getElementById('selectionModal').classList.remove('hidden'); document.getElementById('modalSearch').value = ''; renderModalList(); }
 function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
 function filterModalList() { const q = document.getElementById('modalSearch').value.toLowerCase(); document.querySelectorAll('.pick-item').forEach(el => { el.style.display = el.innerText.toLowerCase().includes(q) ? 'flex' : 'none'; }); }
 
@@ -310,9 +308,9 @@ function renderModalList() {
     const selections = currentSelections[currentCat] || [];
     (inv[currentCat] || []).forEach((item, idx) => {
         const sel = selections.find(s => !s.isTemp && s.idx === idx);
-        list.innerHTML += `<div class="pick-item p-4 flex justify-between items-center mb-2 ${sel?'active':''} ${item.outOfStock?'opacity-50 pointer-events-none':''}" onclick="togglePick(${idx})">
-            <div class="flex-1"><div class="font-bold text-gray-800">${item.outOfStock?'[缺貨] ':''}${item.name}</div><div class="text-sm text-blue-500 font-black mt-1">$${Number(item.p).toLocaleString()}</div></div>
-            ${sel ? `<div class="flex items-center gap-4" onclick="event.stopPropagation()"><label class="text-xs flex items-center gap-1 font-bold"><input type="checkbox" class="w-4 h-4" ${sel.isGift?'checked':''} onchange="updateSubItem(${idx}, 'gift', this.checked)"> 贈</label><div class="flex items-center border-2 border-blue-200 rounded-xl bg-white overflow-hidden"><button class="px-3 py-1 bg-blue-50 font-bold" onclick="updateSubItem(${idx}, 'qty', -1)">-</button><span class="px-3 text-sm font-black text-blue-600">${sel.qty || 1}</span><button class="px-3 py-1 bg-blue-50 font-bold" onclick="updateSubItem(${idx}, 'qty', 1)">+</button></div></div>` : ''}</div>`;
+        list.innerHTML += `<div class="pick-item p-3 flex justify-between items-center mb-1.5 ${sel?'active':''} ${item.outOfStock?'opacity-40 pointer-events-none':''}" onclick="togglePick(${idx})">
+            <div class="flex-1"><div class="font-bold text-gray-800 text-xs">${item.outOfStock?'[缺貨] ':''}${item.name}</div><div class="text-[11px] text-blue-500 font-black mt-0.5">$${Number(item.p).toLocaleString()}</div></div>
+            ${sel ? `<div class="flex items-center gap-3" onclick="event.stopPropagation()"><label class="text-[10px] flex items-center gap-1 font-bold"><input type="checkbox" class="w-3.5 h-3.5" ${sel.isGift?'checked':''} onchange="updateSubItem(${idx}, 'gift', this.checked)"> 贈</label><div class="flex items-center border border-blue-200 rounded-lg bg-white overflow-hidden"><button class="px-2 py-0.5 bg-blue-50 text-[10px] font-bold" onclick="updateSubItem(${idx}, 'qty', -1)">-</button><span class="px-2 text-[10px] font-black text-blue-600">${sel.qty || 1}</span><button class="px-2 py-0.5 bg-blue-50 text-[10px] font-bold" onclick="updateSubItem(${idx}, 'qty', 1)">+</button></div></div>` : ''}</div>`;
     });
 }
 
@@ -330,10 +328,10 @@ function updateSubItem(idx, type, val) {
     renderConfig(); renderModalList();
 }
 function saveRecord(st) { 
-    if(!document.getElementById('custName').value) { alert('請填寫客戶名稱'); return; }
+    if(!document.getElementById('custName').value) { alert('填寫名稱'); return; }
     const id = editingRecordId || Date.now();
     const r = { id, time: new Date().toLocaleString(), name: document.getElementById('custName').value, seller: document.getElementById('infoSeller').value, selections: currentSelections, total: document.getElementById('ui-totalSale').innerText, noCard: document.getElementById('noCardTotal').value, status: st === 'current' ? currentStatus : st, discount: document.getElementById('discountAmt').value, progress: "待處理" };
-    db.ref('records/' + id).update(r).then(() => { alert('存檔成功'); resetForm(); showTab(st === 'order' ? 'orders' : 'drafts'); });
+    db.ref('records/' + id).update(r).then(() => { alert('已儲存'); resetForm(); showTab(st === 'order' ? 'orders' : 'drafts'); });
 }
 function editRecord(id) {
     const r = records.find(x => x.id === id); if(!r) return;
@@ -358,21 +356,20 @@ function openDeliveryFast(id) {
         r.selections[cat].forEach((sel, idx) => {
             const k = `${cat}_${idx}`; const isD = tempDeliv[k] !== false;
             let n = sel.isTemp ? sel.name : (inv[cat] && inv[cat][sel.idx] ? inv[cat][sel.idx].name : "未知品項");
-            list.innerHTML += `<div class="flex justify-between items-center p-4 border rounded-xl bg-white shadow-sm"><div class="text-sm font-bold text-gray-700">${n}</div><input type="checkbox" class="w-6 h-6 rounded text-orange-500" ${isD?'checked':''} onchange="db.ref('records/'+${id}+'/deliveredItems/${k}').set(this.checked)"></div>`;
+            list.innerHTML += `<div class="flex justify-between items-center p-3 border rounded-lg bg-white"><div class="text-xs font-bold text-gray-700">${n}</div><input type="checkbox" class="w-5 h-5 rounded text-orange-500" ${isD?'checked':''} onchange="db.ref('records/'+${id}+'/deliveredItems/${k}').set(this.checked)"></div>`;
         });
     }
     document.getElementById('deliveryModal').classList.remove('hidden');
 }
-function saveInventory() { if(confirm('同步至雲端？')) { db.ref('inventory').set(inv); db.ref('catOrder').set(catOrder); alert('已更新'); } }
+function saveInventory() { if(confirm('同步雲端？')) { db.ref('inventory').set(inv); db.ref('catOrder').set(catOrder); alert('已同步'); } }
 function resetForm() { editingRecordId=null; currentSelections={}; document.querySelectorAll('input').forEach(i=>i.value=""); renderConfig(); }
 function moveCat(idx, dir) { let newIdx = idx + dir; if (newIdx < 0 || newIdx >= catOrder.length) return; [catOrder[idx], catOrder[newIdx]] = [catOrder[newIdx], catOrder[idx]]; renderInventoryEditor(); }
 function moveItem(cat, idx, dir) { let newIdx = idx + dir; if (newIdx < 0 || newIdx >= inv[cat].length) return; [inv[cat][idx], inv[cat][newIdx]] = [inv[cat][newIdx], inv[cat][idx]]; renderInventoryEditor(); }
-function addNewCategory() { const n = prompt("新大項："); if(n) { catOrder.push(n); inv[n] = []; renderInventoryEditor(); } }
+function addNewCategory() { const n = prompt("大項名稱："); if(n) { catOrder.push(n); inv[n] = []; renderInventoryEditor(); } }
 function addInvItem(c) { if(!inv[c]) inv[c] = []; inv[c].push({name: "新零件", p: 0, c: 0, outOfStock: false}); renderInventoryEditor(); }
-function removeCat(idx) { if(confirm('確定刪除？')) { delete inv[catOrder[idx]]; catOrder.splice(idx,1); renderInventoryEditor(); } }
+function removeCat(idx) { if(confirm('刪除？')) { delete inv[catOrder[idx]]; catOrder.splice(idx,1); renderInventoryEditor(); } }
 function renameCat(idx, newName) { const old = catOrder[idx]; inv[newName] = inv[old]; delete inv[old]; catOrder[idx] = newName; }
-function addCustomSeller() { const n = prompt("業務名："); if(n) { const s = document.getElementById('infoSeller'); const o = document.createElement('option'); o.value=n; o.text=n; o.selected=true; s.add(o); } }
-function exitToOrdersWithoutSaving() { if(confirm('放棄返回？')) { resetForm(); showTab('drafts'); } }
+function addCustomSeller() { const n = prompt("姓名："); if(n) { const s = document.getElementById('infoSeller'); const o = document.createElement('option'); o.value=n; o.text=n; o.selected=true; s.add(o); } }
 function closeDeliveryModal() { document.getElementById('deliveryModal').classList.add('hidden'); }
 window.onload = () => renderConfig();
 </script>
