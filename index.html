@@ -409,7 +409,6 @@ function updateSubItem(idx, type, val, isTemp, tIdx) {
     renderConfig(); renderModalList();
 }
 function addTempItem() {
-    // 補回臨時新增區成本變數讀取
     const name = document.getElementById('tempName').value, p = document.getElementById('tempPrice').value, c = document.getElementById('tempCost').value; 
     if(!name||!p) return;
     if(!currentSelections[currentCat]) currentSelections[currentCat] = [];
@@ -431,20 +430,22 @@ function resetForm() { editingRecordId=null; currentSelections={}; document.quer
 function renderInventoryEditor() {
     const area = document.getElementById('inventoryEditor'); area.innerHTML = '';
     catOrder.forEach((cat, cIdx) => {
-        const sec = document.createElement('div'); sec.className = "bg-white p-4 rounded-xl border relative";
-        sec.innerHTML = `<div class="flex justify-between items-center mb-2"><input class="font-bold text-blue-600 w-2/3" value="${cat}" onchange="renameCat(${cIdx}, this.value)"><div class="flex gap-1"><button onclick="moveCat(${cIdx},-1)" class="text-xs bg-gray-100 p-1 rounded font-bold">↑</button><button onclick="moveCat(${cIdx},1)" class="text-xs bg-gray-100 p-1 rounded font-bold">↓</button><button onclick="removeCat(${cIdx})" class="text-red-300 ml-1">×</button></div></div><div id="edit-${cat}" class="space-y-2"></div><button onclick="addInvItem('${cat}')" class="w-full text-xs border-dashed border-2 mt-2 py-1">+ 新增零件</button>`;
+        const sec = document.createElement('div'); sec.className = "bg-white p-4 rounded-xl border relative shadow-sm";
+        sec.innerHTML = `<div class="flex justify-between items-center mb-2"><input class="font-bold text-blue-600 w-2/3" value="${cat}" onchange="renameCat(${cIdx}, this.value)"><div class="flex gap-1"><button onclick="moveCat(${cIdx},-1)" class="text-xs bg-gray-100 p-1 rounded font-bold">↑</button><button onclick="moveCat(${cIdx},1)" class="text-xs bg-gray-100 p-1 rounded font-bold">↓</button><button onclick="removeCat(${cIdx})" class="text-red-300 ml-1 text-xl">×</button></div></div><div id="edit-${cat}" class="space-y-2"></div><button onclick="addInvItem('${cat}')" class="w-full text-xs border-dashed border-2 mt-2 py-2 rounded-lg font-bold text-gray-400">+ 新增零件</button>`;
         area.appendChild(sec);
         (inv[cat] || []).forEach((item, idx) => {
-            const row = document.createElement('div'); row.className = "bg-gray-50 p-2 rounded relative border";
+            const row = document.createElement('div'); row.className = "bg-gray-50 p-3 rounded-lg relative border space-y-2";
             row.innerHTML = `
-                <input type="text" class="text-xs font-bold w-full" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value">
-                <div class="flex gap-1 mt-1">
+                <input type="text" class="text-sm font-bold w-full bg-white" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value">
+                
+                <div class="flex gap-2">
                     <input type="number" class="w-1/3 text-xs" value="${item.p}" placeholder="售價" onchange="inv['${cat}'][${idx}].p=this.value">
-                    <input type="number" class="w-1/3 text-xs" value="${item.c||0}" placeholder="成本" onchange="inv['${cat}'][${idx}].c=this.value">
-                    <button onclick="inv['${cat}'][${idx}].outOfStock=!inv['${cat}'][${idx}].outOfStock; renderInventoryEditor();" class="w-1/3 text-[9px] font-bold rounded ${item.outOfStock?'bg-red-500 text-white':'bg-gray-200 text-gray-600'}">缺貨</button>
+                    <input type="number" class="w-1/3 text-xs text-red-600 font-bold" value="${item.c||0}" placeholder="成本" onchange="inv['${cat}'][${idx}].c=this.value">
+                    <button onclick="inv['${cat}'][${idx}].outOfStock=!inv['${cat}'][${idx}].outOfStock; renderInventoryEditor();" class="w-1/3 text-[10px] font-bold rounded ${item.outOfStock?'bg-red-500 text-white':'bg-white text-gray-400 border'}">缺貨</button>
                 </div>
-                <div class="flex gap-2 mt-1 items-center">
-                    <button onclick="deleteInvItem('${cat}', ${idx})" class="absolute top-1 right-1 text-gray-300">×</button>
+                
+                <div class="flex justify-end pt-1">
+                    <button onclick="deleteInvItem('${cat}', ${idx})" class="text-xs bg-red-50 text-red-400 px-3 py-1 rounded-md font-bold border border-red-100">刪除品項 ×</button>
                 </div>`;
             document.getElementById(`edit-${cat}`).appendChild(row);
         });
