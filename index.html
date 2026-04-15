@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v8.94</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v8.97</title>
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="IMG_4759.jpeg?v=1">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -23,34 +22,33 @@
         .selected-badge { color: #000; font-size: 14px; margin-right: 12px; display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
         .price-tag { color: #000; font-weight: 900; }
         
-        /* 截圖模式核心設定 */
+        /* 截圖模式：字體縮小與美化 */
         #screenshot-header, #screenshot-footer { display: none; }
-        #mainBody.screenshot-mode { background: #fff !important; padding: 40px !important; }
         .screenshot-mode .no-screenshot { display: none !important; }
+        .screenshot-mode #mainBody { background: #fff !important; padding: 20px !important; }
         .screenshot-mode .max-w-7xl { max-width: 800px !important; margin: 0 auto !important; }
-        .screenshot-mode .card { box-shadow: none !important; border: 3px solid #000 !important; border-radius: 0 !important; padding: 2rem !important; }
-        .screenshot-mode .item-row { border: none; border-bottom: 1px dashed #000; padding: 12px 0; }
-        .screenshot-mode .item-row.is-empty { display: none !important; }
-        .screenshot-mode #screenshot-header { display: flex !important; flex-direction: column; align-items: center; margin-bottom: 20px; border-bottom: 3px solid #000; padding-bottom: 10px; }
-        .screenshot-mode #screenshot-header .ss-title { width: 100%; text-align: center; font-size: 2rem; font-weight: 900; color: #000; }
-        .screenshot-mode #screenshot-header #ss-time { width: 100%; text-align: left; font-size: 0.9rem; color: #000; font-weight: bold; margin-top: 10px; }
-        .screenshot-mode #screenshot-footer { display: block !important; margin-top: 30px; border-top: 2px solid #000; padding-top: 15px; text-align: right; }
-        .ss-amount-row { font-size: 1.2rem; font-weight: 800; color: #000; margin-bottom: 5px; }
-        .ss-total-row { font-size: 1.8rem; font-weight: 900; color: #000; border-top: 2px solid #000; margin-top: 10px; padding-top: 5px; display: inline-block; min-width: 250px; }
+        .screenshot-mode .card { box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important; border: 1px solid #eee !important; border-radius: 10px !important; padding: 1.5rem !important; }
+        .screenshot-mode .item-row { border: none; border-bottom: 1px dashed #ddd; padding: 10px 0; }
+        .screenshot-mode #screenshot-header { display: flex !important; flex-direction: column; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #3b82f6; padding-bottom: 10px; }
+        .screenshot-mode #screenshot-header .ss-title { font-size: 1.5rem; font-weight: 900; color: #1e3a8a; }
+        .screenshot-mode #screenshot-header #ss-time { font-size: 0.75rem; color: #666; font-weight: bold; margin-top: 5px; }
+        .screenshot-mode #screenshot-footer { display: block !important; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; text-align: right; }
+        .ss-amount-row { font-size: 0.9rem; font-weight: 700; color: #444; margin-bottom: 3px; }
+        .ss-total-row { font-size: 1.4rem; font-weight: 900; color: #3b82f6; border-top: 2px solid #3b82f6; margin-top: 8px; padding-top: 5px; display: inline-block; min-width: 200px; }
         
-        /* 返回按鈕設定 - 修正為截圖模式下顯示 */
-        #screenshotNav { position: fixed; top: 20px; right: 20px; z-index: 9999999 !important; display: none; }
+        /* 返回按鈕：縮小並下移避開狀態列 */
+        #screenshotNav { position: fixed; top: 80px; right: 20px; z-index: 9999999; display: none; }
         .screenshot-mode #screenshotNav { display: block !important; }
+        #screenshotNav button { font-size: 14px; padding: 8px 18px; border-radius: 50px; background: #1e293b; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
 
         .pick-item { transition: all 0.2s; border: 2px solid #e5e7eb; cursor: pointer; border-radius: 10px; }
         .pick-item.active { background-color: #eff6ff; border-color: #3b82f6; }
-        @media print { .no-print, button, #sellerBox, .no-screenshot { display: none !important; } }
     </style>
 </head>
 <body class="p-2 md:p-6" id="mainBody">
 
-<button onclick="location.reload(true)" class="no-screenshot fixed right-4 bottom-24 z-[40] bg-orange-500 text-white shadow-lg w-10 h-10 rounded-full flex items-center justify-center text-lg opacity-80 active:scale-90 transition-all">🔄</button>
-<div id="screenshotNav" class="no-print"><button onclick="exitScreenshotMode()" class="bg-blue-600 text-white px-8 py-3 rounded-full font-black shadow-2xl border-4 border-white active:scale-95 transition-all">← 返回編輯模式</button></div>
+<button onclick="location.reload(true)" class="no-screenshot fixed right-4 bottom-24 z-[40] bg-orange-500 text-white shadow-lg w-10 h-10 rounded-full flex items-center justify-center text-lg opacity-80">🔄</button>
+<div id="screenshotNav" class="no-print"><button onclick="exitScreenshotMode()">← 結束截圖模式</button></div>
 
 <script>
 const firebaseConfig = { apiKey: "AIzaSyDeCI3yFPr1v9KxOmko-qim2a7EtllEHKM", authDomain: "magic-conch-gaming.firebaseapp.com", databaseURL: "https://magic-conch-gaming-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "magic-conch-gaming", storageBucket: "magic-conch-gaming.firebasestorage.app", messagingSenderId: "105735978925", appId: "1:105735978925:web:3ec77acbfd344475322b24" };
@@ -59,7 +57,8 @@ const db = firebase.database();
 </script>
 
 <div class="max-w-7xl mx-auto">
-    <div id="screenshot-header"><div class="ss-title">《報價單》</div><div id="ss-time"></div></div>
+    <div id="screenshot-header"><div class="ss-title">《神奇海螺電競 報價單》</div><div id="ss-time"></div></div>
+    
     <div class="flex border-b mb-6 no-screenshot overflow-x-auto bg-white sticky top-0 z-10 p-1">
         <button onclick="showTab('calc')" id="btn-calc" class="px-5 py-4 tab-active whitespace-nowrap">殼 報價配單</button>
         <button onclick="showTab('drafts')" id="btn-drafts" class="px-5 py-4 whitespace-nowrap">📂 訂單草稿</button>
@@ -72,7 +71,6 @@ const db = firebase.database();
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <div class="lg:col-span-3 space-y-4">
                 <div class="card p-6">
-                    <div class="flex justify-between items-center mb-6 no-screenshot"><h2 class="font-bold text-xl text-blue-600">電腦配置區</h2></div>
                     <div id="configRows" class="grid grid-cols-1 md:grid-cols-1 gap-1"></div>
                 </div>
                 <div class="card p-6 no-screenshot">
@@ -97,18 +95,17 @@ const db = firebase.database();
                         <div id="ui-totalSale" class="text-4xl font-black text-blue-600">$0</div>
                         <div id="ui-noCardShow" class="text-lg font-bold text-orange-500 mt-1 hidden">無卡分期：$0</div>
                         <div class="pt-4 border-t mt-4 text-xs text-orange-500 font-bold">無卡分期金額</div>
-                        <input type="number" id="noCardTotal" class="w-full mt-1 border-orange-200" placeholder="請輸入分期總額" oninput="calculate()">
+                        <input type="number" id="noCardTotal" class="w-full mt-1 border-orange-200" placeholder="分期總額" oninput="calculate()">
                     </div>
-                    <div id="sellerBox" class="seller-bg p-4 rounded-lg mb-6 border border-blue-100 space-y-3">
+                    <div id="sellerBox" class="seller-bg p-4 rounded-lg mb-6 border border-blue-100">
                         <div class="flex justify-between text-sm text-blue-500 border-t pt-2"><span>總成本</span><span id="ui-totalCost">$0</span></div>
                         <div class="flex justify-between text-lg font-bold text-green-600 border-t mt-2 pt-2"><span>預計淨利</span><span id="ui-totalProfit">$0</span></div>
                     </div>
                     <div class="space-y-2">
                         <button onclick="saveRecord('current')" class="w-full bg-blue-500 text-white py-3 rounded-xl font-bold shadow">儲存/更新</button>
-                        <button id="btnConvertToOrder" onclick="saveRecord('order')" class="hidden w-full bg-green-600 text-white py-3 rounded-xl font-bold shadow">✅ 轉為正式訂單</button>
-                        <button onclick="enterScreenshotMode()" class="w-full bg-orange-500 text-white py-3 rounded-xl font-bold shadow">📸 進入截圖模式</button>
-                        <button onclick="exitToOrdersWithoutSaving()" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold shadow">❌ 不儲存並返回</button>
-                        <button onclick="resetFormOnly()" class="w-full text-gray-400 text-xs mt-2 underline font-bold">清空重填</button>
+                        <button id="btnConvertToOrder" onclick="saveRecord('order')" class="hidden w-full bg-green-600 text-white py-3 rounded-xl font-bold">✅ 轉正式訂單</button>
+                        <button onclick="enterScreenshotMode()" class="w-full bg-orange-500 text-white py-3 rounded-xl font-bold">📸 截圖模式</button>
+                        <button onclick="exitToOrdersWithoutSaving()" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold">❌ 不儲存並返回</button>
                     </div>
                 </div>
             </div>
@@ -131,21 +128,20 @@ const db = firebase.database();
     <div id="tab-inventory" class="page-content hidden">
         <div class="card p-6">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="font-bold text-2xl text-gray-800">⚙️ 雲端品項管理</h2>
+                <h2 class="font-bold text-2xl">⚙️ 雲端品項管理</h2>
                 <div class="flex gap-2">
-                    <button onclick="showRecycleBin()" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg text-sm font-bold border">🗑️ 刪除紀錄</button>
-                    <button onclick="addNewCategory()" class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-bold">+ 新增大項</button>
-                    <button onclick="saveInventory()" class="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-bold">儲存並同步</button>
+                    <button onclick="addNewCategory()" class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-bold">+ 大項</button>
+                    <button onclick="saveInventory()" class="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-bold">儲存雲端</button>
                 </div>
             </div>
-            <div id="inventoryEditor" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            <div id="inventoryEditor" class="space-y-6"></div>
         </div>
     </div>
 </div>
 
 <div id="selectionModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[500]">
     <div class="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
-        <div class="p-4 border-b flex justify-between items-center bg-gray-50"><h3 id="modalTitle" class="font-bold text-blue-600">選擇品項</h3><button onclick="closeModal()" class="text-gray-400 text-3xl font-bold">×</button></div>
+        <div class="p-4 border-b flex justify-between items-center bg-gray-50"><h3 id="modalTitle" class="font-bold text-blue-600">選擇品項</h3><button onclick="closeModal()" class="text-gray-400 text-3xl">×</button></div>
         <div class="p-3 border-b bg-white"><input type="text" id="modalSearch" class="w-full" placeholder="🔍 搜尋零件名稱..." oninput="filterModalList()"></div>
         <div id="modalList" class="overflow-y-auto flex-1 p-4 space-y-2"></div>
         <div class="p-4 border-t bg-gray-50 space-y-2">
@@ -163,11 +159,10 @@ const db = firebase.database();
     </div>
 </div>
 
-<div id="recycleBinModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[10000]"><div class="bg-white rounded-2xl max-w-xl w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl"><div class="p-4 border-b flex justify-between items-center bg-gray-800 text-white"><h3 class="font-bold">🗑️ 品項刪除紀錄</h3><button onclick="closeRecycleBin()" class="text-3xl font-bold">×</button></div><div id="recycleList" class="overflow-y-auto flex-1 p-4 space-y-2 bg-gray-50"></div></div></div>
-
 <script>
-let inv = {}; let catOrder = []; let records = []; let currentSelections = {}; let editingRecordId = null; let currentCat = ""; let isSellerMode = true; let currentStatus = 'draft'; let recycleBin = [];
+let inv = {}; let catOrder = []; let records = []; let currentSelections = {}; let editingRecordId = null; let currentCat = ""; let currentStatus = 'draft';
 
+// --- Firebase 核心邏輯 ---
 db.ref('inventory').on('value', s => { if(s.exists()) inv = s.val(); renderConfig(); });
 db.ref('catOrder').on('value', s => { if(s.exists()) catOrder = s.val(); renderConfig(); });
 db.ref('records').on('value', s => { records = []; if(s.exists()) { const data = s.val(); for(let id in data) records.push(data[id]); } renderRecords(); });
@@ -199,20 +194,19 @@ function calculate() {
 }
 
 function renderConfig() {
-    const container = document.getElementById('configRows'); if(!container) return;
+    const container = document.getElementById('configRows');
     const isSS = document.getElementById('mainBody').classList.contains('screenshot-mode');
     container.innerHTML = '';
     catOrder.forEach(cat => {
         const items = currentSelections[cat] || [];
         if (isSS && items.length === 0) return;
         const badges = items.map(sel => {
-            let name = "", p = 0;
-            if(sel.isTemp) { name = sel.name; p = sel.p; } 
-            else { const target = (inv[cat] || [])[sel.idx]; if(!target) return ''; name = target.name; p = target.p; }
+            let name = sel.isTemp ? sel.name : (inv[cat] || [])[sel.idx]?.name;
+            let p = sel.isTemp ? sel.p : (inv[cat] || [])[sel.idx]?.p;
             return `<div class="selected-badge">${sel.isGift?'[贈]':''}${name}${sel.qty>1?` x${sel.qty}`:''} <span class="price-tag ml-1">($${Number(p).toLocaleString()})</span></div>`;
         }).join('');
         container.innerHTML += `<div class="p-3 border-b item-row cursor-pointer" onclick="openSelection('${cat}')">
-            <div class="text-sm font-black text-black uppercase border-l-4 border-black pl-2 tracking-widest">${cat}</div>
+            <div class="text-[11px] font-black text-blue-500 uppercase tracking-widest">${cat}</div>
             <div class="mt-1 flex flex-wrap gap-1">${badges || '<span class="text-gray-300 italic text-xs no-screenshot">尚未選擇</span>'}</div>
         </div>`;
     });
@@ -225,33 +219,15 @@ function renderRecords() {
     records.sort((a,b)=>b.id-a.id).forEach(r => {
         const progressList = ["待處理", "組裝中", "測試中", "已完工", "已寄出"];
         const pOpts = progressList.map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
-        
-        let missingItems = [];
-        if(r.deliveredItems && r.status !== 'draft') {
-            for(let key in r.deliveredItems) {
-                if(r.deliveredItems[key] === false) {
-                    const [cat, idx] = key.split('_');
-                    const sel = (r.selections[cat] || [])[idx];
-                    if (sel) {
-                        let n = sel.isTemp ? sel.name : (inv[cat] && inv[cat][sel.idx] ? inv[cat][sel.idx].name : "未知");
-                        missingItems.push(n);
-                    }
-                }
-            }
-        }
-
-        // 2. 修正人員名稱與進度選單的不對稱 (flex 垂直居中與一致的內邊距)
-        const div = `<div class="p-4 border-2 rounded-xl bg-white shadow-sm mb-2 ${missingItems.length > 0 ? 'border-red-400' : ''}">
+        const div = `<div class="p-4 border-2 rounded-xl bg-white shadow-sm mb-2">
             <div class="flex justify-between items-start">
                 <div class="flex-1">
                     <div class="text-[10px] text-gray-400 font-bold">${r.time}</div>
                     <div class="text-sm font-bold text-gray-700">${r.name || '[無名]'}</div>
                     <div class="text-blue-600 font-black text-xl">${r.total}</div>
-                    ${r.noCard > 0 ? `<div class="text-sm font-bold text-orange-500">無卡：$${Number(r.noCard).toLocaleString()}</div>` : ''}
-                    ${missingItems.length > 0 ? `<div class="text-[11px] text-red-600 font-black mt-1">⚠️ 未出貨：${missingItems.join(', ')}</div>` : ''}
                 </div>
                 <div class="flex flex-col gap-1 items-end">
-                    <div class="flex gap-1 mt-1 items-center">
+                    <div class="flex gap-1 items-center">
                         <span class="bg-gray-100 text-[10px] px-2 py-1 rounded font-bold h-[24px] flex items-center">${r.seller||'未選'}</span>
                         <select onchange="db.ref('records/'+${r.id}+'/progress').set(this.value)" class="text-[10px] px-1 py-0 border rounded w-24 h-[24px] leading-none">${pOpts}</select>
                     </div>
@@ -259,11 +235,7 @@ function renderRecords() {
             </div>
             <div class="flex gap-2 border-t mt-2 pt-2">
                 <button onclick="editRecord(${r.id})" class="flex-1 py-1 bg-blue-500 text-white text-xs rounded font-bold">編輯</button>
-                ${r.status === 'draft' ? `<button onclick="if(confirm('轉為正式訂單？')) db.ref('records/'+${r.id}+'/status').set('order')" class="bg-green-600 text-white px-3 py-1 rounded text-xs font-bold">✅ 轉正式</button>` : ''}
-                
-                ${r.status !== 'draft' ? `<button onclick="openDeliveryFast(${r.id})" class="flex-1 py-1 bg-orange-500 text-white text-xs rounded font-bold">📦 出貨管理</button>` : ''}
-                
-                ${r.status === 'order' ? `<button onclick="if(confirm('完成結案？')) db.ref('records/'+${r.id}+'/status').set('completed')" class="bg-gray-700 text-white px-3 py-1 rounded text-xs font-bold">🏁 結案</button>` : ''}
+                ${r.status === 'draft' ? `<button onclick="if(confirm('轉正式訂單？')) db.ref('records/'+${r.id}+'/status').set('order')" class="bg-green-600 text-white px-3 py-1 rounded text-xs font-bold">✅ 轉正式</button>` : `<button onclick="openDeliveryFast(${r.id})" class="flex-1 py-1 bg-orange-500 text-white text-xs rounded font-bold">📦 出貨</button>`}
                 <button onclick="if(confirm('刪除？')) db.ref('records/'+${r.id}).remove()" class="px-3 py-1 bg-red-50 text-red-400 text-xs rounded">刪除</button>
             </div>
         </div>`;
@@ -271,86 +243,88 @@ function renderRecords() {
     });
 }
 
-function enterScreenshotMode() { 
-    document.getElementById('mainBody').classList.add('screenshot-mode'); 
-    renderConfig(); 
-}
-function exitScreenshotMode() { 
-    document.getElementById('mainBody').classList.remove('screenshot-mode'); 
-    renderConfig(); 
+// --- 庫存排序邏輯 ---
+function renderInventoryEditor() {
+    const area = document.getElementById('inventoryEditor'); area.innerHTML = '';
+    catOrder.forEach((cat, cIdx) => {
+        const sec = document.createElement('div'); sec.className = "bg-white p-4 rounded-xl border relative shadow-sm";
+        sec.innerHTML = `<div class="flex justify-between items-center mb-3">
+            <div class="flex items-center gap-2">
+                <div class="flex flex-col text-[10px] text-gray-400">
+                    <button onclick="moveCat(${cIdx}, -1)">▲</button>
+                    <button onclick="moveCat(${cIdx}, 1)">▼</button>
+                </div>
+                <input class="font-bold text-blue-600 border-none p-0 w-32 focus:ring-0" value="${cat}" onchange="renameCat(${cIdx}, this.value)">
+            </div>
+            <button onclick="removeCat(${cIdx})" class="text-red-300 text-3xl">×</button>
+        </div>
+        <div id="edit-${cat}" class="space-y-1 pl-4"></div>
+        <button onclick="addInvItem('${cat}')" class="w-full text-[11px] bg-gray-50 mt-3 py-1.5 rounded border-dashed border-2 text-gray-400">+ 新增零件</button>`;
+        area.appendChild(sec);
+        (inv[cat] || []).forEach((item, idx) => {
+            const row = document.createElement('div'); row.className = "flex items-center gap-2 bg-gray-50 p-1.5 rounded border";
+            row.innerHTML = `<div class="flex flex-col text-[8px] text-gray-400 px-1">
+                    <button onclick="moveItem('${cat}', ${idx}, -1)">▲</button>
+                    <button onclick="moveItem('${cat}', ${idx}, 1)">▼</button>
+                </div>
+                <input class="flex-1 text-xs font-bold bg-transparent" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value">
+                <input type="number" class="w-20 text-xs text-blue-600" value="${item.p}" onchange="inv['${cat}'][${idx}].p=this.value">
+                <input type="number" class="w-20 text-xs text-red-400" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=this.value">
+                <button onclick="inv['${cat}'].splice(${idx}, 1); renderInventoryEditor();" class="text-red-300 px-1">×</button>`;
+            document.getElementById(`edit-${cat}`).appendChild(row);
+        });
+    });
 }
 
+function moveCat(idx, dir) { let newIdx = idx + dir; if (newIdx < 0 || newIdx >= catOrder.length) return; [catOrder[idx], catOrder[newIdx]] = [catOrder[newIdx], catOrder[idx]]; renderInventoryEditor(); }
+function moveItem(cat, idx, dir) { let newIdx = idx + dir; if (newIdx < 0 || newIdx >= inv[cat].length) return; [inv[cat][idx], inv[cat][newIdx]] = [inv[cat][newIdx], inv[cat][idx]]; renderInventoryEditor(); }
+
+// --- 介面控制與存檔 ---
+function enterScreenshotMode() { document.getElementById('mainBody').classList.add('screenshot-mode'); renderConfig(); }
+function exitScreenshotMode() { document.getElementById('mainBody').classList.remove('screenshot-mode'); renderConfig(); }
+function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); if(t==='inventory') renderInventoryEditor(); }
+
+function openSelection(cat) { currentCat = cat; document.getElementById('modalTitle').innerText = '選擇 ' + cat; document.getElementById('selectionModal').classList.remove('hidden'); renderModalList(); }
 function renderModalList() {
     const list = document.getElementById('modalList'); list.innerHTML = '';
     const selections = currentSelections[currentCat] || [];
     (inv[currentCat] || []).forEach((item, idx) => {
         const sel = selections.find(s => !s.isTemp && s.idx === idx);
-        // 1. 修正選項無法按的問題：將 onclick 綁定在容器上，並確保內部按鈕事件停止冒泡
-        list.innerHTML += `<div class="pick-item p-3 flex justify-between items-center rounded-lg mb-1 ${sel?'active':''}" onclick="togglePick(${idx})">
-            <div class="flex-1 pointer-events-none">
+        list.innerHTML += `<div class="pick-item p-3 flex justify-between items-center mb-1 ${sel?'active':''}" onclick="togglePick(${idx})">
+            <div class="flex-1">
                 <div class="font-bold text-sm">${item.name}</div>
                 <div class="text-xs text-blue-500 font-bold">$${Number(item.p).toLocaleString()}</div>
             </div>
             <div class="flex items-center gap-3" onclick="event.stopPropagation()">
-                <label class="text-xs flex items-center gap-1 cursor-pointer">
-                    <input type="checkbox" ${sel?.isGift?'checked':''} onchange="updateSubItem(${idx}, 'gift', this.checked, false)"> 贈
-                </label>
-                <div class="flex items-center border rounded bg-white overflow-hidden">
-                    <button class="px-2 py-1 bg-gray-50 text-xs font-bold" onclick="updateSubItem(${idx}, 'qty', -1, false)">-</button>
-                    <span class="px-2 text-xs font-bold min-w-[20px] text-center">${sel?.qty || 1}</span>
-                    <button class="px-2 py-1 bg-gray-50 text-xs font-bold" onclick="updateSubItem(${idx}, 'qty', 1, false)">+</button>
+                <label class="text-xs flex items-center gap-1"><input type="checkbox" ${sel?.isGift?'checked':''} onchange="updateSubItem(${idx}, 'gift', this.checked)"> 贈</label>
+                <div class="flex items-center border rounded bg-white">
+                    <button class="px-2 py-1 bg-gray-50 text-xs" onclick="updateSubItem(${idx}, 'qty', -1)">-</button>
+                    <span class="px-2 text-xs font-bold">${sel?.qty || 1}</span>
+                    <button class="px-2 py-1 bg-gray-50 text-xs" onclick="updateSubItem(${idx}, 'qty', 1)">+</button>
                 </div>
             </div>
         </div>`;
     });
 }
 
-function updateSubItem(idx, type, val, isTemp) {
-    if(!currentSelections[currentCat]) return;
-    const sel = currentSelections[currentCat].find(s => !s.isTemp && s.idx === idx);
+function togglePick(idx) {
+    if(!currentSelections[currentCat]) currentSelections[currentCat] = [];
+    const i = currentSelections[currentCat].findIndex(s => !s.isTemp && s.idx === idx);
+    if(i > -1) currentSelections[currentCat].splice(i,1); else currentSelections[currentCat].push({idx, isGift:false, qty:1, isTemp: false});
+    renderConfig(); renderModalList();
+}
+function updateSubItem(idx, type, val) {
+    const sel = (currentSelections[currentCat] || []).find(s => !s.isTemp && s.idx === idx);
     if(!sel) return;
     if(type==='qty') sel.qty = Math.max(1, (sel.qty||1)+val);
     if(type==='gift') sel.isGift = val;
     renderConfig(); renderModalList();
 }
 
-function renderInventoryEditor() {
-    const area = document.getElementById('inventoryEditor'); area.innerHTML = '';
-    catOrder.forEach((cat, cIdx) => {
-        const sec = document.createElement('div'); sec.className = "bg-white p-4 rounded-xl border relative shadow-sm mb-4";
-        // 4. 補回大項調整順序按鈕
-        sec.innerHTML = `<div class="flex justify-between items-center mb-2">
-            <div class="flex items-center gap-2 flex-1">
-                <div class="flex flex-col">
-                    <button onclick="moveCat(${cIdx}, -1)" class="text-[10px] text-gray-400 hover:text-blue-500">▲</button>
-                    <button onclick="moveCat(${cIdx}, 1)" class="text-[10px] text-gray-400 hover:text-blue-500">▼</button>
-                </div>
-                <input class="font-bold text-blue-600 w-full" value="${cat}" onchange="renameCat(${cIdx}, this.value)">
-            </div>
-            <button onclick="removeCat(${cIdx})" class="text-red-300 text-3xl font-bold ml-2">×</button>
-        </div>
-        <div id="edit-${cat}" class="space-y-3"></div>
-        <button onclick="addInvItem('${cat}')" class="w-full text-xs border-dashed border-2 mt-4 py-2 rounded-lg font-bold text-gray-400">+ 新增零件</button>`;
-        area.appendChild(sec);
-        (inv[cat] || []).forEach((item, idx) => {
-            const row = document.createElement('div'); row.className = "bg-gray-50 p-3 rounded-lg border space-y-2 mb-2";
-            row.innerHTML = `<input type="text" class="text-sm font-black w-full bg-white border p-2 rounded shadow-sm" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value">
-                <div class="flex gap-2"><input type="number" class="w-1/3 text-xs p-1" value="${item.p}" placeholder="售價" onchange="inv['${cat}'][${idx}].p=this.value"><input type="number" class="w-1/3 text-xs text-red-600 font-bold p-1 bg-white" value="${item.c||0}" placeholder="成本" onchange="inv['${cat}'][${idx}].c=this.value">
-                    <button onclick="inv['${cat}'][${idx}].outOfStock=!inv['${cat}'][${idx}].outOfStock; renderInventoryEditor();" class="w-1/3 text-[10px] font-bold rounded ${item.outOfStock?'bg-red-500 text-white':'bg-white text-gray-400 border'}">缺貨</button>
-                </div><div class="flex justify-end pt-1"><button onclick="deleteInvItem('${cat}', ${idx})" class="text-[10px] bg-red-50 text-red-500 px-4 py-1.5 rounded-full font-black border border-red-200">刪除品項 ×</button></div>`;
-            document.getElementById(`edit-${cat}`).appendChild(row);
-        });
-    });
-}
-
-// 4. 補回移動分類順序的功能
-function moveCat(idx, dir) {
-    const newIdx = idx + dir;
-    if (newIdx < 0 || newIdx >= catOrder.length) return;
-    const temp = catOrder[idx];
-    catOrder[idx] = catOrder[newIdx];
-    catOrder[newIdx] = temp;
-    db.ref('catOrder').set(catOrder).then(() => renderInventoryEditor());
+function saveRecord(st) { 
+    const id = editingRecordId || Date.now();
+    const r = { id, time: new Date().toLocaleString(), name: document.getElementById('custName').value, seller: document.getElementById('infoSeller').value, selections: currentSelections, total: document.getElementById('ui-totalSale').innerText, noCard: document.getElementById('noCardTotal').value, status: st === 'current' ? currentStatus : st, discount: document.getElementById('discountAmt').value, progress: "待處理" };
+    db.ref('records/' + id).update(r).then(() => { alert('已儲存'); resetForm(); showTab('drafts'); });
 }
 
 function editRecord(id) {
@@ -359,15 +333,16 @@ function editRecord(id) {
     document.getElementById('custName').value = r.name || ''; 
     document.getElementById('discountAmt').value = r.discount || 0; 
     document.getElementById('noCardTotal').value = r.noCard || '';
-    document.getElementById('infoSeller').value = r.seller || '朱冠穎';
     if(r.status === 'draft') document.getElementById('btnConvertToOrder').classList.remove('hidden'); else document.getElementById('btnConvertToOrder').classList.add('hidden');
     renderConfig(); showTab('calc');
 }
 
-function saveRecord(st) { 
-    const id = editingRecordId || Date.now();
-    const r = { id, time: new Date().toLocaleString(), name: document.getElementById('custName').value, seller: document.getElementById('infoSeller').value, selections: currentSelections, total: document.getElementById('ui-totalSale').innerText, noCard: document.getElementById('noCardTotal').value, status: st === 'current' ? currentStatus : st, discount: document.getElementById('discountAmt').value };
-    db.ref('records/' + id).update(r).then(() => { alert('成功'); resetForm(); showTab('drafts'); });
+function addTempItem() {
+    const n = document.getElementById('tempName').value; const p = document.getElementById('tempPrice').value; const c = document.getElementById('tempCost').value;
+    if(!n) return;
+    if(!currentSelections[currentCat]) currentSelections[currentCat] = [];
+    currentSelections[currentCat].push({name:n, p, c, isGift:false, qty:1, isTemp: true});
+    renderConfig(); renderModalList();
 }
 
 let deliveryId = null; let tempDeliv = {};
@@ -384,82 +359,19 @@ function openDeliveryFast(id) {
     document.getElementById('deliveryModal').classList.remove('hidden');
 }
 function saveDeliveryStatus() { db.ref('records/'+deliveryId+'/deliveredItems').set(tempDeliv).then(() => document.getElementById('deliveryModal').classList.add('hidden')); }
-function closeDeliveryModal() { document.getElementById('deliveryModal').classList.add('hidden'); }
-function exitToOrdersWithoutSaving() { if(confirm('確定不儲存並返回？')) { resetForm(); showTab('drafts'); } }
-function addCustomSeller() { const name = prompt("請輸入新的人員姓名："); if (name) { const select = document.getElementById('infoSeller'); const opt = document.createElement('option'); opt.value = name; opt.text = name; opt.selected = true; select.add(opt); } }
+
+function resetForm() { editingRecordId=null; currentSelections={}; document.querySelectorAll('input').forEach(i=>i.value=""); renderConfig(); }
 function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
-function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); if(t==='inventory') renderInventoryEditor(); }
+function saveInventory() { db.ref('inventory').set(inv); db.ref('catOrder').set(catOrder); alert('同步成功'); }
+function addNewCategory() { const n = prompt("大項名稱："); if(n) { catOrder.push(n); inv[n] = []; renderInventoryEditor(); } }
+function addInvItem(c) { inv[c].push({name: "新零件", p: 0, c: 0}); renderInventoryEditor(); }
+function removeCat(idx) { if(confirm('刪除？')) { delete inv[catOrder[idx]]; catOrder.splice(idx,1); renderInventoryEditor(); } }
+function renameCat(idx, newName) { const old = catOrder[idx]; inv[newName] = inv[old]; delete inv[old]; catOrder[idx] = newName; }
+function closeDeliveryModal() { document.getElementById('deliveryModal').classList.add('hidden'); }
+function exitToOrdersWithoutSaving() { if(confirm('不儲存？')) { resetForm(); showTab('drafts'); } }
+function addCustomSeller() { const n = prompt("人員名："); if(n) { const s = document.getElementById('infoSeller'); const o = document.createElement('option'); o.value=n; o.text=n; o.selected=true; s.add(o); } }
 
-// 1. 修正選項無法按的核心函數
-function togglePick(idx) {
-    if(!currentSelections[currentCat]) currentSelections[currentCat] = [];
-    const i = currentSelections[currentCat].findIndex(s => !s.isTemp && s.idx === idx);
-    if(i > -1) currentSelections[currentCat].splice(i,1); else currentSelections[currentCat].push({idx, isGift:false, qty:1, isTemp: false});
-    renderConfig(); renderModalList();
-}
-
-function addInvItem(c) { if(!inv[c]) inv[c]=[]; inv[c].push({name:"", p:0, c:0, outOfStock: false}); renderInventoryEditor(); }
-function deleteInvItem(cat, idx) { const item = inv[cat][idx]; recycleBin.push({ type: 'item', name: item.name, cat: cat, data: item }); inv[cat].splice(idx, 1); renderInventoryEditor(); }
-function resetForm() { editingRecordId=null; currentSelections={}; document.querySelectorAll('input:not([type="checkbox"])').forEach(i=>i.value=""); renderConfig(); }
-function resetFormOnly() { document.querySelectorAll('input:not([type="checkbox"])').forEach(i=>i.value=""); renderConfig(); }
 window.onload = () => renderConfig();
-
-function openSelection(cat) {
-    currentCat = cat;
-    document.getElementById('modalTitle').innerText = '選擇 ' + cat;
-    document.getElementById('selectionModal').classList.remove('hidden');
-    document.getElementById('modalSearch').value = '';
-    renderModalList();
-}
-function filterModalList() {
-    const q = document.getElementById('modalSearch').value.toLowerCase();
-    document.querySelectorAll('.pick-item').forEach(el => {
-        const text = el.innerText.toLowerCase();
-        el.style.display = text.includes(q) ? 'flex' : 'none';
-    });
-}
-function addTempItem() {
-    const n = document.getElementById('tempName').value;
-    const p = document.getElementById('tempPrice').value;
-    const c = document.getElementById('tempCost').value;
-    if(!n) return;
-    if(!currentSelections[currentCat]) currentSelections[currentCat] = [];
-    currentSelections[currentCat].push({name:n, p, c, isGift:false, qty:1, isTemp: true});
-    document.getElementById('tempName').value=''; document.getElementById('tempPrice').value=''; document.getElementById('tempCost').value='';
-    renderConfig(); renderModalList();
-}
-function saveInventory() {
-    db.ref('inventory').set(inv).then(() => alert('雲端庫存已同步'));
-}
-function renameCat(idx, newName) {
-    const oldName = catOrder[idx];
-    if(oldName === newName) return;
-    inv[newName] = inv[oldName];
-    delete inv[oldName];
-    catOrder[idx] = newName;
-    db.ref('catOrder').set(catOrder);
-    db.ref('inventory').set(inv);
-}
-function removeCat(idx) {
-    if(confirm('確定刪除整個分類？')) {
-        const name = catOrder[idx];
-        delete inv[name];
-        catOrder.splice(idx,1);
-        db.ref('catOrder').set(catOrder);
-        db.ref('inventory').set(inv);
-        renderInventoryEditor();
-    }
-}
-function addNewCategory() {
-    const n = prompt("請輸入新分類名稱：");
-    if(n) {
-        catOrder.push(n);
-        inv[n] = [];
-        db.ref('catOrder').set(catOrder);
-        db.ref('inventory').set(inv);
-        renderInventoryEditor();
-    }
-}
 </script>
 </body>
 </html>
