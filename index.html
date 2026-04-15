@@ -211,21 +211,16 @@ db.ref('inventory').on('value', s => { if(s.exists()) inv = s.val(); renderConfi
 db.ref('catOrder').on('value', s => { if(s.exists()) catOrder = s.val(); renderConfig(); });
 db.ref('records').on('value', s => { records = []; if(s.exists()) { const data = s.val(); for(let id in data) records.push(data[id]); } renderRecords(); });
 
-// 修正後的智慧返回邏輯
 function goBack() {
-    // 優先檢查是否正在編輯模式
     if (editingRecordId !== null) {
         const r = records.find(x => x.id === editingRecordId);
-        // 判斷原始分類決定回哪裡
         let target = 'drafts';
         if (r && r.status === 'order') target = 'orders';
         if (r && r.status === 'completed') target = 'completed';
-        
-        resetForm(); // 強制清空編輯狀態
-        showTab(target); // 強制跳轉回清單
-        return; // 終止後續 history.back 邏輯
+        resetForm();
+        showTab(target);
+        return;
     }
-
     const activeTab = document.querySelector('.page-content:not(.hidden)').id;
     if (activeTab !== 'tab-calc') {
         showTab('calc');
@@ -289,7 +284,7 @@ function renderRecords() {
         let undelivered = [];
         for (let cat in r.selections) {
             r.selections[cat].forEach((sel, idx) => {
-                const k = `${cat}_${idx}`; 
+                const k = `${cat}_${idx}`;
                 const isD = r.deliveredItems ? r.deliveredItems[k] !== false : true;
                 if (!isD) {
                     let n = sel.isTemp ? sel.name : (inv[cat] && inv[cat][sel.idx] ? inv[cat][sel.idx].name : "未知品項");
@@ -362,21 +357,32 @@ function toggleAdminMode() {
 function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); if(t==='inventory') renderInventoryEditor(); }
 
 function enterScreenshotMode() { 
-    // 設定截圖時間
+    // 1. 設定截圖日期時間
     const now = new Date();
-    const timeStr = now.getFullYear() + '/' + (now.getMonth() + 1) + '/' + now.getDate() + ' ' + now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    const timeStr = now.getFullYear() + '/' + (now.getMonth() + 1).toString().padStart(2, '0') + '/' + now.getDate().toString().padStart(2, '0') + ' ' + now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
     document.getElementById('ss-time').innerText = '報價日期：' + timeStr;
 
-    // 同步數值到右下角截圖區
+    // 2. 同步數值到右下角截圖區
+    calculate(); // 確保數值是最新的
     document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value || 0).toLocaleString();
     document.getElementById('ss-val-untaxed').innerText = document.getElementById('ui-untaxed').innerText;
     document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText;
 
+    // 3. 切換模式並強制移除 hidden 類別
     document.getElementById('mainBody').classList.add('screenshot-mode'); 
+    document.getElementById('screenshot-header').classList.remove('hidden');
+    document.getElementById('screenshot-footer').classList.remove('hidden');
+    
     renderConfig(); 
 }
 
-function exitScreenshotMode() { document.getElementById('mainBody').classList.remove('screenshot-mode'); renderConfig(); }
+function exitScreenshotMode() { 
+    document.getElementById('mainBody').classList.remove('screenshot-mode'); 
+    document.getElementById('screenshot-header').classList.add('hidden');
+    document.getElementById('screenshot-footer').classList.add('hidden');
+    renderConfig(); 
+}
+
 function openSelection(cat) { currentCat = cat; document.getElementById('modalTitle').innerText = '🔍 ' + cat; document.getElementById('selectionModal').classList.remove('hidden'); document.getElementById('modalSearch').value = ''; renderModalList(); }
 function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
 function filterModalList() { const q = document.getElementById('modalSearch').value.toLowerCase(); document.querySelectorAll('.pick-item').forEach(el => { el.style.display = el.innerText.toLowerCase().includes(q) ? 'flex' : 'none'; }); }
