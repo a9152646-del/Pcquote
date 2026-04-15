@@ -409,6 +409,7 @@ function updateSubItem(idx, type, val, isTemp, tIdx) {
     renderConfig(); renderModalList();
 }
 function addTempItem() {
+    // 補回臨時新增區成本變數讀取
     const name = document.getElementById('tempName').value, p = document.getElementById('tempPrice').value, c = document.getElementById('tempCost').value; 
     if(!name||!p) return;
     if(!currentSelections[currentCat]) currentSelections[currentCat] = [];
