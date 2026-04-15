@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.07</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.08</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -58,11 +58,14 @@
         .screenshot-mode body { background: #fff !important; padding-top: 100px !important; }
         .screenshot-mode .max-w-7xl { max-width: 700px !important; margin: 0 auto !important; }
         
-        /* 雲端項目優化：移除框框，防止文字超出 */
-        .inv-item-row { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; border: 1px solid #f1f5f9; background: #fff; margin-bottom: 6px; overflow: hidden; }
-        .inv-item-row input[type="text"] { border: none !important; background: transparent !important; padding: 0 !important; flex: 1; min-width: 0; }
+        /* 雲端項目優化：名稱額外一排 */
+        .inv-item-row { display: flex; flex-direction: column; padding: 10px 12px; border-radius: 8px; border: 1px solid #f1f5f9; background: #fff; margin-bottom: 8px; }
+        .inv-item-name-row { display: flex; align-items: center; gap: 8px; width: 100%; margin-bottom: 6px; }
+        .inv-item-name-row input[type="text"] { border: none !important; background: transparent !important; padding: 0 !important; flex: 1; font-weight: bold; font-size: 13px; }
+        .inv-item-ctrl-row { display: flex; items-center; justify-content: flex-end; gap: 8px; border-top: 1px dashed #f1f5f9; pt-2; }
+        
         .inv-out-of-stock { background-color: #fff1f2 !important; border-color: #fecdd3 !important; }
-        .stock-btn { font-size: 11px; padding: 4px 6px; border-radius: 6px; font-weight: bold; border: 1px solid #e2e8f0; cursor: pointer; min-width: 55px; text-align: center; }
+        .stock-btn { font-size: 11px; padding: 3px 6px; border-radius: 6px; font-weight: bold; border: 1px solid #e2e8f0; cursor: pointer; min-width: 55px; text-align: center; }
         .stock-btn.active { background: #22c55e; color: white; border-color: #22c55e; }
         .stock-btn.oos { background: #ef4444; color: white; border-color: #ef4444; }
 
@@ -273,14 +276,17 @@ function renderRecords() {
         for (let cat in r.selections) {
             r.selections[cat].forEach((sel, idx) => {
                 const k = `${cat}_${idx}`;
-                const isD = r.deliveredItems && r.deliveredItems[k] === true;
+                // 預設為出貨：只有明確定為 false 才算未出貨
+                const isD = r.deliveredItems ? r.deliveredItems[k] !== false : true;
                 if (!isD) {
                     let n = sel.isTemp ? sel.name : (inv[cat] && inv[cat][sel.idx] ? inv[cat][sel.idx].name : "未知品項");
                     undelivered.push(n);
                 }
             });
         }
-        const undeliveredHtml = undelivered.length > 0 ? `<div class="mt-2 p-2 bg-red-50 rounded text-[10px] text-red-600 font-bold"><div class="border-b border-red-100 mb-1">⚠️ 未出貨：</div>${undelivered.join('、')}</div>` : '';
+        
+        // 草稿不顯示未出貨內容
+        const undeliveredHtml = (r.status !== 'draft' && undelivered.length > 0) ? `<div class="mt-2 p-2 bg-red-50 rounded text-[10px] text-red-600 font-bold"><div class="border-b border-red-100 mb-1">⚠️ 未出貨：</div>${undelivered.join('、')}</div>` : '';
 
         const div = `<div class="p-4 border-2 rounded-xl bg-white shadow-sm space-y-3">
             <div class="flex justify-between items-start">
@@ -312,12 +318,15 @@ function renderInventoryEditor() {
         area.appendChild(sec);
         (inv[cat] || []).forEach((item, idx) => {
             const row = document.createElement('div'); row.className = `inv-item-row ${item.outOfStock ? 'inv-out-of-stock' : ''}`;
+            // 修正佈局：零件名稱單獨一整排
             row.innerHTML = `
-                <div class="flex flex-col text-[10px] text-gray-300 px-1 flex-shrink-0"><button onclick="moveItem('${cat}', ${idx}, -1)">▲</button><button onclick="moveItem('${cat}', ${idx}, 1)">▼</button></div>
-                <input type="text" class="font-bold text-xs" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value">
-                <div class="flex items-center gap-2 flex-shrink-0">
-                    <div class="flex items-center gap-1 border-2 rounded-lg bg-white px-2"><span class="text-[10px] text-gray-400">售</span><input type="number" class="w-12 text-xs font-black text-blue-600 border-none p-0" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div>
-                    <div class="flex items-center gap-1 border-2 rounded-lg bg-white px-2"><span class="text-[10px] text-gray-400">本</span><input type="number" class="w-12 text-xs font-black text-red-400 border-none p-0" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div>
+                <div class="inv-item-name-row">
+                    <div class="flex flex-col text-[10px] text-gray-300 px-1 flex-shrink-0"><button onclick="moveItem('${cat}', ${idx}, -1)">▲</button><button onclick="moveItem('${cat}', ${idx}, 1)">▼</button></div>
+                    <input type="text" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value" placeholder="請輸入零件名稱...">
+                </div>
+                <div class="inv-item-ctrl-row">
+                    <div class="flex items-center gap-1 border-2 rounded-lg bg-white px-2 flex-shrink-0"><span class="text-[10px] text-gray-400">售</span><input type="number" class="w-12 text-xs font-black text-blue-600 border-none p-0" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div>
+                    <div class="flex items-center gap-1 border-2 rounded-lg bg-white px-2 flex-shrink-0"><span class="text-[10px] text-gray-400">本</span><input type="number" class="w-12 text-xs font-black text-red-400 border-none p-0" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div>
                     <button onclick="toggleStockStatus('${cat}', ${idx})" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button>
                     <button onclick="inv['${cat}'].splice(${idx}, 1); renderInventoryEditor();" class="text-red-200 text-xl px-1">×</button>
                 </div>`;
@@ -396,7 +405,9 @@ function openDeliveryFast(id) {
     const list = document.getElementById('deliveryList'); list.innerHTML = '';
     for (let cat in r.selections) {
         r.selections[cat].forEach((sel, idx) => {
-            const k = `${cat}_${idx}`; const isD = tempDeliv[k] === true;
+            const k = `${cat}_${idx}`; 
+            // 預設打勾：只有明確為 false 的才不打勾
+            const isD = tempDeliv[k] !== false;
             let n = sel.isTemp ? sel.name : (inv[cat] && inv[cat][sel.idx] ? inv[cat][sel.idx].name : "未知品項");
             list.innerHTML += `<div class="flex justify-between items-center p-3 border-2 rounded-xl bg-white"><div>${n}</div><input type="checkbox" class="w-5 h-5" ${isD?'checked':''} onchange="db.ref('records/'+${id}+'/deliveredItems/${k}').set(this.checked)"></div>`;
         });
