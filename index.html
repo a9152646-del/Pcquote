@@ -14,7 +14,6 @@
             background-color: #f8fafc; 
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
             padding-top: 105px !important; 
-            /* 豬豬，這裡底部空間直接給 200，讓內容一定會高過按鈕 */
             padding-bottom: 200px !important; 
             font-size: 14px; 
             color: #334155; 
@@ -66,13 +65,16 @@
         .stock-btn.active { background: #22c55e; color: white; border-color: #22c55e; }
         .stock-btn.oos { background: #ef4444; color: white; border-color: #ef4444; }
 
+        /* 💾 豬豬，這裡新增品相按鈕樣式 */
+        .supp-btn { font-size: 10px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 4px; border: 1px solid #e2e8f0; cursor: pointer; background: #f8fafc; color: #94a3b8; font-weight: bold; }
+        .supp-btn.active { background: #6366f1; color: white; border-color: #6366f1; }
+
         button { font-size: 14px !important; }
 
-        /* 💾 豬豬，這裡單獨控制儲存鈕的位置，確保它在 🔄 上方 */
         #floatingSaveBtn {
             position: fixed;
             right: 16px;
-            bottom: 230px; /* 拉高位置，確保在更新鍵上方 */
+            bottom: 230px; 
             z-index: 100;
         }
     </style>
@@ -250,14 +252,9 @@ function calculate() {
         });
     });
 
-    // 豬豬修正邏輯：
-    // 總額 (給客戶看的現金部分) = (零件總價 - 折扣) - 無卡分期
     const finalSale = (subP - disc) - noCard; 
-    
-    // 利潤 (含無卡整筆) = (零件總價 - 折扣 - 成本) + 無卡分期
     const profit = (subP - disc - subC) + noCard;
-
-    const untaxed = Math.round((subP - disc) / 1.05); // 未稅按原本零件折扣後總價算
+    const untaxed = Math.round((subP - disc) / 1.05);
     document.getElementById('ui-untaxed').innerText = `$${untaxed.toLocaleString()}`;
     document.getElementById('ui-totalSale').innerText = `$${finalSale.toLocaleString()}`;
     
@@ -322,12 +319,20 @@ function renderInventoryEditor() {
         area.appendChild(sec);
         (inv[cat] || []).forEach((item, idx) => {
             const row = document.createElement('div'); row.className = `inv-item-row ${item.outOfStock ? 'inv-out-of-stock' : ''}`;
+            
+            // 豬豬，這裡處理品相複選按鈕的 HTML
+            const suppList = item.suppliers || [];
+            const suppHtml = ['原', '速', '裕'].map(s => 
+                `<button onclick="toggleSupplier('${cat}', ${idx}, '${s}')" class="supp-btn ${suppList.includes(s) ? 'active' : ''}">${s}</button>`
+            ).join('');
+
             row.innerHTML = `
                 <div class="inv-item-name-row">
                     <div class="flex flex-col text-[10px] text-gray-300 px-1 flex-shrink-0"><button onclick="moveItem('${cat}', ${idx}, -1)">▲</button><button onclick="moveItem('${cat}', ${idx}, 1)">▼</button></div>
                     <input type="text" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value" placeholder="請輸入零件名稱...">
                 </div>
                 <div class="inv-item-ctrl-row">
+                    <div class="flex gap-1 mr-auto">${suppHtml}</div>
                     <div class="flex items-center gap-1 border-2 rounded-lg bg-white px-2 flex-shrink-0"><span class="text-[10px] text-gray-400">售</span><input type="number" class="w-12 text-xs font-black text-blue-600 border-none p-0" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div>
                     <div class="flex items-center gap-1 border-2 rounded-lg bg-white px-2 flex-shrink-0"><span class="text-[10px] text-gray-400">本</span><input type="number" class="w-12 text-xs font-black text-red-400 border-none p-0" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div>
                     <button onclick="toggleStockStatus('${cat}', ${idx})" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button>
@@ -336,6 +341,15 @@ function renderInventoryEditor() {
             document.getElementById(`edit-${cat}`).appendChild(row);
         });
     });
+}
+
+// 豬豬，切換供應商品相的函式
+function toggleSupplier(cat, idx, s) {
+    if(!inv[cat][idx].suppliers) inv[cat][idx].suppliers = [];
+    const i = inv[cat][idx].suppliers.indexOf(s);
+    if(i > -1) inv[cat][idx].suppliers.splice(i, 1);
+    else inv[cat][idx].suppliers.push(s);
+    renderInventoryEditor();
 }
 
 function toggleStockStatus(cat, idx) {
@@ -347,14 +361,8 @@ function toggleAdminMode() {
     const isChecked = document.getElementById('adminToggle').checked;
     const body = document.getElementById('mainBody');
     const box = document.getElementById('sellerBox');
-    if(isChecked) { 
-        body.classList.remove('hide-prices'); 
-        box.classList.remove('invisible'); 
-        box.classList.remove('hidden'); // 雙重保險確保利潤顯示
-    } else { 
-        body.classList.add('hide-prices'); 
-        box.classList.add('invisible'); 
-    }
+    if(isChecked) { body.classList.remove('hide-prices'); box.classList.remove('invisible'); box.classList.remove('hidden'); } 
+    else { body.classList.add('hide-prices'); box.classList.add('invisible'); }
 }
 
 function showTab(t) { 
@@ -362,29 +370,19 @@ function showTab(t) {
     document.getElementById('tab-'+t).classList.remove('hidden'); 
     document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); 
     document.getElementById('btn-'+t).classList.add('tab-active'); 
-    
-    // 豬豬，這裡強勢控制儲存鈕
     const fsBtn = document.getElementById('floatingSaveBtn');
-    if(t === 'inventory') {
-        renderInventoryEditor();
-        fsBtn.classList.remove('hidden');
-        fsBtn.style.display = 'flex';
-    } else {
-        fsBtn.classList.add('hidden');
-        fsBtn.style.display = 'none';
-    }
+    if(t === 'inventory') { renderInventoryEditor(); fsBtn.classList.remove('hidden'); fsBtn.style.display = 'flex'; } 
+    else { fsBtn.classList.add('hidden'); fsBtn.style.display = 'none'; }
 }
 
 function enterScreenshotMode() { 
     const now = new Date();
     const timeStr = now.getFullYear() + '/' + (now.getMonth() + 1).toString().padStart(2, '0') + '/' + now.getDate().toString().padStart(2, '0') + ' ' + now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
     document.getElementById('ss-time').innerText = '報價日期：' + timeStr;
-
     calculate(); 
     document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value || 0).toLocaleString();
     document.getElementById('ss-val-untaxed').innerText = document.getElementById('ui-untaxed').innerText;
     document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText;
-
     document.getElementById('mainBody').classList.add('screenshot-mode'); 
     document.getElementById('screenshot-header').style.display = 'block';
     document.getElementById('screenshot-footer').style.display = 'block';
@@ -471,10 +469,7 @@ function renameCat(idx, newName) { const old = catOrder[idx]; inv[newName] = inv
 function addCustomSeller() { const n = prompt("請輸入業務名稱："); if(n) { const s = document.getElementById('infoSeller'); const o = document.createElement('option'); o.value=n; o.text=n; o.selected=true; s.add(o); } }
 function closeDeliveryModal() { document.getElementById('deliveryModal').classList.add('hidden'); }
 
-window.onload = () => {
-    renderConfig();
-    showTab('calc');
-};
+window.onload = () => { renderConfig(); showTab('calc'); };
 </script>
 </body>
 </html>
