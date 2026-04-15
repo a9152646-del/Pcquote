@@ -6,8 +6,8 @@
     <title>神奇海螺電競 | 專業報價與庫存系統 v8.2</title>
 
     <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="apple-touch-icon" href="IMG_4759.jpeg?v=1">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="IMG_4759.jpeg?v=1">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -30,12 +30,14 @@
         .screenshot-mode .card { box-shadow: none !important; border: 2px solid #334155 !important; border-radius: 0 !important; padding: 2rem !important; }
         .screenshot-mode .item-row { border: none; border-bottom: 1px dashed #ccc; padding: 8px 0; }
         .screenshot-mode .item-row.empty-row { display: none !important; visibility: hidden !important; height: 0 !important; padding: 0 !important; margin: 0 !important; }
+        
         .screenshot-mode .selected-badge { border: none; background: none; padding: 0; font-size: 14px; color: #000; }
         .screenshot-mode #screenshot-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #334155; padding-bottom: 10px; }
         .screenshot-mode #screenshot-header .ss-title { width: 100%; text-align: center; font-size: 1.5rem; font-weight: 900; margin-bottom: 8px; }
         .screenshot-mode #screenshot-header #ss-time { width: 100%; text-align: left; font-size: 0.875rem; color: #4b5563; }
         .screenshot-mode #screenshot-footer { display: block; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; }
 
+        /* 品項選取視覺強化 */
         .pick-item { transition: all 0.2s; border: 2px solid #e5e7eb; cursor: pointer; border-radius: 10px; }
         .pick-item.active { background-color: #eff6ff; border-color: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.2); }
         .is-out-of-stock { opacity: 0.4; background-color: #f1f5f9 !important; border-color: #cbd5e1 !important; color: #64748b !important; }
@@ -68,10 +70,10 @@ const db = firebase.database();
     </div>
 
     <div class="flex border-b mb-6 no-screenshot overflow-x-auto bg-white sticky top-0 z-10">
-        <button onclick="showTab('calc')" id="btn-calc" class="px-6 py-3 tab-active whitespace-nowrap">🐚 報價配單</button>
-        <button onclick="showTab('orders')" id="btn-orders" class="px-6 py-3 whitespace-nowrap">📋 訂單管理</button>
-        <button onclick="showTab('completed')" id="btn-completed" class="px-6 py-3 whitespace-nowrap">🏁 已結案</button>
-        <button onclick="showTab('inventory')" id="btn-inventory" class="px-6 py-3 whitespace-nowrap">⚙️ 庫存品項</button>
+        <button onclick="showTab('calc')" id="btn-calc" class="px-6 py-4 tab-active whitespace-nowrap">🐚 報價配單</button>
+        <button onclick="showTab('orders')" id="btn-orders" class="px-6 py-4 whitespace-nowrap">📋 訂單管理</button>
+        <button onclick="showTab('completed')" id="btn-completed" class="px-6 py-4 whitespace-nowrap">🏁 已結案</button>
+        <button onclick="showTab('inventory')" id="btn-inventory" class="px-6 py-4 whitespace-nowrap">⚙️ 庫存品項</button>
     </div>
 
     <div id="tab-calc" class="page-content">
@@ -126,12 +128,6 @@ const db = firebase.database();
         </div>
     </div>
 
-    <div id="screenshot-footer" class="text-right space-y-1">
-        <div id="ss-discount" class="text-sm text-red-500 font-bold"></div>
-        <div id="ss-untaxed" class="text-sm text-gray-600"></div>
-        <div id="ss-total" class="text-2xl font-bold text-blue-700"></div>
-    </div>
-
     <div id="tab-orders" class="page-content hidden">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="card p-6">
@@ -162,56 +158,41 @@ const db = firebase.database();
                 </div>
             </div>
             <div id="inventoryEditor" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            
+            <div class="mt-12 p-6 bg-red-50 rounded-2xl border-2 border-dashed border-red-200">
+                <h3 class="font-bold text-red-500 mb-4">🗑️ 品項刪除暫存區</h3>
+                <div id="trashContainer" class="space-y-2"></div>
+            </div>
         </div>
     </div>
 </div>
 
-<div id="screenshotNav" style="display: none; position: fixed; top: 20px; right: 20px; z-index: 999999;" class="flex gap-2">
-    <button onclick="exitScreenshotMode()" class="bg-blue-600 text-white px-6 py-2 rounded-full font-bold shadow-xl">返回編輯</button>
-</div>
-
 <div id="selectionModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        <div class="p-4 border-b flex justify-between items-center bg-gray-50">
-            <h3 id="modalTitle" class="font-bold text-blue-600">選擇品項</h3>
-            <button onclick="closeModal()" class="text-gray-400 text-xl font-bold">×</button>
-        </div>
-        <div class="p-2 border-b bg-white">
-            <input type="text" id="modalSearch" class="w-full" placeholder="🔍 搜尋零件名稱..." oninput="filterModalList()">
-        </div>
+        <div class="p-4 border-b flex justify-between items-center bg-gray-50"><h3 id="modalTitle" class="font-bold text-blue-600">選擇品項</h3><button onclick="closeModal()" class="text-gray-400 text-xl font-bold">×</button></div>
+        <div class="p-2 border-b bg-white"><input type="text" id="modalSearch" class="w-full" placeholder="🔍 搜尋零件名稱..." oninput="filterModalList()"></div>
         <div id="modalList" class="overflow-y-auto flex-1 p-4 space-y-2"></div>
         <div class="p-4 border-t bg-gray-50 space-y-2">
             <div class="text-xs font-bold text-gray-500 uppercase tracking-wider">🛠️ 臨時新增品項</div>
-            <div class="flex gap-2">
-                <input type="text" id="tempName" class="flex-1" placeholder="名稱">
-                <input type="number" id="tempPrice" class="w-20" placeholder="售價">
-                <input type="number" id="tempCost" class="w-20" placeholder="成本">
-                <button onclick="addTempItem()" class="bg-orange-500 text-white px-4 py-1 rounded text-sm font-bold">新增</button>
-            </div>
+            <div class="flex gap-2"><input type="text" id="tempName" class="flex-1" placeholder="名稱"><input type="number" id="tempPrice" class="w-20" placeholder="售價"><input type="number" id="tempCost" class="w-20" placeholder="成本"><button onclick="addTempItem()" class="bg-orange-500 text-white px-4 py-1 rounded text-sm font-bold">新增</button></div>
         </div>
-        <div class="p-4 border-t">
-            <button onclick="closeModal()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">確認完成</button>
-        </div>
+        <div class="p-4 border-t"><button onclick="closeModal()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">確認完成</button></div>
     </div>
 </div>
 
 <div id="shippingModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[100]">
     <div class="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col">
-        <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
-            <h3 class="font-bold text-gray-700">📦 品項出貨管理</h3>
-            <button onclick="closeShippingModal()" class="text-gray-400 text-2xl">&times;</button>
-        </div>
+        <div class="p-4 border-b bg-gray-50 flex justify-between items-center"><h3 class="font-bold text-gray-700">📦 品項出貨管理</h3><button onclick="closeShippingModal()" class="text-gray-400 text-2xl">&times;</button></div>
         <div id="shippingList" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
-        <div class="p-4 border-t">
-            <button onclick="closeShippingModal()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">更新完成</button>
-        </div>
+        <div class="p-4 border-t"><button onclick="closeShippingModal()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">更新完成</button></div>
     </div>
 </div>
 
 <script>
-let inv = {}; let catOrder = []; let records = []; let currentSelections = {}; 
+let inv = {}; let catOrder = []; let records = []; let currentSelections = {}; let trashInv = [];
 let editingRecordId = null; let currentCat = ""; let isSellerMode = true; let currentStatus = 'draft';
 
+// Firebase 資料監聽
 db.ref('inventory').on('value', s => { if(s.exists()) inv = s.val(); renderConfig(); });
 db.ref('catOrder').on('value', s => { if(s.exists()) catOrder = s.val(); renderConfig(); });
 db.ref('records').on('value', s => {
@@ -258,7 +239,7 @@ function renderConfig() {
     calculate();
 }
 
-function updateStatus(id, field, value) { db.ref(`records/${id}/${field}`).set(value); }
+function updateField(id, field, value) { db.ref(`records/${id}/${field}`).set(value); }
 
 function renderRecords() {
     const dList = document.getElementById('draftList'), oList = document.getElementById('orderList'), cList = document.getElementById('completedList');
@@ -270,15 +251,15 @@ function renderRecords() {
         const sOpts = sellers.map(s => `<option value="${s}" ${r.seller===s?'selected':''}>${s}</option>`).join('');
         const pOpts = statuses.map(s => `<option value="${s}" ${r.progress===s?'selected':''}>${s}</option>`).join('');
         
-        // 修正: 找出具體的缺件品項名稱
-        let missingItems = [];
+        // 缺件邏輯
+        let missingNames = [];
         if(r.deliveredItems) {
             for(let key in r.deliveredItems) {
                 if(r.deliveredItems[key] === false) {
                     const [cat, idx] = key.split('_');
                     const sel = r.selections[cat][idx];
                     let n = sel.isTemp ? sel.name : (inv[cat] && inv[cat][sel.idx] ? inv[cat][sel.idx].name : "未知品項");
-                    missingItems.push(n);
+                    missingNames.push(n);
                 }
             }
         }
@@ -287,27 +268,27 @@ function renderRecords() {
             ? `<div class="text-gray-400 text-xs line-through">原計: ${r.total}</div><div class="text-orange-600 font-black">分期: $${Number(r.noCard).toLocaleString()}</div>`
             : `<div class="text-blue-600 font-black">${r.total}</div>`;
 
-        const div = `<div class="p-4 border-2 rounded-xl bg-white flex flex-col gap-3 shadow-sm relative ${missingItems.length>0?'border-red-400':'border-transparent'}">
-            <div class="absolute top-4 right-4 flex flex-col items-end gap-1">
-                ${r.completedTime ? `<span class="text-[9px] text-gray-400 font-bold bg-gray-100 px-2 rounded">結案時間: ${r.completedTime}</span>` : ''}
+        const div = `<div class="p-4 border-2 rounded-xl bg-white flex flex-col gap-3 shadow-sm relative ${missingNames.length>0?'border-red-400':'border-transparent'}">
+            <div class="absolute top-4 right-4 text-right">
+                ${r.completedTime ? `<div class="text-[9px] text-gray-400 font-bold bg-gray-100 px-2 rounded mb-1">完成: ${r.completedTime}</div>` : ''}
             </div>
             <div class="flex justify-between items-start">
                 <div class="flex-1">
                     <div class="text-[10px] text-gray-400 font-bold">${r.time}</div>
                     <div class="text-sm font-bold text-gray-700">[${r.source||'無'}] ${r.name}</div>
                     ${priceDisplay}
-                    ${missingItems.length > 0 ? `<div class="mt-2 text-[11px] text-red-600 font-black bg-red-50 p-2 rounded border border-red-100 italic">⚠️ 未出貨：${missingItems.join(', ')}</div>` : ''}
+                    ${missingNames.length > 0 ? `<div class="mt-2 text-[11px] text-red-600 font-black bg-red-50 p-2 rounded italic border border-red-100">⚠️ 未出貨：${missingNames.join(', ')}</div>` : ''}
                 </div>
                 <div class="flex flex-col items-end gap-2 pr-2">
-                    <select onchange="updateStatus(${r.id}, 'seller', this.value)" class="text-xs p-1 bg-gray-50 border rounded w-24">${sOpts}</select>
-                    <select onchange="updateStatus(${r.id}, 'progress', this.value)" class="text-xs p-1 bg-blue-50 border-blue-100 text-blue-700 rounded w-24 font-bold">${pOpts}</select>
+                    <select onchange="updateField(${r.id}, 'seller', this.value)" class="text-xs p-1 bg-gray-50 border rounded w-24">${sOpts}</select>
+                    <select onchange="updateField(${r.id}, 'progress', this.value)" class="text-xs p-1 bg-blue-50 border-blue-100 text-blue-700 rounded w-24 font-bold">${pOpts}</select>
                 </div>
             </div>
             <div class="flex gap-2 border-t pt-2">
-                <button onclick="editRecord(${r.id})" class="flex-1 py-1 bg-blue-500 text-white text-xs rounded font-bold">${r.status==='completed'?'查看內容':'編輯'}</button>
+                <button onclick="editRecord(${r.id})" class="flex-1 py-1 bg-blue-500 text-white text-xs rounded font-bold">${r.status==='completed'?'查看':'編輯'}</button>
                 ${r.status==='order' ? `<button onclick="openShippingManager(${r.id})" class="flex-1 py-1 bg-orange-500 text-white text-xs rounded font-bold">📦 出貨管理</button>` : ''}
-                ${r.status==='order' ? `<button onclick="completeOrder(${r.id})" class="flex-1 py-1 bg-green-600 text-white text-xs rounded font-bold">🏁 結案歸檔</button>` : ''}
-                <button onclick="if(confirm('確定刪除？')) db.ref('records/'+${r.id}).remove()" class="px-3 py-1 bg-red-50 text-red-400 text-xs rounded font-bold">刪除</button>
+                ${r.status==='order' ? `<button onclick="archiveOrder(${r.id})" class="flex-1 py-1 bg-green-600 text-white text-xs rounded font-bold">🏁 結案歸檔</button>` : ''}
+                <button onclick="if(confirm('刪除？')) db.ref('records/'+${r.id}).remove()" class="px-3 py-1 bg-red-50 text-red-400 text-xs rounded font-bold">刪除</button>
             </div>
         </div>`;
         
@@ -320,8 +301,8 @@ function renderRecords() {
     document.getElementById('count-completed').innerText = records.filter(r=>r.status==='completed').length;
 }
 
-function completeOrder(id) {
-    if(confirm('確定結案並移至「已結案」區域嗎？')) {
+function archiveOrder(id) {
+    if(confirm('確定結案並歸檔嗎？')) {
         const now = new Date();
         const t = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${now.getMinutes()}`;
         db.ref(`records/${id}`).update({ status: 'completed', completedTime: t });
@@ -352,29 +333,18 @@ function renderModalList() {
     const list = document.getElementById('modalList'); list.innerHTML = ''; const selections = currentSelections[currentCat] || [];
     (inv[currentCat] || []).forEach((item, idx) => {
         const sel = selections.find(s => !s.isTemp && s.idx === idx);
-        // 修正: 加上 active class 產生藍色外框
         list.innerHTML += `<div class="pick-item p-3 rounded-lg flex justify-between items-center mb-1 ${sel?'active':''} ${item.outOfStock?'is-out-of-stock':''}" onclick="togglePick(${idx}, false)">
             <div class="flex-1"><div class="font-bold text-sm">${item.outOfStock?'(缺貨) ':''}${item.name}</div><div class="text-xs text-blue-500 font-bold">$${Number(item.p).toLocaleString()}</div></div>
             <div class="flex items-center gap-3" onclick="event.stopPropagation()">
                 <label class="text-xs flex items-center gap-1 cursor-pointer"><input type="checkbox" ${sel?.isGift?'checked':''} onchange="updateSubItem(${idx}, 'gift', this.checked, false)"> 贈</label>
-                <div class="flex items-center border rounded bg-white overflow-hidden"><button class="px-2 py-1 bg-gray-50" onclick="updateSubItem(${idx}, 'qty', -1, false)">-</button><span class="px-2 text-xs font-bold">${sel?.qty||1}</span><button class="px-2 py-1 bg-gray-50" onclick="updateSubItem(${idx}, 'qty', 1, false)">+</button></div>
-            </div>
-        </div>`;
-    });
-    selections.filter(s => s.isTemp).forEach((temp, tIdx) => {
-        list.innerHTML += `<div class="pick-item p-3 rounded-lg flex justify-between items-center active border-orange-200 bg-orange-50 mb-1">
-            <div class="flex-1"><div class="font-bold text-sm text-orange-700">[臨時] ${temp.name}</div><div class="text-xs text-orange-500 font-bold">$${Number(temp.p).toLocaleString()}</div></div>
-            <div class="flex items-center gap-3" onclick="event.stopPropagation()">
                 <div class="flex items-center border rounded bg-white overflow-hidden shadow-sm">
-                    <button class="px-3 py-1 bg-gray-50 text-xs font-bold" onclick="updateSubItem(null, 'qty', -1, true, ${tIdx})">-</button>
-                    <span class="px-3 text-xs font-bold min-w-[30px] text-center">${temp.qty || 1}</span>
-                    <button class="px-3 py-1 bg-gray-50 text-xs font-bold" onclick="updateSubItem(null, 'qty', 1, true, ${tIdx})">+</button>
+                    <button class="px-2 py-1 bg-gray-50 text-xs font-bold" onclick="updateSubItem(${idx}, 'qty', -1, false)">-</button>
+                    <span class="px-2 text-xs font-bold min-w-[20px] text-center">${sel?.qty || 1}</span>
+                    <button class="px-2 py-1 bg-gray-50 text-xs font-bold" onclick="updateSubItem(${idx}, 'qty', 1, false)">+</button>
                 </div>
-                <button onclick="removeTempItem(${tIdx})" class="text-red-400 text-lg ml-2 font-bold">×</button>
             </div>
         </div>`;
     });
-    filterModalList();
 }
 
 function togglePick(idx, isTemp) {
@@ -410,24 +380,38 @@ function editRecord(id) {
     if(r.status==='draft') document.getElementById('btnConvertToOrder').classList.remove('hidden'); else document.getElementById('btnConvertToOrder').classList.add('hidden');
     renderConfig(); showTab('calc');
 }
+
+// 修正: 排序按鈕與回收站
 function renderInventoryEditor() {
     const area = document.getElementById('inventoryEditor'); area.innerHTML = '';
     catOrder.forEach((cat, cIdx) => {
         const sec = document.createElement('div'); sec.className = "bg-white p-4 rounded-xl border relative";
-        sec.innerHTML = `<div class="flex justify-between items-center mb-2"><input class="font-bold text-blue-600 w-2/3" value="${cat}" onchange="renameCat(${cIdx}, this.value)"><button onclick="removeCat(${cIdx})" class="text-red-300">×</button></div><div id="edit-${cat}" class="space-y-2"></div><button onclick="addInvItem('${cat}')" class="w-full text-xs border-dashed border-2 mt-2 py-1">+ 新增零件</button>`;
+        sec.innerHTML = `<div class="flex justify-between items-center mb-2"><input class="font-bold text-blue-600 w-2/3" value="${cat}" onchange="renameCat(${cIdx}, this.value)"><div class="flex gap-1"><button onclick="moveCat(${cIdx},-1)" class="text-xs bg-gray-100 p-1 rounded">↑</button><button onclick="moveCat(${cIdx},1)" class="text-xs bg-gray-100 p-1 rounded">↓</button><button onclick="removeCat(${cIdx})" class="text-red-300 ml-1">×</button></div></div><div id="edit-${cat}" class="space-y-2"></div><button onclick="addInvItem('${cat}')" class="w-full text-xs border-dashed border-2 mt-2 py-1">+ 新增零件</button>`;
         area.appendChild(sec);
         (inv[cat] || []).forEach((item, idx) => {
             const row = document.createElement('div'); row.className = "bg-gray-50 p-2 rounded relative border";
-            row.innerHTML = `<input type="text" class="text-xs font-bold w-full" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value"><div class="flex gap-1 mt-1"><input type="number" class="w-1/2 text-xs" value="${item.p}" onchange="inv['${cat}'][${idx}].p=this.value"><input type="number" class="w-1/2 text-xs text-red-500" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=this.value"></div><div class="flex gap-2 mt-1 items-center"><label class="text-[9px] bg-gray-200 px-1 rounded cursor-pointer"><input type="checkbox" ${item.outOfStock?'checked':''} onchange="inv['${cat}'][${idx}].outOfStock=this.checked; db.ref('inventory').set(inv);"> 缺貨</label><button onclick="inv['${cat}'].splice(${idx},1); renderInventoryEditor();" class="text-gray-300">×</button></div>`;
+            row.innerHTML = `<input type="text" class="text-xs font-bold w-full" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value"><div class="flex gap-1 mt-1"><input type="number" class="w-1/2 text-xs" value="${item.p}" onchange="inv['${cat}'][${idx}].p=this.value"><input type="number" class="w-1/2 text-xs text-red-500" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=this.value"></div><div class="flex gap-2 mt-1 items-center"><button onclick="moveItem('${cat}', ${idx}, -1)" class="text-[9px] bg-white px-2 border">上移</button><button onclick="moveItem('${cat}', ${idx}, 1)" class="text-[9px] bg-white px-2 border">下移</button><label class="text-[9px] bg-gray-200 px-1 rounded cursor-pointer"><input type="checkbox" ${item.outOfStock?'checked':''} onchange="inv['${cat}'][${idx}].outOfStock=this.checked; db.ref('inventory').set(inv);"> 缺貨</label><button onclick="moveToTrash('${cat}',${idx})" class="absolute top-1 right-1 text-gray-300">×</button></div>`;
             document.getElementById(`edit-${cat}`).appendChild(row);
         });
     });
+    renderTrash();
 }
+
+function moveToTrash(cat, idx) { const item = inv[cat].splice(idx,1)[0]; trashInv.push({cat, item}); renderInventoryEditor(); }
+function renderTrash() {
+    const area = document.getElementById('trashContainer'); area.innerHTML = trashInv.length === 0 ? '<div class="text-gray-400 text-xs">空</div>' : '';
+    trashInv.forEach((t, i) => { area.innerHTML += `<div class="flex justify-between items-center bg-white p-2 border rounded text-xs"><span>[${t.cat}] ${t.item.name}</span><button onclick="restoreFromTrash(${i})" class="text-blue-500">救回</button></div>`; });
+}
+function restoreFromTrash(i) { const t = trashInv.splice(i,1)[0]; if(!inv[t.cat]) inv[t.cat]=[]; inv[t.cat].push(t.item); renderInventoryEditor(); }
+
+function moveCat(i, d) { let n = i+d; if(n>=0 && n<catOrder.length) { [catOrder[i], catOrder[n]] = [catOrder[n], catOrder[i]]; renderInventoryEditor(); } }
+function moveItem(cat, i, d) { let n = i+d; if(n>=0 && n<inv[cat].length) { [inv[cat][i], inv[cat][n]] = [inv[cat][n], inv[cat][i]]; renderInventoryEditor(); } }
 function addNewCategory() { const name = prompt("名稱"); if(name) { catOrder.push(name); inv[name]=[]; renderInventoryEditor(); } }
-function removeCat(i) { if(confirm("刪除？")) { delete inv[catOrder[i]]; catOrder.splice(i,1); renderInventoryEditor(); } }
+function removeCat(i) { if(confirm("確定連同內含品項一起刪除大項？")) { delete inv[catOrder[i]]; catOrder.splice(i,1); renderInventoryEditor(); } }
 function renameCat(i, n) { const o = catOrder[i]; inv[n]=inv[o]; delete inv[o]; catOrder[i]=n; renderInventoryEditor(); }
 function addInvItem(c) { if(!inv[c]) inv[c]=[]; inv[c].push({name:"", p:0, c:0}); renderInventoryEditor(); }
 function saveInventory() { db.ref('inventory').set(inv); db.ref('catOrder').set(catOrder).then(()=>alert('同步成功')); }
+
 function enterScreenshotMode() { calculate(); document.getElementById('mainBody').classList.add('screenshot-mode'); document.getElementById('screenshotNav').style.display='flex'; }
 function exitScreenshotMode() { document.getElementById('mainBody').classList.remove('screenshot-mode'); document.getElementById('screenshotNav').style.display='none'; }
 function exitToOrdersWithoutSaving() { if(confirm("返回？")) { resetForm(); showTab('orders'); } }
