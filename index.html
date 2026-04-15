@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.06</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.07</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -58,8 +58,9 @@
         .screenshot-mode body { background: #fff !important; padding-top: 100px !important; }
         .screenshot-mode .max-w-7xl { max-width: 700px !important; margin: 0 auto !important; }
         
-        /* 品項管理修正：防止按鈕突出，保持對稱 */
-        .inv-item-row { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; border: 1px solid #f1f5f9; background: #fff; margin-bottom: 6px; }
+        /* 雲端項目優化：移除框框，防止文字超出 */
+        .inv-item-row { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; border: 1px solid #f1f5f9; background: #fff; margin-bottom: 6px; overflow: hidden; }
+        .inv-item-row input[type="text"] { border: none !important; background: transparent !important; padding: 0 !important; flex: 1; min-width: 0; }
         .inv-out-of-stock { background-color: #fff1f2 !important; border-color: #fecdd3 !important; }
         .stock-btn { font-size: 11px; padding: 4px 6px; border-radius: 6px; font-weight: bold; border: 1px solid #e2e8f0; cursor: pointer; min-width: 55px; text-align: center; }
         .stock-btn.active { background: #22c55e; color: white; border-color: #22c55e; }
@@ -83,8 +84,8 @@
 
 <div class="max-w-7xl mx-auto">
     <div id="screenshot-header" class="hidden text-center border-b-4 border-blue-600 pb-4 mb-6">
-        <div class="text-2xl font-black text-blue-900 tracking-tighter">神奇海螺電競 | 專業組裝報價單</div>
-        <div id="ss-time" class="text-xs text-gray-400 mt-1 font-mono"></div>
+        <div class="text-3xl font-black text-blue-900 tracking-widest">《報價單》</div>
+        <div id="ss-time" class="text-xs text-gray-400 mt-2 font-mono"></div>
     </div>
     
     <div class="flex border-b-2 mb-4 no-screenshot overflow-x-auto bg-white sticky top-0 z-10 rounded-t">
@@ -268,7 +269,6 @@ function renderRecords() {
         const pOpts = ["待處理", "組裝中", "測試中", "已完工", "已寄出"].map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
         const noCardInfo = r.noCard > 0 ? `<div class="text-orange-500 font-bold text-xs mt-1">無卡分期: $${Number(r.noCard).toLocaleString()}</div>` : '';
         
-        // 未出貨項目邏輯
         let undelivered = [];
         for (let cat in r.selections) {
             r.selections[cat].forEach((sel, idx) => {
@@ -312,10 +312,9 @@ function renderInventoryEditor() {
         area.appendChild(sec);
         (inv[cat] || []).forEach((item, idx) => {
             const row = document.createElement('div'); row.className = `inv-item-row ${item.outOfStock ? 'inv-out-of-stock' : ''}`;
-            // 修正佈局：使用 flex 分配空間，確保按鈕整齊
             row.innerHTML = `
-                <div class="flex flex-col text-[10px] text-gray-300 px-1"><button onclick="moveItem('${cat}', ${idx}, -1)">▲</button><button onclick="moveItem('${cat}', ${idx}, 1)">▼</button></div>
-                <input class="flex-1 text-xs font-bold bg-transparent border-none focus:ring-0 min-w-0" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value">
+                <div class="flex flex-col text-[10px] text-gray-300 px-1 flex-shrink-0"><button onclick="moveItem('${cat}', ${idx}, -1)">▲</button><button onclick="moveItem('${cat}', ${idx}, 1)">▼</button></div>
+                <input type="text" class="font-bold text-xs" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value">
                 <div class="flex items-center gap-2 flex-shrink-0">
                     <div class="flex items-center gap-1 border-2 rounded-lg bg-white px-2"><span class="text-[10px] text-gray-400">售</span><input type="number" class="w-12 text-xs font-black text-blue-600 border-none p-0" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div>
                     <div class="flex items-center gap-1 border-2 rounded-lg bg-white px-2"><span class="text-[10px] text-gray-400">本</span><input type="number" class="w-12 text-xs font-black text-red-400 border-none p-0" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div>
