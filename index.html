@@ -33,7 +33,6 @@
         
         .is-out-of-stock { opacity: 0.4; background-color: #f1f5f9 !important; border-color: #cbd5e1 !important; color: #64748b !important; }
 
-        /* 進度標籤顏色 */
         .status-badge { font-weight: bold; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
         .status-待處理 { background: #fee2e2; color: #ef4444; }
         .status-組裝中 { background: #fef3c7; color: #d97706; }
@@ -193,6 +192,19 @@ const db = firebase.database();
     </div>
 </div>
 
+<div id="shippingModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col">
+        <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
+            <h3 class="font-bold text-gray-700">📦 品項出貨/缺件管理</h3>
+            <button onclick="closeShippingModal()" class="text-gray-400 text-2xl">&times;</button>
+        </div>
+        <div id="shippingList" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+        <div class="p-4 border-t">
+            <button onclick="closeShippingModal()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">更新完成</button>
+        </div>
+    </div>
+</div>
+
 <script>
 let inv = {}; let catOrder = []; let records = []; let currentSelections = {}; 
 let editingRecordId = null; let currentCat = ""; let isSellerMode = true; let currentStatus = 'draft';
@@ -266,7 +278,6 @@ function renderRecords() {
     records.sort((a,b)=>b.id-a.id).forEach(r => {
         const sellers = ["未選擇", "朱冠穎", "江鈞宇", "江苙翔"];
         const statuses = ["待處理", "組裝中", "測試中", "已完工", "已寄出"];
-        
         const sellerOptions = sellers.map(s => `<option value="${s}" ${r.seller === s ? 'selected' : ''}>${s}</option>`).join('');
         const progressOptions = statuses.map(s => `<option value="${s}" ${r.progress === s ? 'selected' : ''}>${s}</option>`).join('');
 
@@ -274,9 +285,23 @@ function renderRecords() {
         const priceDisplay = hasNoCard 
             ? `<div class="text-gray-400 text-xs line-through">原計: ${r.total}</div><div class="text-orange-600 font-black">分期: $${Number(r.noCard).toLocaleString()}</div>`
             : `<div class="text-blue-600 font-black">${r.total}</div>`;
-            
+
+        // 判斷是否有未出貨品項
+        let hasUndelivered = false;
+        if(r.deliveredItems) {
+            for(let cat in r.selections) {
+                r.selections[cat].forEach((sel, i) => {
+                    const key = `${cat}_${i}`;
+                    if(r.deliveredItems[key] === false) hasUndelivered = true;
+                });
+            }
+        }
+
         const div = `<div class="p-4 border rounded-xl bg-white flex flex-col gap-3 shadow-sm relative">
-            <div class="absolute top-4 right-4"><span class="status-badge status-${r.progress||'待處理'}">${r.progress||'待處理'}</span></div>
+            <div class="absolute top-4 right-4 flex flex-col items-end gap-1">
+                <span class="status-badge status-${r.progress||'待處理'}">${r.progress||'待處理'}</span>
+                ${hasUndelivered ? '<span class="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded font-bold animate-pulse">有缺件</span>' : ''}
+            </div>
             <div class="flex justify-between items-start">
                 <div>
                     <div class="text-[10px] text-gray-400 font-bold">${r.time}</div>
@@ -296,6 +321,7 @@ function renderRecords() {
             </div>
             <div class="flex gap-2 border-t pt-2">
                 <button onclick="editRecord(${r.id})" class="flex-1 py-1 bg-blue-500 text-white text-xs rounded font-bold">編輯</button>
+                ${r.status === 'order' ? `<button onclick="openShippingManager(${r.id})" class="flex-1 py-1 bg-orange-500 text-white text-xs rounded font-bold">📦 管理出貨</button>` : ''}
                 <button onclick="if(confirm('確定刪除？')) db.ref('records/${r.id}').remove()" class="px-3 py-1 bg-red-50 text-red-400 text-xs rounded font-bold">刪除</button>
             </div>
         </div>`;
@@ -303,6 +329,52 @@ function renderRecords() {
     });
     document.getElementById('count-draft').innerText = records.filter(r=>r.status==='draft').length;
     document.getElementById('count-order').innerText = records.filter(r=>r.status==='order').length;
+}
+
+// 新增: 管理出貨狀態邏輯
+function openShippingManager(id) {
+    const r = records.find(x => x.id === id);
+    if(!r) return;
+    editingRecordId = id;
+    const listArea = document.getElementById('shippingList');
+    listArea.innerHTML = '';
+    
+    if(!r.deliveredItems) r.deliveredItems = {};
+
+    for(let cat in r.selections) {
+        r.selections[cat].forEach((sel, i) => {
+            const key = `${cat}_${i}`;
+            const isDelivered = r.deliveredItems[key] !== false; // 預設為已出貨(true)
+            
+            let name = "";
+            if(sel.isTemp) name = sel.name;
+            else name = (inv[cat] && inv[cat][sel.idx]) ? inv[cat][sel.idx].name : "未知品項";
+
+            listArea.innerHTML += `
+                <div class="flex justify-between items-center p-3 border rounded-lg ${isDelivered ? 'bg-gray-50' : 'bg-red-50 border-red-200'}">
+                    <div>
+                        <div class="text-[10px] font-bold text-gray-400">${cat}</div>
+                        <div class="text-sm font-bold ${isDelivered ? 'text-gray-600' : 'text-red-700'}">${name}</div>
+                    </div>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <span class="text-xs font-bold ${isDelivered ? 'text-green-600' : 'text-red-600'}">${isDelivered ? '已出貨' : '未出貨'}</span>
+                        <input type="checkbox" class="w-5 h-5" ${isDelivered ? 'checked' : ''} 
+                               onchange="updateItemShipping('${key}', this.checked)">
+                    </label>
+                </div>
+            `;
+        });
+    }
+    document.getElementById('shippingModal').classList.remove('hidden');
+}
+
+function updateItemShipping(key, isDelivered) {
+    db.ref(`records/${editingRecordId}/deliveredItems/${key}`).set(isDelivered);
+}
+
+function closeShippingModal() {
+    document.getElementById('shippingModal').classList.add('hidden');
+    editingRecordId = null;
 }
 
 function filterModalList() {
@@ -419,14 +491,31 @@ function renameCat(i, nN) { const oN = catOrder[i]; inv[nN] = inv[oN]; delete in
 function addInvItem(c) { if(!inv[c]) inv[c]=[]; inv[c].push({name:"", p:0, c:0}); renderInventoryEditor(); }
 function removeInvItem(c, i) { inv[c].splice(i,1); renderInventoryEditor(); }
 function saveInventory() { db.ref('inventory').set(inv); db.ref('catOrder').set(catOrder).then(()=>alert('同步成功')); }
-// 新增: 靜默同步庫存
 function saveInventorySilently() { db.ref('inventory').set(inv); db.ref('catOrder').set(catOrder); }
 
 function enterScreenshotMode() { calculate(); document.getElementById('mainBody').classList.add('screenshot-mode'); document.getElementById('screenshotNav').style.display='flex'; }
 function exitScreenshotMode() { document.getElementById('mainBody').classList.remove('screenshot-mode'); document.getElementById('screenshotNav').style.display='none'; }
 function exitToOrdersWithoutSaving() { if(confirm("確定返回？")) { resetForm(); showTab('orders'); } }
-function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); const target = document.getElementById('tab-' + t); if(target) target.classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); const btn = document.getElementById('btn-' + t); if(btn) btn.classList.add('tab-active'); if(t === 'inventory') renderInventoryEditor(); }
-function toggleSellerMode() { isSellerMode = !isSellerMode; const box = document.getElementById('sellerBox'); if(isSellerMode) box.classList.remove('hidden'); else box.classList.add('hidden'); const btn = document.getElementById('sellerBtn'); btn.innerText = `管理員模式: ${isSellerMode ? 'ON' : 'OFF'}`; renderConfig(); }
+
+function showTab(t) {
+    document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
+    const target = document.getElementById('tab-' + t);
+    if(target) target.classList.remove('hidden');
+    document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active'));
+    const btn = document.getElementById('btn-' + t);
+    if(btn) btn.classList.add('tab-active');
+    if(t === 'inventory') renderInventoryEditor();
+}
+
+function toggleSellerMode() {
+    isSellerMode = !isSellerMode;
+    const box = document.getElementById('sellerBox');
+    if(isSellerMode) box.classList.remove('hidden'); else box.classList.add('hidden');
+    const btn = document.getElementById('sellerBtn');
+    btn.innerText = `管理員模式: ${isSellerMode ? 'ON' : 'OFF'}`;
+    renderConfig();
+}
+
 function resetForm() { editingRecordId = null; currentSelections = {}; document.getElementById('custName').value = ""; document.getElementById('custPhone').value = ""; document.getElementById('custAddr').value = ""; document.getElementById('discountAmt').value = 0; document.getElementById('noCardTotal').value = ""; document.getElementById('btnConvertToOrder').classList.add('hidden'); calculate(); renderConfig(); }
 function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
 window.onload = () => { renderConfig(); };
