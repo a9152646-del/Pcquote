@@ -23,35 +23,22 @@
         .selected-badge { background: #f1f5f9; color: #334155; padding: 4px 10px; border-radius: 6px; font-size: 12px; margin: 2px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid #e2e8f0; }
         
         #screenshot-header, #screenshot-footer { display: none; }
-
-        /* 截圖模式優化 */
         .hide-price .price-tag { display: none !important; }
         #mainBody.screenshot-mode { background: #fff !important; padding: 40px !important; }
         .screenshot-mode .no-screenshot { display: none !important; }
         .screenshot-mode .max-w-7xl { max-width: 800px !important; margin: 0 auto !important; }
         .screenshot-mode .card { box-shadow: none !important; border: 2px solid #334155 !important; border-radius: 0 !important; padding: 2rem !important; }
         .screenshot-mode .item-row { border: none; border-bottom: 1px dashed #ccc; padding: 8px 0; }
-        
         .screenshot-mode .item-row.empty-row { display: none !important; visibility: hidden !important; height: 0 !important; padding: 0 !important; margin: 0 !important; }
-        
         .screenshot-mode .selected-badge { border: none; background: none; padding: 0; font-size: 14px; color: #000; }
         .screenshot-mode #screenshot-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #334155; padding-bottom: 10px; }
         .screenshot-mode #screenshot-header .ss-title { width: 100%; text-align: center; font-size: 1.5rem; font-weight: 900; margin-bottom: 8px; }
         .screenshot-mode #screenshot-header #ss-time { width: 100%; text-align: left; font-size: 0.875rem; color: #4b5563; }
         .screenshot-mode #screenshot-footer { display: block; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; }
 
-        /* 核心修正：選取時的框框與反藍視覺 */
         .pick-item { transition: all 0.2s; border: 2px solid #e5e7eb; cursor: pointer; border-radius: 10px; }
         .pick-item.active { background-color: #eff6ff; border-color: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.2); }
-        
         .is-out-of-stock { opacity: 0.4; background-color: #f1f5f9 !important; border-color: #cbd5e1 !important; color: #64748b !important; }
-
-        .status-badge { font-weight: bold; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
-        .status-待處理 { background: #fee2e2; color: #ef4444; }
-        .status-組裝中 { background: #fef3c7; color: #d97706; }
-        .status-測試中 { background: #e0f2fe; color: #0284c7; }
-        .status-已完工 { background: #dcfce7; color: #16a34a; }
-        .status-已寄出 { background: #f3f4f6; color: #4b5563; }
 
         @media print { .no-print, button, #sellerBox, .no-screenshot { display: none !important; } }
     </style>
@@ -81,9 +68,10 @@ const db = firebase.database();
     </div>
 
     <div class="flex border-b mb-6 no-screenshot overflow-x-auto bg-white sticky top-0 z-10">
-        <button onclick="showTab('calc')" id="btn-calc" class="px-6 py-3 tab-active">🐚 報價配單</button>
-        <button onclick="showTab('orders')" id="btn-orders" class="px-6 py-3">📋 訂單管理</button>
-        <button onclick="showTab('inventory')" id="btn-inventory" class="px-6 py-3">⚙️ 庫存品項</button>
+        <button onclick="showTab('calc')" id="btn-calc" class="px-6 py-3 tab-active whitespace-nowrap">🐚 報價配單</button>
+        <button onclick="showTab('orders')" id="btn-orders" class="px-6 py-3 whitespace-nowrap">📋 訂單管理</button>
+        <button onclick="showTab('completed')" id="btn-completed" class="px-6 py-3 whitespace-nowrap">🏁 已結案</button>
+        <button onclick="showTab('inventory')" id="btn-inventory" class="px-6 py-3 whitespace-nowrap">⚙️ 庫存品項</button>
     </div>
 
     <div id="tab-calc" class="page-content">
@@ -145,10 +133,22 @@ const db = firebase.database();
     </div>
 
     <div id="tab-orders" class="page-content hidden">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="card p-4"><h2 class="font-bold text-orange-500 border-b pb-2 mb-4">📂 雲端草稿 <span id="count-draft">0</span></h2><div id="draftList" class="space-y-4"></div></div>
-            <div class="card p-4"><h2 class="font-bold text-green-600 border-b pb-2 mb-4">✅ 正式訂單 <span id="count-order">0</span></h2><div id="orderList" class="space-y-4"></div></div>
-            <div class="card p-4 bg-gray-50"><h2 class="font-bold text-gray-500 border-b pb-2 mb-4">🏁 已結案 <span id="count-completed">0</span></h2><div id="completedList" class="space-y-4 opacity-75"></div></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="card p-6">
+                <h2 class="font-bold text-lg mb-4 text-orange-500 border-b pb-2">📂 雲端草稿 <span id="count-draft">0</span></h2>
+                <div id="draftList" class="space-y-4"></div>
+            </div>
+            <div class="card p-6">
+                <h2 class="font-bold text-lg mb-4 text-green-600 border-b pb-2">✅ 正式訂單 <span id="count-order">0</span></h2>
+                <div id="orderList" class="space-y-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-completed" class="page-content hidden">
+        <div class="card p-6">
+            <h2 class="font-bold text-lg mb-4 text-gray-500 border-b pb-2">🏁 已結案訂單 <span id="count-completed">0</span></h2>
+            <div id="completedList" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
         </div>
     </div>
 
@@ -198,7 +198,7 @@ const db = firebase.database();
 <div id="shippingModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[100]">
     <div class="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col">
         <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
-            <h3 class="font-bold text-gray-700">📦 品項出貨/缺件管理</h3>
+            <h3 class="font-bold text-gray-700">📦 品項出貨管理</h3>
             <button onclick="closeShippingModal()" class="text-gray-400 text-2xl">&times;</button>
         </div>
         <div id="shippingList" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
@@ -270,15 +270,15 @@ function renderRecords() {
         const sOpts = sellers.map(s => `<option value="${s}" ${r.seller===s?'selected':''}>${s}</option>`).join('');
         const pOpts = statuses.map(s => `<option value="${s}" ${r.progress===s?'selected':''}>${s}</option>`).join('');
         
-        // 核心修正: 抓取具體的未出貨品項名稱
-        let missingNames = [];
+        // 修正: 找出具體的缺件品項名稱
+        let missingItems = [];
         if(r.deliveredItems) {
             for(let key in r.deliveredItems) {
                 if(r.deliveredItems[key] === false) {
                     const [cat, idx] = key.split('_');
                     const sel = r.selections[cat][idx];
-                    let name = sel.isTemp ? sel.name : ((inv[cat] && inv[cat][sel.idx]) ? inv[cat][sel.idx].name : "未知");
-                    missingNames.push(name);
+                    let n = sel.isTemp ? sel.name : (inv[cat] && inv[cat][sel.idx] ? inv[cat][sel.idx].name : "未知品項");
+                    missingItems.push(n);
                 }
             }
         }
@@ -287,28 +287,27 @@ function renderRecords() {
             ? `<div class="text-gray-400 text-xs line-through">原計: ${r.total}</div><div class="text-orange-600 font-black">分期: $${Number(r.noCard).toLocaleString()}</div>`
             : `<div class="text-blue-600 font-black">${r.total}</div>`;
 
-        const div = `<div class="p-4 border-2 rounded-xl bg-white flex flex-col gap-3 shadow-sm relative ${missingNames.length>0?'border-red-400':'border-transparent'}">
+        const div = `<div class="p-4 border-2 rounded-xl bg-white flex flex-col gap-3 shadow-sm relative ${missingItems.length>0?'border-red-400':'border-transparent'}">
             <div class="absolute top-4 right-4 flex flex-col items-end gap-1">
-                <span class="status-badge status-${r.progress||'待處理'}">${r.progress||'待處理'}</span>
-                ${r.completedTime ? `<span class="text-[9px] text-gray-400 font-bold">結案: ${r.completedTime}</span>` : ''}
+                ${r.completedTime ? `<span class="text-[9px] text-gray-400 font-bold bg-gray-100 px-2 rounded">結案時間: ${r.completedTime}</span>` : ''}
             </div>
             <div class="flex justify-between items-start">
                 <div class="flex-1">
                     <div class="text-[10px] text-gray-400 font-bold">${r.time}</div>
                     <div class="text-sm font-bold text-gray-700">[${r.source||'無'}] ${r.name}</div>
                     ${priceDisplay}
-                    ${missingNames.length > 0 ? `<div class="mt-2 text-[11px] font-bold text-red-600 bg-red-50 p-2 rounded">未出貨：${missingNames.join(', ')}</div>` : ''}
+                    ${missingItems.length > 0 ? `<div class="mt-2 text-[11px] text-red-600 font-black bg-red-50 p-2 rounded border border-red-100 italic">⚠️ 未出貨：${missingItems.join(', ')}</div>` : ''}
                 </div>
-                ${r.status !== 'completed' ? `<div class="flex flex-col items-end gap-2 pr-12">
+                <div class="flex flex-col items-end gap-2 pr-2">
                     <select onchange="updateStatus(${r.id}, 'seller', this.value)" class="text-xs p-1 bg-gray-50 border rounded w-24">${sOpts}</select>
                     <select onchange="updateStatus(${r.id}, 'progress', this.value)" class="text-xs p-1 bg-blue-50 border-blue-100 text-blue-700 rounded w-24 font-bold">${pOpts}</select>
-                </div>` : ''}
+                </div>
             </div>
             <div class="flex gap-2 border-t pt-2">
-                ${r.status === 'completed' ? `<button onclick="editRecord(${r.id})" class="flex-1 py-1 bg-gray-200 text-gray-600 text-xs rounded font-bold">檢視內容</button>` : `<button onclick="editRecord(${r.id})" class="flex-1 py-1 bg-blue-500 text-white text-xs rounded font-bold">編輯</button>`}
-                ${r.status==='order'?`<button onclick="openShippingManager(${r.id})" class="flex-1 py-1 bg-orange-500 text-white text-xs rounded font-bold">📦 出貨管理</button>`:''}
-                ${r.status==='order'?`<button onclick="completeOrder(${r.id})" class="flex-1 py-1 bg-green-600 text-white text-xs rounded font-bold">🏁 結案歸檔</button>`:''}
-                <button onclick="if(confirm('刪除？')) db.ref('records/'+${r.id}).remove()" class="px-3 py-1 bg-red-50 text-red-400 text-xs rounded font-bold">刪除</button>
+                <button onclick="editRecord(${r.id})" class="flex-1 py-1 bg-blue-500 text-white text-xs rounded font-bold">${r.status==='completed'?'查看內容':'編輯'}</button>
+                ${r.status==='order' ? `<button onclick="openShippingManager(${r.id})" class="flex-1 py-1 bg-orange-500 text-white text-xs rounded font-bold">📦 出貨管理</button>` : ''}
+                ${r.status==='order' ? `<button onclick="completeOrder(${r.id})" class="flex-1 py-1 bg-green-600 text-white text-xs rounded font-bold">🏁 結案歸檔</button>` : ''}
+                <button onclick="if(confirm('確定刪除？')) db.ref('records/'+${r.id}).remove()" class="px-3 py-1 bg-red-50 text-red-400 text-xs rounded font-bold">刪除</button>
             </div>
         </div>`;
         
@@ -321,15 +320,11 @@ function renderRecords() {
     document.getElementById('count-completed').innerText = records.filter(r=>r.status==='completed').length;
 }
 
-// 核心功能: 結案歸檔
 function completeOrder(id) {
-    if(confirm('確定結案？結案後將移至完成區。')) {
+    if(confirm('確定結案並移至「已結案」區域嗎？')) {
         const now = new Date();
-        const timeStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${now.getMinutes()}`;
-        db.ref(`records/${id}`).update({
-            status: 'completed',
-            completedTime: timeStr
-        });
+        const t = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${now.getMinutes()}`;
+        db.ref(`records/${id}`).update({ status: 'completed', completedTime: t });
     }
 }
 
@@ -343,7 +338,7 @@ function openShippingManager(id) {
             let name = sel.isTemp ? sel.name : ((inv[cat] && inv[cat][sel.idx]) ? inv[cat][sel.idx].name : "未知");
             list.innerHTML += `<div class="flex justify-between items-center p-3 border rounded-lg ${isDel?'bg-gray-50':'bg-red-50 border-red-200'}">
                 <div><div class="text-[10px] font-bold text-gray-400">${cat}</div><div class="text-sm font-bold ${isDel?'':'text-red-700'}">${name}</div></div>
-                <label class="flex items-center gap-2"><input type="checkbox" class="w-5 h-5" ${isDel?'checked':''} onchange="db.ref('records/${id}/deliveredItems/${key}').set(this.checked)"> <span class="text-xs font-bold">${isDel?'已出貨':'缺件'}</span></label>
+                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="w-6 h-6" ${isDel?'checked':''} onchange="db.ref('records/${id}/deliveredItems/${key}').set(this.checked)"> <span class="text-xs font-bold">${isDel?'已出貨':'未出貨'}</span></label>
             </div>`;
         });
     }
@@ -356,15 +351,12 @@ function filterModalList() { const term = document.getElementById('modalSearch')
 function renderModalList() {
     const list = document.getElementById('modalList'); list.innerHTML = ''; const selections = currentSelections[currentCat] || [];
     (inv[currentCat] || []).forEach((item, idx) => {
-        // 核心修正: 檢查是否已經選取，給予 active class
         const sel = selections.find(s => !s.isTemp && s.idx === idx);
+        // 修正: 加上 active class 產生藍色外框
         list.innerHTML += `<div class="pick-item p-3 rounded-lg flex justify-between items-center mb-1 ${sel?'active':''} ${item.outOfStock?'is-out-of-stock':''}" onclick="togglePick(${idx}, false)">
-            <div class="flex-1">
-                <div class="font-bold text-sm">${item.outOfStock?'(缺貨) ':''}${item.name}</div>
-                <div class="text-xs text-blue-500 font-bold">$${Number(item.p).toLocaleString()}</div>
-            </div>
+            <div class="flex-1"><div class="font-bold text-sm">${item.outOfStock?'(缺貨) ':''}${item.name}</div><div class="text-xs text-blue-500 font-bold">$${Number(item.p).toLocaleString()}</div></div>
             <div class="flex items-center gap-3" onclick="event.stopPropagation()">
-                <label class="text-xs flex items-center gap-1"><input type="checkbox" ${sel?.isGift?'checked':''} onchange="updateSubItem(${idx}, 'gift', this.checked, false)"> 贈</label>
+                <label class="text-xs flex items-center gap-1 cursor-pointer"><input type="checkbox" ${sel?.isGift?'checked':''} onchange="updateSubItem(${idx}, 'gift', this.checked, false)"> 贈</label>
                 <div class="flex items-center border rounded bg-white overflow-hidden"><button class="px-2 py-1 bg-gray-50" onclick="updateSubItem(${idx}, 'qty', -1, false)">-</button><span class="px-2 text-xs font-bold">${sel?.qty||1}</span><button class="px-2 py-1 bg-gray-50" onclick="updateSubItem(${idx}, 'qty', 1, false)">+</button></div>
             </div>
         </div>`;
