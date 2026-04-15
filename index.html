@@ -65,7 +65,6 @@
         .stock-btn.active { background: #22c55e; color: white; border-color: #22c55e; }
         .stock-btn.oos { background: #ef4444; color: white; border-color: #ef4444; }
 
-        /* 💾 豬豬，這裡單獨控制供應商按鈕的樣式 */
         .supp-btn { 
             font-size: 10px; 
             width: 24px; 
@@ -253,26 +252,50 @@ function goBack() {
     if (activeTab !== 'tab-calc') showTab('calc'); else window.history.back();
 }
 
+// 💾 豬豬，這裡就是你需要的「無卡分期利潤修正」邏輯
 function calculate() {
     let subP = 0, subC = 0, disc = parseFloat(document.getElementById('discountAmt')?.value || 0);
     let noCard = parseFloat(document.getElementById('noCardTotal').value) || 0;
+    
     catOrder.forEach(cat => {
         (currentSelections[cat] || []).forEach(s => {
             let p = 0, c = 0;
             if (s.isTemp) { p = Number(s.p || 0); c = Number(s.c || 0); } 
             else { const item = (inv[cat] || [])[s.idx]; if(item) { p = Number(item.p || 0); c = Number(item.c || 0); } }
-            if(!s.isGift) subP += (p * (s.qty || 1)); subC += (c * (s.qty || 1));
+            if(!s.isGift) subP += (p * (s.qty || 1)); 
+            subC += (c * (s.qty || 1));
         });
     });
-    const finalSale = (subP - disc) - noCard; 
-    const profit = (subP - disc - subC) + noCard;
-    const untaxed = Math.round((subP - disc) / 1.05);
+
+    // 原本含稅金額 (零件總額 - 折扣)
+    const originalTotal = subP - disc;
+    
+    // 最終現金/餘額 (顯示給客戶看的)
+    // 如果分期大於原本金額，則現場付 0 元
+    const finalSale = Math.max(0, originalTotal - noCard); 
+    
+    // 利潤計算 (豬豬修正版)
+    // 1. 原本利潤 = 原本含稅金額 - 成本
+    const originalProfit = originalTotal - subC;
+    let profit = originalProfit;
+    
+    // 2. 如果有分期，利潤 = (無卡金額 - 原本含稅金額) + 原本利潤
+    if (noCard > 0) {
+        const extraProfit = noCard - originalTotal;
+        profit = extraProfit + originalProfit;
+    }
+
+    const untaxed = Math.round(originalTotal / 1.05);
     document.getElementById('ui-untaxed').innerText = `$${untaxed.toLocaleString()}`;
     document.getElementById('ui-totalSale').innerText = `$${finalSale.toLocaleString()}`;
+    
     if(noCard > 0) {
         document.getElementById('ui-noCardVal').innerText = `$${noCard.toLocaleString()}`;
         document.getElementById('ui-noCardShow').classList.remove('hidden');
-    } else document.getElementById('ui-noCardShow').classList.add('hidden');
+    } else {
+        document.getElementById('ui-noCardShow').classList.add('hidden');
+    }
+
     document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`;
     document.getElementById('ui-totalProfit').innerText = `$${profit.toLocaleString()}`;
 }
@@ -319,7 +342,6 @@ function renderRecords() {
     });
 }
 
-// 💾 豬豬，這裡就是你需要的「原速裕」按鈕生成的邏輯
 function renderInventoryEditor() {
     const area = document.getElementById('inventoryEditor'); area.innerHTML = '';
     catOrder.forEach((cat, cIdx) => {
@@ -328,8 +350,6 @@ function renderInventoryEditor() {
         area.appendChild(sec);
         (inv[cat] || []).forEach((item, idx) => {
             const row = document.createElement('div'); row.className = `inv-item-row ${item.outOfStock ? 'inv-out-of-stock' : ''}`;
-            
-            // 這裡生成三個按鈕
             const sList = item.suppliers || [];
             const sHtml = ['原', '速', '裕'].map(label => 
                 `<button onclick="event.stopPropagation(); toggleSupplier('${cat}', ${idx}, '${label}')" class="supp-btn ${sList.includes(label) ? 'active' : ''}">${label}</button>`
