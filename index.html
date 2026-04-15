@@ -51,8 +51,6 @@
         #screenshotNav button { font-size: 14px; padding: 10px 20px; border-radius: 30px; background: #1e293b; color: white; box-shadow: 0 8px 20px rgba(0,0,0,0.3); font-weight: bold; }
 
         .screenshot-mode .no-screenshot, .screenshot-mode #adminToggleContainer { display: none !important; }
-        .screenshot-mode #screenshot-header { display: block !important; }
-        .screenshot-mode #screenshot-footer { display: flex !important; flex-direction: column; }
         .screenshot-mode body { background: #fff !important; padding-top: 80px !important; }
         .screenshot-mode .max-w-7xl { max-width: 700px !important; margin: 0 auto !important; }
         
@@ -87,7 +85,7 @@
 <div id="screenshotNav"><button onclick="exitScreenshotMode()">🔙 返回編輯模式</button></div>
 
 <div class="max-w-7xl mx-auto">
-    <div id="screenshot-header" class="hidden text-center border-b-4 border-blue-600 pb-4 mb-6">
+    <div id="screenshot-header" style="display: none;" class="text-center border-b-4 border-blue-600 pb-4 mb-6">
         <div class="text-3xl font-black text-blue-900 tracking-widest">《報價單》</div>
         <div id="ss-time" class="text-xs text-gray-400 mt-2 font-mono"></div>
     </div>
@@ -111,7 +109,7 @@
             <div class="lg:col-span-3 space-y-3">
                 <div class="card p-1">
                     <div id="configRows" class="divide-y divide-gray-100"></div>
-                    <div id="screenshot-footer" class="hidden text-right p-6 pt-4 border-t-2 border-gray-100 space-y-1">
+                    <div id="screenshot-footer" style="display: none;" class="text-right p-6 pt-4 border-t-2 border-gray-100 space-y-1">
                         <div class="text-xs text-gray-500 font-bold">折扣：<span id="ss-val-disc" class="text-red-500"></span></div>
                         <div class="text-xs text-gray-500 font-bold">未稅：<span id="ss-val-untaxed"></span></div>
                         <div class="text-xl font-black text-blue-600">總計 (含稅)：<span id="ss-val-total"></span></div>
@@ -334,19 +332,11 @@ function renderInventoryEditor() {
                     <div class="flex items-center gap-1 border-2 rounded-lg bg-white px-2 flex-shrink-0"><span class="text-[10px] text-gray-400">售</span><input type="number" class="w-12 text-xs font-black text-blue-600 border-none p-0" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div>
                     <div class="flex items-center gap-1 border-2 rounded-lg bg-white px-2 flex-shrink-0"><span class="text-[10px] text-gray-400">本</span><input type="number" class="w-12 text-xs font-black text-red-400 border-none p-0" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div>
                     <button onclick="toggleStockStatus('${cat}', ${idx})" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button>
-                    <button onclick="removeItem('${cat}', ${idx})" class="text-red-200 text-xl px-1">×</button>
+                    <button onclick="if(confirm('豬豬，確定要刪除這個品項嗎？')) { inv['${cat}'].splice(${idx}, 1); renderInventoryEditor(); }" class="text-red-200 text-xl px-1">×</button>
                 </div>`;
             document.getElementById(`edit-${cat}`).appendChild(row);
         });
     });
-}
-
-function removeItem(cat, idx) {
-    const itemName = inv[cat][idx].name || '此零件';
-    if (confirm('豬豬，確定要刪除「' + itemName + '」嗎？\n此動作將從雲端資料庫移除。')) {
-        inv[cat].splice(idx, 1);
-        renderInventoryEditor();
-    }
 }
 
 function toggleStockStatus(cat, idx) {
@@ -368,37 +358,36 @@ function showTab(t) {
     document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); 
     document.getElementById('btn-'+t).classList.add('tab-active'); 
     
-    // 控制懸浮儲存鍵顯示：僅在品項管理頁顯示
-    const fSave = document.getElementById('floatingSaveBtn');
-    if(t==='inventory') {
+    // 強制控制懸浮儲存鈕顯示
+    const fsBtn = document.getElementById('floatingSaveBtn');
+    if(t === 'inventory') {
         renderInventoryEditor();
-        fSave.classList.remove('hidden');
+        fsBtn.style.display = 'flex';
     } else {
-        fSave.classList.add('hidden');
+        fsBtn.style.display = 'none';
     }
 }
 
 function enterScreenshotMode() { 
+    // 豬豬，日期時間與頁尾數值強制顯示
     const now = new Date();
     const timeStr = now.getFullYear() + '/' + (now.getMonth() + 1).toString().padStart(2, '0') + '/' + now.getDate().toString().padStart(2, '0') + ' ' + now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
     document.getElementById('ss-time').innerText = '報價日期：' + timeStr;
 
-    calculate(); 
     document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value || 0).toLocaleString();
     document.getElementById('ss-val-untaxed').innerText = document.getElementById('ui-untaxed').innerText;
     document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText;
 
     document.getElementById('mainBody').classList.add('screenshot-mode'); 
-    document.getElementById('screenshot-header').classList.remove('hidden');
-    document.getElementById('screenshot-footer').classList.remove('hidden');
-    
+    document.getElementById('screenshot-header').style.display = 'block';
+    document.getElementById('screenshot-footer').style.display = 'block';
     renderConfig(); 
 }
 
 function exitScreenshotMode() { 
     document.getElementById('mainBody').classList.remove('screenshot-mode'); 
-    document.getElementById('screenshot-header').classList.add('hidden');
-    document.getElementById('screenshot-footer').classList.add('hidden');
+    document.getElementById('screenshot-header').style.display = 'none';
+    document.getElementById('screenshot-footer').style.display = 'none';
     renderConfig(); 
 }
 
@@ -464,7 +453,7 @@ function openDeliveryFast(id) {
     }
     document.getElementById('deliveryModal').classList.remove('hidden');
 }
-function saveInventory() { if(confirm('確定要將更改同步到雲端資料庫嗎？')) { db.ref('inventory').set(inv); db.ref('catOrder').set(catOrder); alert('同步成功！'); } }
+function saveInventory() { if(confirm('豬豬，確定要將更改同步到雲端嗎？')) { db.ref('inventory').set(inv); db.ref('catOrder').set(catOrder); alert('同步成功！'); } }
 function resetForm() { editingRecordId=null; currentSelections={}; document.querySelectorAll('input').forEach(i=>i.value=""); renderConfig(); }
 function moveCat(idx, dir) { let newIdx = idx + dir; if (newIdx < 0 || newIdx >= catOrder.length) return; [catOrder[idx], catOrder[newIdx]] = [catOrder[newIdx], catOrder[idx]]; renderInventoryEditor(); }
 function moveItem(cat, idx, dir) { let newIdx = idx + dir; if (newIdx < 0 || newIdx >= inv[cat].length) return; [inv[cat][idx], inv[cat][newIdx]] = [inv[cat][newIdx], inv[cat][idx]]; renderInventoryEditor(); }
