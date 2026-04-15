@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v8.93</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v8.94</title>
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -38,8 +38,10 @@
         .ss-amount-row { font-size: 1.2rem; font-weight: 800; color: #000; margin-bottom: 5px; }
         .ss-total-row { font-size: 1.8rem; font-weight: 900; color: #000; border-top: 2px solid #000; margin-top: 10px; padding-top: 5px; display: inline-block; min-width: 250px; }
         
-        /* 返回按鈕設定 */
-        #screenshotNav { position: fixed; top: 20px; right: 20px; z-index: 9999999 !important; }
+        /* 返回按鈕設定 - 修正為截圖模式下顯示 */
+        #screenshotNav { position: fixed; top: 20px; right: 20px; z-index: 9999999 !important; display: none; }
+        .screenshot-mode #screenshotNav { display: block !important; }
+
         .pick-item { transition: all 0.2s; border: 2px solid #e5e7eb; cursor: pointer; border-radius: 10px; }
         .pick-item.active { background-color: #eff6ff; border-color: #3b82f6; }
         @media print { .no-print, button, #sellerBox, .no-screenshot { display: none !important; } }
@@ -48,7 +50,7 @@
 <body class="p-2 md:p-6" id="mainBody">
 
 <button onclick="location.reload(true)" class="no-screenshot fixed right-4 bottom-24 z-[40] bg-orange-500 text-white shadow-lg w-10 h-10 rounded-full flex items-center justify-center text-lg opacity-80 active:scale-90 transition-all">🔄</button>
-<div id="screenshotNav" class="hidden"><button onclick="exitScreenshotMode()" class="bg-blue-600 text-white px-8 py-3 rounded-full font-black shadow-2xl border-4 border-white active:scale-95 transition-all">← 返回編輯模式</button></div>
+<div id="screenshotNav" class="no-print"><button onclick="exitScreenshotMode()" class="bg-blue-600 text-white px-8 py-3 rounded-full font-black shadow-2xl border-4 border-white active:scale-95 transition-all">← 返回編輯模式</button></div>
 
 <script>
 const firebaseConfig = { apiKey: "AIzaSyDeCI3yFPr1v9KxOmko-qim2a7EtllEHKM", authDomain: "magic-conch-gaming.firebaseapp.com", databaseURL: "https://magic-conch-gaming-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "magic-conch-gaming", storageBucket: "magic-conch-gaming.firebasestorage.app", messagingSenderId: "105735978925", appId: "1:105735978925:web:3ec77acbfd344475322b24" };
@@ -238,6 +240,7 @@ function renderRecords() {
             }
         }
 
+        // 2. 修正人員名稱與進度選單的不對稱 (flex 垂直居中與一致的內邊距)
         const div = `<div class="p-4 border-2 rounded-xl bg-white shadow-sm mb-2 ${missingItems.length > 0 ? 'border-red-400' : ''}">
             <div class="flex justify-between items-start">
                 <div class="flex-1">
@@ -248,9 +251,9 @@ function renderRecords() {
                     ${missingItems.length > 0 ? `<div class="text-[11px] text-red-600 font-black mt-1">⚠️ 未出貨：${missingItems.join(', ')}</div>` : ''}
                 </div>
                 <div class="flex flex-col gap-1 items-end">
-                    <div class="flex gap-1 mt-1">
-                        <span class="bg-gray-100 text-[10px] px-2 py-0.5 rounded font-bold">${r.seller||'未選'}</span>
-                        <select onchange="db.ref('records/'+${r.id}+'/progress').set(this.value)" class="text-[10px] p-1 border rounded w-24">${pOpts}</select>
+                    <div class="flex gap-1 mt-1 items-center">
+                        <span class="bg-gray-100 text-[10px] px-2 py-1 rounded font-bold h-[24px] flex items-center">${r.seller||'未選'}</span>
+                        <select onchange="db.ref('records/'+${r.id}+'/progress').set(this.value)" class="text-[10px] px-1 py-0 border rounded w-24 h-[24px] leading-none">${pOpts}</select>
                     </div>
                 </div>
             </div>
@@ -270,12 +273,10 @@ function renderRecords() {
 
 function enterScreenshotMode() { 
     document.getElementById('mainBody').classList.add('screenshot-mode'); 
-    document.getElementById('screenshotNav').classList.remove('hidden');
     renderConfig(); 
 }
 function exitScreenshotMode() { 
     document.getElementById('mainBody').classList.remove('screenshot-mode'); 
-    document.getElementById('screenshotNav').classList.add('hidden');
     renderConfig(); 
 }
 
@@ -284,8 +285,9 @@ function renderModalList() {
     const selections = currentSelections[currentCat] || [];
     (inv[currentCat] || []).forEach((item, idx) => {
         const sel = selections.find(s => !s.isTemp && s.idx === idx);
-        list.innerHTML += `<div class="pick-item p-3 flex justify-between items-center rounded-lg mb-1 ${sel?'active':''}" onclick="togglePick(${idx}, false)">
-            <div class="flex-1">
+        // 1. 修正選項無法按的問題：將 onclick 綁定在容器上，並確保內部按鈕事件停止冒泡
+        list.innerHTML += `<div class="pick-item p-3 flex justify-between items-center rounded-lg mb-1 ${sel?'active':''}" onclick="togglePick(${idx})">
+            <div class="flex-1 pointer-events-none">
                 <div class="font-bold text-sm">${item.name}</div>
                 <div class="text-xs text-blue-500 font-bold">$${Number(item.p).toLocaleString()}</div>
             </div>
@@ -316,7 +318,19 @@ function renderInventoryEditor() {
     const area = document.getElementById('inventoryEditor'); area.innerHTML = '';
     catOrder.forEach((cat, cIdx) => {
         const sec = document.createElement('div'); sec.className = "bg-white p-4 rounded-xl border relative shadow-sm mb-4";
-        sec.innerHTML = `<div class="flex justify-between items-center mb-2"><input class="font-bold text-blue-600 w-2/3" value="${cat}" onchange="renameCat(${cIdx}, this.value)"><button onclick="removeCat(${cIdx})" class="text-red-300 text-3xl font-bold">×</button></div><div id="edit-${cat}" class="space-y-3"></div><button onclick="addInvItem('${cat}')" class="w-full text-xs border-dashed border-2 mt-4 py-2 rounded-lg font-bold text-gray-400">+ 新增零件</button>`;
+        // 4. 補回大項調整順序按鈕
+        sec.innerHTML = `<div class="flex justify-between items-center mb-2">
+            <div class="flex items-center gap-2 flex-1">
+                <div class="flex flex-col">
+                    <button onclick="moveCat(${cIdx}, -1)" class="text-[10px] text-gray-400 hover:text-blue-500">▲</button>
+                    <button onclick="moveCat(${cIdx}, 1)" class="text-[10px] text-gray-400 hover:text-blue-500">▼</button>
+                </div>
+                <input class="font-bold text-blue-600 w-full" value="${cat}" onchange="renameCat(${cIdx}, this.value)">
+            </div>
+            <button onclick="removeCat(${cIdx})" class="text-red-300 text-3xl font-bold ml-2">×</button>
+        </div>
+        <div id="edit-${cat}" class="space-y-3"></div>
+        <button onclick="addInvItem('${cat}')" class="w-full text-xs border-dashed border-2 mt-4 py-2 rounded-lg font-bold text-gray-400">+ 新增零件</button>`;
         area.appendChild(sec);
         (inv[cat] || []).forEach((item, idx) => {
             const row = document.createElement('div'); row.className = "bg-gray-50 p-3 rounded-lg border space-y-2 mb-2";
@@ -327,6 +341,16 @@ function renderInventoryEditor() {
             document.getElementById(`edit-${cat}`).appendChild(row);
         });
     });
+}
+
+// 4. 補回移動分類順序的功能
+function moveCat(idx, dir) {
+    const newIdx = idx + dir;
+    if (newIdx < 0 || newIdx >= catOrder.length) return;
+    const temp = catOrder[idx];
+    catOrder[idx] = catOrder[newIdx];
+    catOrder[newIdx] = temp;
+    db.ref('catOrder').set(catOrder).then(() => renderInventoryEditor());
 }
 
 function editRecord(id) {
@@ -365,12 +389,15 @@ function exitToOrdersWithoutSaving() { if(confirm('確定不儲存並返回？')
 function addCustomSeller() { const name = prompt("請輸入新的人員姓名："); if (name) { const select = document.getElementById('infoSeller'); const opt = document.createElement('option'); opt.value = name; opt.text = name; opt.selected = true; select.add(opt); } }
 function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
 function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); if(t==='inventory') renderInventoryEditor(); }
+
+// 1. 修正選項無法按的核心函數
 function togglePick(idx) {
     if(!currentSelections[currentCat]) currentSelections[currentCat] = [];
     const i = currentSelections[currentCat].findIndex(s => !s.isTemp && s.idx === idx);
     if(i > -1) currentSelections[currentCat].splice(i,1); else currentSelections[currentCat].push({idx, isGift:false, qty:1, isTemp: false});
     renderConfig(); renderModalList();
 }
+
 function addInvItem(c) { if(!inv[c]) inv[c]=[]; inv[c].push({name:"", p:0, c:0, outOfStock: false}); renderInventoryEditor(); }
 function deleteInvItem(cat, idx) { const item = inv[cat][idx]; recycleBin.push({ type: 'item', name: item.name, cat: cat, data: item }); inv[cat].splice(idx, 1); renderInventoryEditor(); }
 function resetForm() { editingRecordId=null; currentSelections={}; document.querySelectorAll('input:not([type="checkbox"])').forEach(i=>i.value=""); renderConfig(); }
