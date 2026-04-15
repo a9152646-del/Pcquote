@@ -26,11 +26,11 @@
         .seller-bg { background-color: #eff6ff; }
         .item-row:hover { background-color: #f8fafc; }
         
-        /* 報價模式：全黑文字 */
+        /* 報價模式：全黑文字、無邊框標籤 */
         .selected-badge { color: #000; font-size: 15px; margin-right: 12px; display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
         .price-tag { color: #000; font-weight: 900; }
         
-        /* 截圖模式 */
+        /* 截圖模式硬設定 */
         #screenshot-header, #screenshot-footer { display: none; }
         #mainBody.screenshot-mode { background: #fff !important; padding: 40px !important; }
         .screenshot-mode .no-screenshot { display: none !important; }
@@ -47,6 +47,7 @@
         .ss-amount-row { font-size: 1.2rem; font-weight: 800; color: #000; margin-bottom: 5px; }
         .ss-total-row { font-size: 1.8rem; font-weight: 900; color: #000; border-top: 2px solid #000; margin-top: 10px; padding-top: 5px; display: inline-block; min-width: 250px; }
 
+        /* 返回按鈕強制最上層 */
         #screenshotNav { position: fixed; top: 40px; right: 20px; z-index: 999999; display: none; }
         #mainBody.screenshot-mode #screenshotNav { display: block; }
 
@@ -170,14 +171,13 @@ const db = firebase.database();
     </div>
 </div>
 
-<div id="recycleBinModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[1000]">
+<div id="recycleBinModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[1000000]">
     <div class="bg-white rounded-2xl max-w-xl w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl">
         <div class="p-4 border-b flex justify-between items-center bg-gray-800 text-white">
             <h3 class="font-bold">🗑️ 品項刪除紀錄 (暫存)</h3>
             <button onclick="closeRecycleBin()" class="text-3xl font-bold">×</button>
         </div>
         <div id="recycleList" class="overflow-y-auto flex-1 p-4 space-y-2 bg-gray-50"></div>
-        <div class="p-2 text-center text-[10px] text-gray-400 font-bold italic border-t">重整頁面後暫存會清空</div>
     </div>
 </div>
 
@@ -275,19 +275,20 @@ function renderInventoryEditor() {
     const area = document.getElementById('inventoryEditor'); area.innerHTML = '';
     catOrder.forEach((cat, cIdx) => {
         const sec = document.createElement('div'); sec.className = "bg-white p-4 rounded-xl border relative shadow-sm";
-        sec.innerHTML = `<div class="flex justify-between items-center mb-2"><input class="font-bold text-blue-600 w-2/3" value="${cat}" onchange="renameCat(${cIdx}, this.value)"><button onclick="removeCat(${cIdx})" class="text-red-300 text-2xl font-bold">×</button></div><div id="edit-${cat}" class="space-y-3 mt-4"></div><button onclick="addInvItem('${cat}')" class="w-full text-xs border-dashed border-2 mt-4 py-2 rounded-lg font-bold text-gray-400">+ 新增零件</button>`;
+        sec.innerHTML = `<div class="flex justify-between items-center mb-2"><input class="font-bold text-blue-600 w-2/3" value="${cat}" onchange="renameCat(${cIdx}, this.value)"><button onclick="removeCat(${cIdx})" class="text-red-300 text-3xl font-bold">×</button></div><div id="edit-${cat}" class="space-y-3 mt-4"></div><button onclick="addInvItem('${cat}')" class="w-full text-xs border-dashed border-2 mt-4 py-2 rounded-lg font-bold text-gray-400">+ 新增零件</button>`;
         area.appendChild(sec);
         (inv[cat] || []).forEach((item, idx) => {
-            const row = document.createElement('div'); row.className = "bg-gray-50 p-4 rounded-lg relative border space-y-2 mb-2";
+            const row = document.createElement('div'); 
+            row.className = "bg-gray-50 p-3 rounded-lg relative border space-y-2 mb-2";
             row.innerHTML = `
                 <input type="text" class="text-sm font-black w-full bg-white border p-2 rounded shadow-sm mb-1" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value">
                 <div class="flex gap-2">
                     <input type="number" class="w-1/3 text-xs p-1" value="${item.p}" placeholder="售價" onchange="inv['${cat}'][${idx}].p=this.value">
                     <input type="number" class="w-1/3 text-xs text-red-600 font-bold p-1 bg-white" value="${item.c||0}" placeholder="成本" onchange="inv['${cat}'][${idx}].c=this.value">
-                    <button onclick="inv['${cat}'][${idx}].outOfStock=!inv['${cat}'][${idx}].outOfStock; renderInventoryEditor();" class="w-1/3 text-[10px] font-bold rounded ${item.outOfStock?'bg-red-500 text-white':'bg-white text-gray-400 border'}">缺貨</button>
+                    <button onclick="inv['${cat}'][${idx}].outOfStock=!inv['${cat}'][${idx}].outOfStock; renderInventoryEditor();" class="w-1/3 text-[10px] font-bold rounded shadow-sm ${item.outOfStock?'bg-red-500 text-white':'bg-white text-gray-400 border'}">缺貨</button>
                 </div>
-                <div class="flex justify-end pt-1 border-t mt-1">
-                    <button onclick="deleteInvItem('${cat}', ${idx})" class="text-[10px] bg-red-50 text-red-500 px-4 py-1.5 rounded-full font-black border border-red-200">
+                <div class="flex justify-end pt-1 border-t border-gray-100 mt-2">
+                    <button onclick="deleteInvItem('${cat}', ${idx})" class="text-[10px] bg-red-50 text-red-500 px-4 py-1.5 rounded-full font-black border border-red-200 active:scale-95 transition-all shadow-sm">
                         刪除品項 ×
                     </button>
                 </div>`;
@@ -310,7 +311,7 @@ function removeCat(i) {
     }
 }
 function showRecycleBin() {
-    const list = document.getElementById('recycleList'); list.innerHTML = recycleBin.length ? '' : '<div class="text-center py-10 text-gray-400">尚無紀錄</div>';
+    const list = document.getElementById('recycleList'); list.innerHTML = recycleBin.length ? '' : '<div class="text-center py-10 text-gray-400 font-bold">目前沒有刪除紀錄</div>';
     recycleBin.forEach((item, idx) => {
         list.innerHTML += `<div class="flex items-center justify-between p-3 bg-white border rounded shadow-sm">
             <span class="font-bold text-sm">(${item.type==='cat'?'類別':'零件'}) ${item.name}</span>
@@ -329,6 +330,30 @@ function closeRecycleBin() { document.getElementById('recycleBinModal').classLis
 function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
 function addInvItem(c) { if(!inv[c]) inv[c]=[]; inv[c].push({name:"", p:0, c:0, outOfStock: false}); renderInventoryEditor(); }
 function saveInventory() { db.ref('inventory').set(inv); db.ref('catOrder').set(catOrder).then(()=>alert('同步成功')); }
+
+function renderRecords() {
+    const dList = document.getElementById('draftList'), oList = document.getElementById('orderList'), cList = document.getElementById('completedList');
+    dList.innerHTML = ''; oList.innerHTML = ''; cList.innerHTML = '';
+    records.sort((a,b)=>b.id-a.id).forEach(r => {
+        const div = `<div class="p-4 border-2 rounded-xl bg-white shadow-sm"><div class="flex justify-between items-start"><div class="flex-1"><div class="text-[10px] text-gray-400 font-bold">${r.time}</div><div class="text-sm font-bold">${r.name || '[無名]'}</div><div class="text-blue-600 font-black">${r.total}</div></div></div><div class="flex gap-2 border-t mt-2 pt-2"><button onclick="editRecord(${r.id})" class="flex-1 py-1 bg-blue-500 text-white text-xs rounded font-bold">編輯</button><button onclick="if(confirm('刪除？')) db.ref('records/'+${r.id}).remove()" class="px-3 py-1 bg-red-50 text-red-400 text-xs rounded">刪除</button></div></div>`;
+        if(r.status === 'draft') dList.innerHTML += div; else oList.innerHTML += div;
+    });
+}
+function editRecord(id) {
+    const r = records.find(x => x.id === id); if(!r) return;
+    editingRecordId = id; currentStatus = r.status; currentSelections = r.selections || {};
+    document.getElementById('custName').value = r.name || ''; 
+    document.getElementById('discountAmt').value = r.discount || 0; 
+    if(r.status === 'draft') document.getElementById('btnConvertToOrder').classList.remove('hidden'); 
+    else document.getElementById('btnConvertToOrder').classList.add('hidden');
+    renderConfig(); showTab('calc');
+}
+function saveRecord(st) { 
+    const id = editingRecordId || Date.now();
+    const r = { id, time: new Date().toLocaleString(), name: document.getElementById('custName').value, selections: currentSelections, total: document.getElementById('ui-totalSale').innerText, status: st === 'current' ? currentStatus : st, discount: document.getElementById('discountAmt').value };
+    db.ref('records/' + id).update(r).then(() => { alert('成功'); showTab('drafts'); });
+}
+function toggleSellerMode() { isSellerMode = !isSellerMode; document.getElementById('sellerBox').classList.toggle('hidden'); renderConfig(); }
 function togglePick(idx, isT) {
     if(!currentSelections[currentCat]) currentSelections[currentCat] = [];
     const i = currentSelections[currentCat].findIndex(s => !s.isTemp && s.idx === idx);
