@@ -3,41 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.05 (位置修正版)</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.05 (介面優化版)</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        /* 1. 介面與截圖模式全體下移 (修正點：增加 padding-top) */
+        /* 1. 介面下移距離維持，字體調回適中大小 */
         body { 
             background-color: #f8fafc; 
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
-            padding-top: 130px !important; /* 編輯模式下移，完全避開狀態欄 */
-            font-size: 18px; 
+            padding-top: 130px !important; /* 維持下移距離 */
+            font-size: 16px; /* 調回較適中的字體 */
             color: #334155; 
-            line-height: 1.6;
+            line-height: 1.5;
         }
-        .tab-active { border-bottom: 4px solid #3b82f6; color: #3b82f6; font-weight: bold; }
-        .card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
+        .tab-active { border-bottom: 3px solid #3b82f6; color: #3b82f6; font-weight: bold; }
+        .card { background: white; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
         .hidden { display: none !important; }
         
-        /* 輸入框加大 */
-        input, select, textarea { border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 18px; outline: none; }
+        /* 輸入框大小調整 */
+        input, select, textarea { border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 12px; font-size: 16px; outline: none; }
         
-        /* 報價單項目加大 */
-        .item-row { padding: 16px 20px !important; border-bottom: 1px solid #f1f5f9; }
-        .selected-badge { color: #1e293b; font-size: 18px; margin-right: 8px; display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
-        .price-tag { color: #94a3b8; font-weight: 400; font-size: 14px; margin-left: 4px; }
+        /* 報價單項目間距與字體 */
+        .item-row { padding: 14px 18px !important; border-bottom: 1px solid #f1f5f9; }
+        .selected-badge { color: #1e293b; font-size: 16px; margin-right: 8px; display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
+        .price-tag { color: #94a3b8; font-weight: 400; font-size: 13px; margin-left: 4px; }
         
         /* 管理員隱藏單價 */
         .hide-prices .price-tag { display: none !important; }
 
-        /* 管理員框框位置下移 (避免重疊時間) */
+        /* 金額隱藏按鈕位置更改：左下角 */
         #adminToggleContainer {
             position: fixed;
-            top: 55px;
+            bottom: 25px;
             left: 15px;
             z-index: 50;
         }
@@ -49,30 +49,30 @@
             border: 2px solid #e2e8f0;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             cursor: pointer;
         }
 
-        /* 截圖模式位置修正 */
+        /* 截圖模式位置 */
         #screenshotNav { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 99999; display: none; }
         .screenshot-mode #screenshotNav { display: block !important; }
-        #screenshotNav button { font-size: 18px; padding: 14px 28px; border-radius: 40px; background: #1e293b; color: white; box-shadow: 0 8px 20px rgba(0,0,0,0.3); font-weight: bold; }
+        #screenshotNav button { font-size: 16px; padding: 12px 24px; border-radius: 30px; background: #1e293b; color: white; box-shadow: 0 8px 20px rgba(0,0,0,0.3); font-weight: bold; }
 
         .screenshot-mode .no-screenshot, .screenshot-mode #adminToggleContainer { display: none !important; }
         .screenshot-mode #screenshot-header { display: block !important; }
         .screenshot-mode #screenshot-footer { display: flex !important; flex-direction: column; }
-        .screenshot-mode body { background: #fff !important; padding-top: 100px !important; } /* 截圖模式標題下移 */
+        .screenshot-mode body { background: #fff !important; padding-top: 100px !important; }
         .screenshot-mode .max-w-7xl { max-width: 700px !important; margin: 0 auto !important; }
         
-        /* 品項管理頁面優化 */
-        .inv-item-row { display: flex; align-items: center; gap: 8px; padding: 12px; border-radius: 8px; border: 1px solid #f1f5f9; background: #fff; margin-bottom: 6px; }
+        /* 品項管理頁面 */
+        .inv-item-row { display: flex; align-items: center; gap: 6px; padding: 10px; border-radius: 8px; border: 1px solid #f1f5f9; background: #fff; margin-bottom: 4px; }
         .inv-out-of-stock { background-color: #fff1f2 !important; border-color: #fecdd3 !important; }
-        .stock-btn { font-size: 14px; padding: 6px 12px; border-radius: 8px; font-weight: bold; border: 1px solid #e2e8f0; cursor: pointer; min-width: 70px; text-align: center; }
+        .stock-btn { font-size: 13px; padding: 5px 10px; border-radius: 6px; font-weight: bold; border: 1px solid #e2e8f0; cursor: pointer; min-width: 65px; text-align: center; }
         .stock-btn.active { background: #22c55e; color: white; border-color: #22c55e; }
         .stock-btn.oos { background: #ef4444; color: white; border-color: #ef4444; }
 
-        /* 按鈕全體加大 */
-        button { font-size: 18px !important; }
+        /* 按鈕字體同步調整 */
+        button { font-size: 16px !important; }
     </style>
 </head>
 <body class="p-2 md:p-4 hide-prices" id="mainBody">
@@ -130,26 +130,26 @@
             <div class="lg:col-span-1 no-screenshot">
                 <div class="card p-4 sticky top-20 border-t-4 border-blue-500 space-y-4">
                     <div class="space-y-3">
-                        <div><label class="text-sm text-gray-400 font-bold">DISCOUNT 折扣</label><input type="number" id="discountAmt" class="w-full mt-1 text-red-500 font-black text-xl" value="0" oninput="calculate()"></div>
-                        <div class="pt-2 border-t border-dashed"><div class="text-sm text-gray-400 font-bold">PRE-TAX 未稅</div><div id="ui-untaxed" class="text-lg font-bold text-gray-500">$0</div></div>
-                        <div class="pt-1"><div class="text-sm text-blue-400 font-bold">TOTAL 含稅</div><div id="ui-totalSale" class="text-4xl font-black text-blue-600">$0</div></div>
+                        <div><label class="text-sm text-gray-400 font-bold">DISCOUNT 折扣</label><input type="number" id="discountAmt" class="w-full mt-1 text-red-500 font-black text-lg" value="0" oninput="calculate()"></div>
+                        <div class="pt-2 border-t border-dashed"><div class="text-sm text-gray-400 font-bold">PRE-TAX 未稅</div><div id="ui-untaxed" class="text-base font-bold text-gray-500">$0</div></div>
+                        <div class="pt-1"><div class="text-sm text-blue-400 font-bold">TOTAL 含稅</div><div id="ui-totalSale" class="text-3xl font-black text-blue-600">$0</div></div>
                         
                         <div id="ui-noCardShow" class="p-3 bg-orange-50 rounded-lg hidden border-2 border-orange-200">
                             <div class="text-xs text-orange-400 font-bold uppercase">無卡分期</div>
-                            <div id="ui-noCardVal" class="text-2xl font-black text-orange-600">$0</div>
+                            <div id="ui-noCardVal" class="text-xl font-black text-orange-600">$0</div>
                         </div>
-                        <input type="number" id="noCardTotal" class="w-full border-orange-200 text-lg" placeholder="無卡分期金額" oninput="calculate()">
+                        <input type="number" id="noCardTotal" class="w-full border-orange-200 text-base" placeholder="無卡分期金額" oninput="calculate()">
                     </div>
                     
                     <div id="sellerBox" class="bg-blue-50 p-4 rounded-xl invisible">
                         <div class="flex justify-between text-sm text-blue-500"><span>成本</span><span id="ui-totalCost">$0</span></div>
-                        <div class="flex justify-between text-lg font-black text-green-600 border-t-2 border-blue-100 mt-2 pt-2"><span>利潤</span><span id="ui-totalProfit">$0</span></div>
+                        <div class="flex justify-between text-xl font-black text-green-600 border-t-2 border-blue-100 mt-2 pt-2"><span>利潤</span><span id="ui-totalProfit">$0</span></div>
                     </div>
 
                     <div class="space-y-2">
-                        <button onclick="saveRecord('current')" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black">💾 儲存草稿</button>
-                        <button id="btnConvertToOrder" onclick="saveRecord('order')" class="hidden w-full bg-green-600 text-white py-4 rounded-xl font-black">✅ 轉正式訂單</button>
-                        <button onclick="enterScreenshotMode()" class="w-full bg-orange-500 text-white py-4 rounded-xl font-black">📸 截圖模式</button>
+                        <button onclick="saveRecord('current')" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black">💾 儲存草稿</button>
+                        <button id="btnConvertToOrder" onclick="saveRecord('order')" class="hidden w-full bg-green-600 text-white py-3 rounded-xl font-black">✅ 轉正式訂單</button>
+                        <button onclick="enterScreenshotMode()" class="w-full bg-orange-500 text-white py-3 rounded-xl font-black">📸 截圖模式</button>
                     </div>
                 </div>
             </div>
@@ -157,10 +157,10 @@
     </div>
 
     <div id="screenshot-footer" class="hidden mt-8 border-t-2 border-gray-100 pt-6 text-right">
-        <div class="text-lg text-gray-500">優惠折抵：<span id="ss-discount" class="font-bold text-red-500">-$0</span></div>
-        <div id="ss-nocard-row" class="text-lg text-orange-500 hidden font-bold">無卡分期總額：<span id="ss-nocard-val">$0</span></div>
-        <div class="text-3xl font-black text-blue-600 mt-2">含稅應付總額：<span id="ss-total">$0</span></div>
-        <div class="text-sm text-gray-300 mt-12">感謝您的支持，祝您使用愉快！</div>
+        <div class="text-base text-gray-500">優惠折抵：<span id="ss-discount" class="font-bold text-red-500">-$0</span></div>
+        <div id="ss-nocard-row" class="text-base text-orange-500 hidden font-bold">無卡分期總額：<span id="ss-nocard-val">$0</span></div>
+        <div class="text-2xl font-black text-blue-600 mt-2">含稅應付總額：<span id="ss-total">$0</span></div>
+        <div class="text-xs text-gray-300 mt-12">感謝您的支持，祝您使用愉快！</div>
     </div>
 
     <div id="tab-drafts" class="page-content hidden"><div id="draftList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
@@ -170,7 +170,7 @@
     <div id="tab-inventory" class="page-content hidden">
         <div class="card p-4">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="font-black text-xl text-gray-700">⚙️ 雲端品項管理</h2>
+                <h2 class="font-black text-lg text-gray-700">⚙️ 雲端品項管理</h2>
                 <div class="flex gap-2">
                     <button onclick="addNewCategory()" class="bg-blue-500 text-white px-3 py-2 rounded-lg text-sm">+ 大項</button>
                     <button onclick="saveInventory()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm shadow-md font-bold">💾 同步雲端</button>
@@ -183,18 +183,18 @@
 
 <div id="selectionModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[500] backdrop-blur-md">
     <div class="bg-white rounded-xl max-w-lg w-full max-h-[85vh] overflow-hidden flex flex-col shadow-2xl">
-        <div class="p-4 border-b flex justify-between items-center bg-gray-50"><h3 id="modalTitle" class="font-black text-blue-600 text-xl">選擇品項</h3><button onclick="closeModal()" class="text-gray-400 text-4xl">×</button></div>
-        <div class="p-4 border-b"><input type="text" id="modalSearch" class="w-full bg-gray-100 border-none py-4 px-6 rounded-xl text-lg" placeholder="🔍 快速搜尋零件..." oninput="filterModalList()"></div>
+        <div class="p-4 border-b flex justify-between items-center bg-gray-50"><h3 id="modalTitle" class="font-black text-blue-600 text-lg">選擇品項</h3><button onclick="closeModal()" class="text-gray-400 text-3xl">×</button></div>
+        <div class="p-4 border-b"><input type="text" id="modalSearch" class="w-full bg-gray-100 border-none py-3 px-5 rounded-xl text-base" placeholder="🔍 快速搜尋零件..." oninput="filterModalList()"></div>
         <div id="modalList" class="overflow-y-auto flex-1 p-3 space-y-2"></div>
         <div class="p-4 border-t bg-gray-50">
             <div class="flex gap-2 mb-3">
-                <input type="text" id="tempName" class="flex-1 text-base" placeholder="臨時名稱">
-                <input type="number" id="tempPrice" class="w-24 text-base" placeholder="售價">
-                <input type="number" id="tempCost" class="w-24 text-base" placeholder="成本">
+                <input type="text" id="tempName" class="flex-1 text-sm" placeholder="臨時名稱">
+                <input type="number" id="tempPrice" class="w-20 text-sm" placeholder="售價">
+                <input type="number" id="tempCost" class="w-20 text-sm" placeholder="成本">
             </div>
-            <button onclick="addTempItem()" class="w-full bg-orange-500 text-white py-3 rounded-xl font-bold">➕ 新增臨時項目</button>
+            <button onclick="addTempItem()" class="w-full bg-orange-500 text-white py-2 rounded-xl font-bold">➕ 新增臨時項目</button>
         </div>
-        <div class="p-4 border-t"><button onclick="closeModal()" class="w-full bg-blue-600 text-white py-5 rounded-2xl font-black">確定選擇</button></div>
+        <div class="p-4 border-t"><button onclick="closeModal()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black">確定選擇</button></div>
     </div>
 </div>
 
@@ -202,7 +202,7 @@
     <div class="bg-white rounded-xl max-w-md w-full max-h-[75vh] overflow-hidden flex flex-col shadow-2xl">
         <div class="p-4 border-b flex justify-between items-center bg-green-600 text-white"><h3 class="font-bold">📦 出貨品項勾選</h3><button onclick="closeDeliveryModal()" class="text-3xl">×</button></div>
         <div id="deliveryList" class="overflow-y-auto flex-1 p-4 space-y-3 bg-gray-50 text-base"></div>
-        <div class="p-4 border-t"><button onclick="closeDeliveryModal()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold">確認關閉</button></div>
+        <div class="p-4 border-t"><button onclick="closeDeliveryModal()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">確認關閉</button></div>
     </div>
 </div>
 
@@ -261,9 +261,9 @@ function renderConfig() {
         const badges = items.map(sel => {
             let target = sel.isTemp ? sel : (inv[cat] || [])[sel.idx];
             if(!target) return '';
-            return `<div class="selected-badge">${sel.isGift?'<span class="text-red-500">[贈]</span> ':''}${target.name}${sel.qty>1?`<span class="bg-blue-100 text-blue-600 px-3 rounded-full ml-2 text-sm">x${sel.qty}</span>`:''} <span class="price-tag">($${Number(target.p).toLocaleString()})</span></div>`;
+            return `<div class="selected-badge">${sel.isGift?'<span class="text-red-500">[贈]</span> ':''}${target.name}${sel.qty>1?`<span class="bg-blue-100 text-blue-600 px-3 rounded-full ml-2 text-xs">x${sel.qty}</span>`:''} <span class="price-tag">($${Number(target.p).toLocaleString()})</span></div>`;
         }).join('');
-        container.innerHTML += `<div class="item-row cursor-pointer transition active:bg-gray-50" onclick="openSelection('${cat}')"><div class="text-xs font-black text-blue-400 uppercase mb-1 tracking-wider">${cat}</div><div class="flex flex-wrap gap-2">${badges || '<span class="text-gray-300 italic text-base no-screenshot">未選中項目...</span>'}</div></div>`;
+        container.innerHTML += `<div class="item-row cursor-pointer transition active:bg-gray-50" onclick="openSelection('${cat}')"><div class="text-[10px] font-black text-blue-400 uppercase mb-1 tracking-wider">${cat}</div><div class="flex flex-wrap gap-2">${badges || '<span class="text-gray-300 italic text-base no-screenshot">未選中項目...</span>'}</div></div>`;
     });
     calculate();
 }
@@ -273,16 +273,16 @@ function renderRecords() {
     dList.innerHTML = ''; oList.innerHTML = ''; cList.innerHTML = '';
     records.sort((a,b)=>b.id-a.id).forEach(r => {
         const pOpts = ["待處理", "組裝中", "測試中", "已完工", "已寄出"].map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
-        const div = `<div class="p-5 border-2 rounded-2xl bg-white shadow-sm space-y-4">
+        const div = `<div class="p-4 border-2 rounded-xl bg-white shadow-sm space-y-3">
             <div class="flex justify-between items-start">
-                <div><div class="text-xs text-gray-400 font-mono">${r.time}</div><div class="text-xl font-black text-gray-800">${r.name || '無名客戶'}</div><div class="text-blue-600 font-black text-2xl">${r.total}</div></div>
-                <div class="text-right"><span class="bg-blue-100 text-blue-600 text-sm font-bold px-3 py-1 rounded-full">${r.seller||'未指定'}</span><div class="mt-3"><select onchange="db.ref('records/'+${r.id}+'/progress').set(this.value)" class="text-sm font-bold border-2 border-gray-100 px-2 py-1 rounded-lg">${pOpts}</select></div></div>
+                <div><div class="text-xs text-gray-400 font-mono">${r.time}</div><div class="text-lg font-black text-gray-800">${r.name || '無名客戶'}</div><div class="text-blue-600 font-black text-xl">${r.total}</div></div>
+                <div class="text-right"><span class="bg-blue-100 text-blue-600 text-xs font-bold px-3 py-1 rounded-full">${r.seller||'未指定'}</span><div class="mt-2"><select onchange="db.ref('records/'+${r.id}+'/progress').set(this.value)" class="text-xs font-bold border-2 border-gray-100 px-2 py-1 rounded-lg">${pOpts}</select></div></div>
             </div>
-            <div class="flex gap-2 pt-4 border-t border-dashed">
-                <button onclick="editRecord(${r.id})" class="flex-1 py-3 bg-blue-600 text-white text-sm rounded-xl font-black">編輯</button>
-                ${r.status === 'draft' ? `<button onclick="if(confirm('確認轉為正式訂單？')) db.ref('records/'+${r.id}+'/status').set('order')" class="bg-green-600 text-white px-4 rounded-xl text-sm font-bold">轉正式</button>` : 
-                `<button onclick="openDeliveryFast(${r.id})" class="bg-orange-500 text-white px-4 rounded-xl text-sm font-bold">出貨</button>
-                 <button onclick="if(confirm('確認結案？')) db.ref('records/'+${r.id}+'/status').set('completed')" class="bg-gray-600 text-white px-4 rounded-xl text-sm font-bold">結案</button>`}
+            <div class="flex gap-2 pt-3 border-t border-dashed">
+                <button onclick="editRecord(${r.id})" class="flex-1 py-2 bg-blue-600 text-white text-sm rounded-lg font-black">編輯</button>
+                ${r.status === 'draft' ? `<button onclick="if(confirm('確認轉為正式訂單？')) db.ref('records/'+${r.id}+'/status').set('order')" class="bg-green-600 text-white px-3 rounded-lg text-sm font-bold">轉正式</button>` : 
+                `<button onclick="openDeliveryFast(${r.id})" class="bg-orange-500 text-white px-3 rounded-lg text-sm font-bold">出貨</button>
+                 <button onclick="if(confirm('確認結案？')) db.ref('records/'+${r.id}+'/status').set('completed')" class="bg-gray-600 text-white px-3 rounded-lg text-sm font-bold">結案</button>`}
                 <button onclick="if(confirm('確定刪除此紀錄？')) db.ref('records/'+${r.id}).remove()" class="text-red-300 text-2xl px-2">✕</button>
             </div></div>`;
         if(r.status === 'draft') dList.innerHTML += div; else if(r.status === 'completed') cList.innerHTML += div; else oList.innerHTML += div;
@@ -292,12 +292,12 @@ function renderRecords() {
 function renderInventoryEditor() {
     const area = document.getElementById('inventoryEditor'); area.innerHTML = '';
     catOrder.forEach((cat, cIdx) => {
-        const sec = document.createElement('div'); sec.className = "bg-gray-50 p-4 rounded-2xl border-2 relative mb-6";
-        sec.innerHTML = `<div class="flex justify-between items-center mb-4"><div class="flex items-center gap-4"><div class="flex flex-col text-sm text-gray-300"><button onclick="moveCat(${cIdx}, -1)">▲</button><button onclick="moveCat(${cIdx}, 1)">▼</button></div><input class="font-black text-lg text-blue-600 border-none bg-transparent p-0 w-48" value="${cat}" onchange="renameCat(${cIdx}, this.value)"></div><button onclick="removeCat(${cIdx})" class="text-red-300 hover:text-red-500 text-4xl">×</button></div><div id="edit-${cat}" class="space-y-3"></div><button onclick="addInvItem('${cat}')" class="w-full text-sm font-bold bg-white mt-4 py-4 rounded-2xl border-2 border-dashed border-gray-200 text-gray-400 hover:text-blue-500 active:bg-blue-50">+ 新增零件品項</button>`;
+        const sec = document.createElement('div'); sec.className = "bg-gray-50 p-4 rounded-xl border-2 relative mb-4";
+        sec.innerHTML = `<div class="flex justify-between items-center mb-4"><div class="flex items-center gap-3"><div class="flex flex-col text-sm text-gray-300"><button onclick="moveCat(${cIdx}, -1)">▲</button><button onclick="moveCat(${cIdx}, 1)">▼</button></div><input class="font-black text-base text-blue-600 border-none bg-transparent p-0 w-44" value="${cat}" onchange="renameCat(${cIdx}, this.value)"></div><button onclick="removeCat(${cIdx})" class="text-red-300 hover:text-red-500 text-3xl">×</button></div><div id="edit-${cat}" class="space-y-3"></div><button onclick="addInvItem('${cat}')" class="w-full text-xs font-bold bg-white mt-4 py-3 rounded-xl border-2 border-dashed border-gray-200 text-gray-400 hover:text-blue-500 active:bg-blue-50">+ 新增零件品項</button>`;
         area.appendChild(sec);
         (inv[cat] || []).forEach((item, idx) => {
             const row = document.createElement('div'); row.className = `inv-item-row ${item.outOfStock ? 'inv-out-of-stock' : ''}`;
-            row.innerHTML = `<div class="flex flex-col text-xs text-gray-300 px-2"><button onclick="moveItem('${cat}', ${idx}, -1)">▲</button><button onclick="moveItem('${cat}', ${idx}, 1)">▼</button></div><input class="flex-grow text-base font-bold bg-transparent border-none focus:ring-0" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value"><div class="flex items-center gap-3 ml-auto"><div class="flex items-center gap-1 border-2 rounded-xl bg-white px-3"><span class="text-xs text-gray-400">售</span><input type="number" class="w-20 text-base font-black text-blue-600 border-none p-0" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div><div class="flex items-center gap-1 border-2 rounded-xl bg-white px-3"><span class="text-xs text-gray-400">本</span><input type="number" class="w-20 text-base font-black text-red-400 border-none p-0" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div><button onclick="toggleStockStatus('${cat}', ${idx})" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button><button onclick="inv['${cat}'].splice(${idx}, 1); renderInventoryEditor();" class="text-red-200 text-3xl px-2">×</button></div>`;
+            row.innerHTML = `<div class="flex flex-col text-xs text-gray-300 px-2"><button onclick="moveItem('${cat}', ${idx}, -1)">▲</button><button onclick="moveItem('${cat}', ${idx}, 1)">▼</button></div><input class="flex-grow text-sm font-bold bg-transparent border-none focus:ring-0" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value"><div class="flex items-center gap-3 ml-auto"><div class="flex items-center gap-1 border-2 rounded-xl bg-white px-2"><span class="text-xs text-gray-400">售</span><input type="number" class="w-20 text-sm font-black text-blue-600 border-none p-0" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div><div class="flex items-center gap-1 border-2 rounded-xl bg-white px-2"><span class="text-xs text-gray-400">本</span><input type="number" class="w-20 text-sm font-black text-red-400 border-none p-0" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div><button onclick="toggleStockStatus('${cat}', ${idx})" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button><button onclick="inv['${cat}'].splice(${idx}, 1); renderInventoryEditor();" class="text-red-200 text-3xl px-1">×</button></div>`;
             document.getElementById(`edit-${cat}`).appendChild(row);
         });
     });
@@ -328,9 +328,9 @@ function renderModalList() {
     const selections = currentSelections[currentCat] || [];
     (inv[currentCat] || []).forEach((item, idx) => {
         const sel = selections.find(s => !s.isTemp && s.idx === idx);
-        list.innerHTML += `<div class="pick-item p-5 border-2 rounded-2xl flex justify-between items-center mb-3 ${sel?'border-blue-500 bg-blue-50':'border-gray-100'} ${item.outOfStock?'opacity-30 pointer-events-none':''}" onclick="togglePick(${idx})">
-            <div class="flex-1"><div class="font-black text-gray-800 text-base">${item.outOfStock?'[缺貨中] ':''}${item.name}</div><div class="text-blue-600 font-black mt-1 text-lg">$${Number(item.p).toLocaleString()}</div></div>
-            ${sel ? `<div class="flex items-center gap-4" onclick="event.stopPropagation()"><label class="text-sm font-bold flex items-center gap-2 bg-white px-3 py-2 rounded-full border"><input type="checkbox" class="w-5 h-5" ${sel.isGift?'checked':''} onchange="updateSubItem(${idx}, 'gift', this.checked)"> 贈品</label><div class="flex items-center border-2 border-blue-200 rounded-xl bg-white overflow-hidden"><button class="px-4 py-2 bg-blue-50 font-bold" onclick="updateSubItem(${idx}, 'qty', -1)">-</button><span class="px-4 font-black text-blue-600">${sel.qty || 1}</span><button class="px-4 py-2 bg-blue-50 font-bold" onclick="updateSubItem(${idx}, 'qty', 1)">+</button></div></div>` : ''}</div>`;
+        list.innerHTML += `<div class="pick-item p-4 border-2 rounded-xl flex justify-between items-center mb-3 ${sel?'border-blue-500 bg-blue-50':'border-gray-100'} ${item.outOfStock?'opacity-30 pointer-events-none':''}" onclick="togglePick(${idx})">
+            <div class="flex-1"><div class="font-black text-gray-800 text-sm">${item.outOfStock?'[缺貨中] ':''}${item.name}</div><div class="text-blue-600 font-black mt-1 text-base">$${Number(item.p).toLocaleString()}</div></div>
+            ${sel ? `<div class="flex items-center gap-3" onclick="event.stopPropagation()"><label class="text-xs font-bold flex items-center gap-2 bg-white px-2 py-1 rounded-full border"><input type="checkbox" class="w-4 h-4" ${sel.isGift?'checked':''} onchange="updateSubItem(${idx}, 'gift', this.checked)"> 贈品</label><div class="flex items-center border-2 border-blue-200 rounded-lg bg-white overflow-hidden"><button class="px-3 py-1 bg-blue-50 font-bold" onclick="updateSubItem(${idx}, 'qty', -1)">-</button><span class="px-3 font-black text-blue-600">${sel.qty || 1}</span><button class="px-3 py-1 bg-blue-50 font-bold" onclick="updateSubItem(${idx}, 'qty', 1)">+</button></div></div>` : ''}</div>`;
     });
 }
 
@@ -375,7 +375,7 @@ function openDeliveryFast(id) {
         r.selections[cat].forEach((sel, idx) => {
             const k = `${cat}_${idx}`; const isD = tempDeliv[k] !== false;
             let n = sel.isTemp ? sel.name : (inv[cat] && inv[cat][sel.idx] ? inv[cat][sel.idx].name : "未知品項");
-            list.innerHTML += `<div class="flex justify-between items-center p-4 border-2 rounded-2xl bg-white"><div>${n}</div><input type="checkbox" class="w-7 h-7" ${isD?'checked':''} onchange="db.ref('records/'+${id}+'/deliveredItems/${k}').set(this.checked)"></div>`;
+            list.innerHTML += `<div class="flex justify-between items-center p-4 border-2 rounded-xl bg-white"><div>${n}</div><input type="checkbox" class="w-6 h-6" ${isD?'checked':''} onchange="db.ref('records/'+${id}+'/deliveredItems/${k}').set(this.checked)"></div>`;
         });
     }
     document.getElementById('deliveryModal').classList.remove('hidden');
