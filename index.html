@@ -35,7 +35,6 @@
         .pick-item.active { background-color: #eff6ff; border-color: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.2); }
         .is-out-of-stock { opacity: 0.4; background-color: #f1f5f9 !important; border-color: #cbd5e1 !important; color: #64748b !important; }
 
-        /* 標籤樣式 */
         .status-badge { font-weight: bold; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
         .status-待處理 { background: #fee2e2; color: #ef4444; }
         .status-組裝中 { background: #fef3c7; color: #d97706; }
@@ -125,9 +124,9 @@ const db = firebase.database();
         </div>
     </div>
 
-    <div id="tab-drafts" class="page-content hidden"><div class="card p-6"><h2 class="font-bold text-orange-500 border-b pb-2 mb-4">📂 雲端草稿 <span id="count-draft">0</span></h2><div id="draftList" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div></div></div>
+    <div id="tab-drafts" class="page-content hidden"><div class="card p-6"><h2 class="font-bold text-orange-500 border-b pb-2 mb-4">📂 訂單草稿 <span id="count-draft">0</span></h2><div id="draftList" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div></div></div>
     <div id="tab-orders" class="page-content hidden"><div class="card p-6"><h2 class="font-bold text-green-600 border-b pb-2 mb-4">✅ 正式訂單 <span id="count-order">0</span></h2><div id="orderList" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div></div></div>
-    <div id="tab-completed" class="page-content hidden"><div class="card p-6"><h2 class="font-bold text-gray-500 border-b pb-2 mb-4">🏁 已結案歷史 <span id="count-completed">0</span></h2><div id="completedList" class="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-80"></div></div></div>
+    <div id="tab-completed" class="page-content hidden"><div class="card p-6"><h2 class="font-bold text-gray-500 border-b pb-2 mb-4">🏁 已結案訂單 <span id="count-completed">0</span></h2><div id="completedList" class="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-80"></div></div></div>
 
     <div id="tab-inventory" class="page-content hidden">
         <div class="card p-6">
@@ -141,7 +140,7 @@ const db = firebase.database();
             <div id="inventoryEditor" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             
             <div class="mt-12 p-6 bg-red-50 rounded-2xl border-2 border-dashed border-red-200">
-                <h3 class="font-bold text-red-500 mb-4 flex items-center gap-2">🗑️ 品項刪除暫存區 (誤刪可在此找回)</h3>
+                <h3 class="font-bold text-red-500 mb-4 flex items-center gap-2">🗑️ 品項刪除暫存區 (誤刪可找回)</h3>
                 <div id="trashContainer" class="space-y-2 text-xs"></div>
             </div>
         </div>
@@ -219,7 +218,7 @@ function renderConfig() {
     calculate();
 }
 
-function updateRecField(id, field, value) { db.ref(`records/${id}/${field}`).set(value); }
+function updateField(id, field, value) { db.ref(`records/${id}/${field}`).set(value); }
 
 function renderRecords() {
     const dList = document.getElementById('draftList'), oList = document.getElementById('orderList'), cList = document.getElementById('completedList');
@@ -249,7 +248,7 @@ function renderRecords() {
 
         const div = `<div class="p-4 border-2 rounded-xl bg-white flex flex-col gap-3 shadow-sm relative ${missingItems.length>0?'border-red-400':'border-transparent'}">
             <div class="absolute top-4 right-4 text-right">
-                ${r.completedTime ? `<div class="text-[9px] text-gray-400 font-bold bg-gray-100 px-2 rounded mb-1">結案於: ${r.completedTime}</div>` : ''}
+                ${r.completedTime ? `<div class="text-[9px] text-gray-400 font-bold bg-gray-100 px-2 rounded mb-1">完成: ${r.completedTime}</div>` : ''}
             </div>
             <div class="flex justify-between items-start">
                 <div class="flex-1">
@@ -259,8 +258,8 @@ function renderRecords() {
                     ${missingItems.length > 0 ? `<div class="mt-2 text-[11px] text-red-600 font-black bg-red-50 p-2 rounded border border-red-100 italic">⚠️ 未出貨：${missingItems.join(', ')}</div>` : ''}
                 </div>
                 <div class="flex flex-col items-end gap-2 pr-2">
-                    <select onchange="updateRecField(${r.id}, 'seller', this.value)" class="text-xs p-1 bg-gray-50 border rounded w-24">${sOpts}</select>
-                    <select onchange="updateRecField(${r.id}, 'progress', this.value)" class="text-xs p-1 bg-blue-50 border-blue-100 text-blue-700 rounded w-24 font-bold">${pOpts}</select>
+                    <select onchange="updateField(${r.id}, 'seller', this.value)" class="text-xs p-1 bg-gray-50 border rounded w-24">${sOpts}</select>
+                    <select onchange="updateField(${r.id}, 'progress', this.value)" class="text-xs p-1 bg-blue-50 border-blue-100 text-blue-700 rounded w-24 font-bold">${pOpts}</select>
                 </div>
             </div>
             <div class="flex gap-2 border-t pt-2">
@@ -281,7 +280,7 @@ function renderRecords() {
 }
 
 function archiveOrder(id) {
-    if(confirm('確定結案並歸檔嗎？')) {
+    if(confirm('確定結案並移至「已結案」區域嗎？')) {
         const now = new Date();
         const t = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${now.getMinutes()}`;
         db.ref(`records/${id}`).update({ status: 'completed', completedTime: t });
@@ -298,7 +297,7 @@ function openShippingManager(id) {
             let name = sel.isTemp ? sel.name : ((inv[cat] && inv[cat][sel.idx]) ? inv[cat][sel.idx].name : "未知");
             list.innerHTML += `<div class="flex justify-between items-center p-3 border rounded-lg ${isDel?'bg-gray-50':'bg-red-50 border-red-200'}">
                 <div><div class="text-[10px] font-bold text-gray-400">${cat}</div><div class="text-sm font-bold ${isDel?'':'text-red-700'}">${name}</div></div>
-                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="w-6 h-6" ${isDel?'checked':''} onchange="db.ref('records/${id}/deliveredItems/${key}').set(this.checked)"> <span class="text-xs font-bold">${isDel?'已出':'未出'}</span></label>
+                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="w-6 h-6" ${isDel?'checked':''} onchange="db.ref('records/${id}/deliveredItems/${key}').set(this.checked)"> <span class="text-xs font-bold">${isDel?'已出貨':'未出貨'}</span></label>
             </div>`;
         });
     }
@@ -324,13 +323,6 @@ function renderModalList() {
             </div>
         </div>`;
     });
-    selections.filter(s => s.isTemp).forEach((temp, tIdx) => {
-        list.innerHTML += `<div class="pick-item p-3 rounded-lg flex justify-between items-center active border-orange-200 bg-orange-50 mb-1">
-            <div class="flex-1"><div class="font-bold text-sm text-orange-700">[臨時] ${temp.name}</div></div>
-            <button onclick="removeTempItem(${tIdx})" class="text-red-400 text-lg ml-2 font-bold">×</button>
-        </div>`;
-    });
-    filterModalList();
 }
 
 function togglePick(idx, isTemp) {
@@ -358,7 +350,7 @@ function openSelection(cat) { currentCat = cat; document.getElementById('modalTi
 function saveRecord(targetStatus) {
     const id = editingRecordId || Date.now(), status = targetStatus === 'current' ? currentStatus : targetStatus;
     const r = { id, time: new Date().toLocaleString(), name: document.getElementById('custName').value, source: document.getElementById('custSource').value, phone: document.getElementById('custPhone').value, addr: document.getElementById('custAddr').value, memo: document.getElementById('orderMemo').value, selections: currentSelections, noCard: document.getElementById('noCardTotal').value, total: document.getElementById('ui-totalSale').innerText, status, discount: document.getElementById('discountAmt').value };
-    db.ref('records/' + id).update(r).then(() => { alert('儲存成功'); resetForm(); showTab('calc'); });
+    db.ref('records/' + id).update(r).then(() => { alert('儲存成功'); resetForm(); showTab('drafts'); });
 }
 function editRecord(id) {
     const r = records.find(x => x.id === id); editingRecordId = id; currentStatus = r.status; currentSelections = r.selections || {};
@@ -367,7 +359,7 @@ function editRecord(id) {
     renderConfig(); showTab('calc');
 }
 
-// 修正: 排序按鈕回歸與回收站
+// 核心修正: 排序按鈕回歸與垃圾桶邏輯
 function renderInventoryEditor() {
     const area = document.getElementById('inventoryEditor'); area.innerHTML = '';
     catOrder.forEach((cat, cIdx) => {
@@ -386,7 +378,7 @@ function renderInventoryEditor() {
 function moveToTrash(cat, idx) { const item = inv[cat].splice(idx,1)[0]; trashInv.push({cat, item}); renderInventoryEditor(); }
 function renderTrash() {
     const area = document.getElementById('trashContainer'); area.innerHTML = trashInv.length === 0 ? '<div class="text-gray-400 text-xs">尚無刪除紀錄</div>' : '';
-    trashInv.forEach((t, i) => { area.innerHTML += `<div class="flex justify-between items-center bg-white p-2 border rounded text-xs"><span>[${t.cat}] ${t.item.name}</span><button onclick="restoreFromTrash(${i})" class="text-blue-500 font-bold">救回</button></div>`; });
+    trashInv.forEach((t, i) => { area.innerHTML += `<div class="flex justify-between items-center bg-white p-2 border rounded text-xs mb-1"><span>[${t.cat}] ${t.item.name}</span><div class="flex gap-2"><button onclick="restoreFromTrash(${i})" class="text-blue-500 font-bold">救回</button><button onclick="trashInv.splice(${i},1); renderTrash();" class="text-red-400">刪除</button></div></div>`; });
 }
 function restoreFromTrash(i) { const t = trashInv.splice(i,1)[0]; if(!inv[t.cat]) inv[t.cat]=[]; inv[t.cat].push(t.item); renderInventoryEditor(); }
 
