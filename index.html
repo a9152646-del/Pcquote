@@ -65,7 +65,6 @@
         .stock-btn.active { background: #22c55e; color: white; border-color: #22c55e; }
         .stock-btn.oos { background: #ef4444; color: white; border-color: #ef4444; }
 
-        /* 💾 豬豬，這是供應商按鈕樣式 */
         .supp-btn { 
             font-size: 10px; 
             width: 26px; 
@@ -84,7 +83,6 @@
             background: #6366f1 !important; 
             color: white !important; 
             border-color: #4f46e5 !important; 
-            box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3);
         }
 
         button { font-size: 14px !important; }
@@ -250,7 +248,6 @@ function goBack() {
     if (activeTab !== 'tab-calc') showTab('calc'); else window.history.back();
 }
 
-// 💾 豬豬，這裡就是無卡利潤修正邏輯！
 function calculate() {
     let subP = 0, subC = 0, disc = parseFloat(document.getElementById('discountAmt')?.value || 0);
     let noCard = parseFloat(document.getElementById('noCardTotal').value) || 0;
@@ -265,10 +262,15 @@ function calculate() {
         });
     });
 
-    const originalTotal = subP - disc; // 含稅總金額
-    const finalSale = Math.max(0, originalTotal - noCard); // 現金支付餘額
+    const originalTotal = subP - disc; 
     
-    // 豬豬算法：(無卡金額 - 含稅總金額) + 原本利潤 = 最新利潤
+    // 💾 豬豬，這裡修正含稅金額不跑掉！
+    // 總額 (TOTAL 含稅) 應該顯示「交易總價」，如果有無卡就顯示無卡金額，不然就顯示原本含稅價
+    const transactionTotal = noCard > 0 ? noCard : originalTotal;
+    
+    // 最終現金/餘額 (給客戶看現場還要付多少)
+    const finalSale = Math.max(0, originalTotal - noCard); 
+
     const originalProfit = originalTotal - subC;
     let profit = originalProfit;
     if (noCard > 0) {
@@ -277,7 +279,9 @@ function calculate() {
 
     const untaxed = Math.round(originalTotal / 1.05);
     document.getElementById('ui-untaxed').innerText = `$${untaxed.toLocaleString()}`;
-    document.getElementById('ui-totalSale').innerText = `$${finalSale.toLocaleString()}`;
+    
+    // 💾 這裡確保畫面上顯示的是交易總額
+    document.getElementById('ui-totalSale').innerText = `$${transactionTotal.toLocaleString()}`;
     
     if(noCard > 0) {
         document.getElementById('ui-noCardVal').innerText = `$${noCard.toLocaleString()}`;
@@ -309,6 +313,25 @@ function renderRecords() {
     const dList = document.getElementById('draftList'), oList = document.getElementById('orderList'), cList = document.getElementById('completedList');
     dList.innerHTML = ''; oList.innerHTML = ''; cList.innerHTML = '';
     records.sort((a,b)=>b.id-a.id).forEach(r => {
+        
+        // 💾 豬豬，這裡把「未出貨商品」抓回來顯示！
+        let undeliveredHtml = "";
+        if(r.status !== 'draft') {
+            let undeliveredNames = [];
+            for (let cat in r.selections) {
+                r.selections[cat].forEach((sel, idx) => {
+                    const k = `${cat}_${idx}`;
+                    if(!r.deliveredItems || r.deliveredItems[k] === false) {
+                        let n = sel.isTemp ? sel.name : (inv[cat] && inv[cat][sel.idx] ? inv[cat][sel.idx].name : "未知品項");
+                        undeliveredNames.push(`●${n}`);
+                    }
+                });
+            }
+            if(undeliveredNames.length > 0) {
+                undeliveredHtml = `<div class="text-[10px] text-red-500 mt-2 pt-1 border-t border-dashed line-clamp-1 font-bold">未出貨：${undeliveredNames.join(' ')}</div>`;
+            }
+        }
+
         const pOpts = ["待處理", "組裝中", "測試中", "已完工", "已寄出"].map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
         const div = `<div class="p-4 border-2 rounded-xl bg-white shadow-sm space-y-3">
             <div class="flex justify-between items-start">
@@ -316,6 +339,8 @@ function renderRecords() {
                     <div class="text-[10px] text-gray-400 font-mono">${r.time}</div>
                     <div class="text-base font-black text-gray-800">${r.name || '無名客戶'}</div>
                     <div class="text-blue-600 font-black text-lg">${r.total}</div>
+                    ${r.noCard > 0 ? `<div class="text-[10px] text-orange-500 font-bold">💳 無卡分期：$${Number(r.noCard).toLocaleString()}</div>` : ''}
+                    ${undeliveredHtml}
                 </div>
                 <div class="text-right ml-2"><span class="bg-blue-100 text-blue-600 text-[10px] font-bold px-2 py-1 rounded-full">${r.seller||'未指定'}</span><div class="mt-2"><select onchange="db.ref('records/'+${r.id}+'/progress').set(this.value)" class="text-[10px] font-bold border-2 border-gray-100 px-1 py-1 rounded-lg">${pOpts}</select></div></div>
             </div>
@@ -330,7 +355,6 @@ function renderRecords() {
     });
 }
 
-// 💾 豬豬，這是供應商「原速裕」按鈕生成的區塊！
 function renderInventoryEditor() {
     const area = document.getElementById('inventoryEditor'); area.innerHTML = '';
     catOrder.forEach((cat, cIdx) => {
@@ -339,8 +363,6 @@ function renderInventoryEditor() {
         area.appendChild(sec);
         (inv[cat] || []).forEach((item, idx) => {
             const row = document.createElement('div'); row.className = `inv-item-row ${item.outOfStock ? 'inv-out-of-stock' : ''}`;
-            
-            // 供應商選取邏輯 (複選)
             const sList = item.suppliers || [];
             const sHtml = ['原', '速', '裕'].map(label => 
                 `<button onclick="event.stopPropagation(); toggleSupplier('${cat}', ${idx}, '${label}')" class="supp-btn ${sList.includes(label) ? 'active' : ''}">${label}</button>`
@@ -368,7 +390,7 @@ function toggleSupplier(cat, idx, label) {
     const list = inv[cat][idx].suppliers;
     const pos = list.indexOf(label);
     if(pos > -1) list.splice(pos, 1); else list.push(label);
-    renderInventoryEditor(); // 點完立刻刷新介面顯示紫色
+    renderInventoryEditor();
 }
 
 function toggleStockStatus(cat, idx) { inv[cat][idx].outOfStock = !inv[cat][idx].outOfStock; renderInventoryEditor(); }
@@ -393,7 +415,12 @@ function enterScreenshotMode() {
     calculate(); 
     document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value || 0).toLocaleString();
     document.getElementById('ss-val-untaxed').innerText = document.getElementById('ui-untaxed').innerText;
+    
+    // 💾 截圖模式下的總額也要正確
+    let noCard = parseFloat(document.getElementById('noCardTotal').value) || 0;
+    let originalTotal = parseInt(document.getElementById('ui-untaxed').innerText.replace(/\D/g,'')) * 1.05; // 簡單推算
     document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText;
+
     document.getElementById('mainBody').classList.add('screenshot-mode'); 
     document.getElementById('screenshot-header').style.display = 'block'; document.getElementById('screenshot-footer').style.display = 'block';
     renderConfig(); 
@@ -424,7 +451,9 @@ function updateSubItem(idx, type, val) {
 }
 function saveRecord(st) { 
     if(!document.getElementById('custName').value) { alert('請填寫客戶姓名'); return; }
-    const id = editingRecordId || Date.now(); const r = { id, time: new Date().toLocaleString(), name: document.getElementById('custName').value, seller: document.getElementById('infoSeller').value, selections: currentSelections, total: document.getElementById('ui-totalSale').innerText, noCard: document.getElementById('noCardTotal').value, status: st === 'current' ? currentStatus : st, discount: document.getElementById('discountAmt').value, progress: "待處理" };
+    const id = editingRecordId || Date.now(); 
+    // 💾 儲存時，將當前顯示的 TOTAL 直接存入紀錄
+    const r = { id, time: new Date().toLocaleString(), name: document.getElementById('custName').value, seller: document.getElementById('infoSeller').value, selections: currentSelections, total: document.getElementById('ui-totalSale').innerText, noCard: document.getElementById('noCardTotal').value, status: st === 'current' ? currentStatus : st, discount: document.getElementById('discountAmt').value, progress: "待處理" };
     db.ref('records/' + id).update(r).then(() => { alert('儲存成功！'); resetForm(); showTab(st === 'order' ? 'orders' : 'drafts'); });
 }
 function editRecord(id) {
