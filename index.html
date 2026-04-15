@@ -65,24 +65,26 @@
         .stock-btn.active { background: #22c55e; color: white; border-color: #22c55e; }
         .stock-btn.oos { background: #ef4444; color: white; border-color: #ef4444; }
 
+        /* 💾 豬豬，這是供應商按鈕樣式 */
         .supp-btn { 
             font-size: 10px; 
-            width: 24px; 
+            width: 26px; 
             height: 24px; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
-            border-radius: 4px; 
+            border-radius: 5px; 
             border: 1px solid #e2e8f0; 
             cursor: pointer; 
-            background: #f8fafc; 
+            background: #f1f5f9; 
             color: #94a3b8; 
             font-weight: bold;
         }
         .supp-btn.active { 
             background: #6366f1 !important; 
             color: white !important; 
-            border-color: #6366f1 !important; 
+            border-color: #4f46e5 !important; 
+            box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3);
         }
 
         button { font-size: 14px !important; }
@@ -241,18 +243,14 @@ db.ref('records').on('value', s => { records = []; if(s.exists()) { const data =
 function goBack() {
     if (editingRecordId !== null) {
         const r = records.find(x => x.id === editingRecordId);
-        let target = 'drafts';
-        if (r && r.status === 'order') target = 'orders';
-        if (r && r.status === 'completed') target = 'completed';
-        resetForm();
-        showTab(target);
-        return;
+        let target = 'drafts'; if (r && r.status === 'order') target = 'orders'; if (r && r.status === 'completed') target = 'completed';
+        resetForm(); showTab(target); return;
     }
     const activeTab = document.querySelector('.page-content:not(.hidden)').id;
     if (activeTab !== 'tab-calc') showTab('calc'); else window.history.back();
 }
 
-// 💾 豬豬，這裡就是你需要的「無卡分期利潤修正」邏輯
+// 💾 豬豬，這裡就是無卡利潤修正邏輯！
 function calculate() {
     let subP = 0, subC = 0, disc = parseFloat(document.getElementById('discountAmt')?.value || 0);
     let noCard = parseFloat(document.getElementById('noCardTotal').value) || 0;
@@ -267,22 +265,14 @@ function calculate() {
         });
     });
 
-    // 原本含稅金額 (零件總額 - 折扣)
-    const originalTotal = subP - disc;
+    const originalTotal = subP - disc; // 含稅總金額
+    const finalSale = Math.max(0, originalTotal - noCard); // 現金支付餘額
     
-    // 最終現金/餘額 (顯示給客戶看的)
-    // 如果分期大於原本金額，則現場付 0 元
-    const finalSale = Math.max(0, originalTotal - noCard); 
-    
-    // 利潤計算 (豬豬修正版)
-    // 1. 原本利潤 = 原本含稅金額 - 成本
+    // 豬豬算法：(無卡金額 - 含稅總金額) + 原本利潤 = 最新利潤
     const originalProfit = originalTotal - subC;
     let profit = originalProfit;
-    
-    // 2. 如果有分期，利潤 = (無卡金額 - 原本含稅金額) + 原本利潤
     if (noCard > 0) {
-        const extraProfit = noCard - originalTotal;
-        profit = extraProfit + originalProfit;
+        profit = (noCard - originalTotal) + originalProfit;
     }
 
     const untaxed = Math.round(originalTotal / 1.05);
@@ -292,9 +282,7 @@ function calculate() {
     if(noCard > 0) {
         document.getElementById('ui-noCardVal').innerText = `$${noCard.toLocaleString()}`;
         document.getElementById('ui-noCardShow').classList.remove('hidden');
-    } else {
-        document.getElementById('ui-noCardShow').classList.add('hidden');
-    }
+    } else document.getElementById('ui-noCardShow').classList.add('hidden');
 
     document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`;
     document.getElementById('ui-totalProfit').innerText = `$${profit.toLocaleString()}`;
@@ -342,6 +330,7 @@ function renderRecords() {
     });
 }
 
+// 💾 豬豬，這是供應商「原速裕」按鈕生成的區塊！
 function renderInventoryEditor() {
     const area = document.getElementById('inventoryEditor'); area.innerHTML = '';
     catOrder.forEach((cat, cIdx) => {
@@ -350,6 +339,8 @@ function renderInventoryEditor() {
         area.appendChild(sec);
         (inv[cat] || []).forEach((item, idx) => {
             const row = document.createElement('div'); row.className = `inv-item-row ${item.outOfStock ? 'inv-out-of-stock' : ''}`;
+            
+            // 供應商選取邏輯 (複選)
             const sList = item.suppliers || [];
             const sHtml = ['原', '速', '裕'].map(label => 
                 `<button onclick="event.stopPropagation(); toggleSupplier('${cat}', ${idx}, '${label}')" class="supp-btn ${sList.includes(label) ? 'active' : ''}">${label}</button>`
@@ -361,11 +352,11 @@ function renderInventoryEditor() {
                     <input type="text" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value" placeholder="請輸入零件名稱...">
                 </div>
                 <div class="inv-item-ctrl-row">
-                    <div class="flex gap-1 mr-auto">${sHtml}</div>
+                    <div class="flex gap-1.5 mr-auto">${sHtml}</div>
                     <div class="flex items-center gap-1 border-2 rounded-lg bg-white px-2 flex-shrink-0"><span class="text-[10px] text-gray-400">售</span><input type="number" class="w-12 text-xs font-black text-blue-600 border-none p-0" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div>
                     <div class="flex items-center gap-1 border-2 rounded-lg bg-white px-2 flex-shrink-0"><span class="text-[10px] text-gray-400">本</span><input type="number" class="w-12 text-xs font-black text-red-400 border-none p-0" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div>
                     <button onclick="toggleStockStatus('${cat}', ${idx})" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button>
-                    <button onclick="if(confirm('豬豬，確定要刪除「' + (inv['${cat}'][${idx}].name || '此零件') + '」嗎？')) { inv['${cat}'].splice(${idx}, 1); renderInventoryEditor(); }" class="text-red-200 text-xl px-1">×</button>
+                    <button onclick="if(confirm('豬豬，確定要刪除此零件嗎？')) { inv['${cat}'].splice(${idx}, 1); renderInventoryEditor(); }" class="text-red-200 text-xl px-1">×</button>
                 </div>`;
             document.getElementById(`edit-${cat}`).appendChild(row);
         });
@@ -377,7 +368,7 @@ function toggleSupplier(cat, idx, label) {
     const list = inv[cat][idx].suppliers;
     const pos = list.indexOf(label);
     if(pos > -1) list.splice(pos, 1); else list.push(label);
-    renderInventoryEditor();
+    renderInventoryEditor(); // 點完立刻刷新介面顯示紫色
 }
 
 function toggleStockStatus(cat, idx) { inv[cat][idx].outOfStock = !inv[cat][idx].outOfStock; renderInventoryEditor(); }
