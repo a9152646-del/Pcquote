@@ -70,9 +70,9 @@
 <body class="p-2 md:p-4 hide-prices" id="mainBody">
 
 <div class="no-screenshot fixed right-4 bottom-6 z-[40] flex flex-col gap-3">
+    <button id="floatingSaveBtn" onclick="saveInventory()" class="hidden bg-green-600 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">💾</button>
     <button onclick="location.reload(true)" class="bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔄</button>
     <button onclick="goBack()" class="bg-black text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔙</button>
-    <button id="floatingSaveBtn" onclick="saveInventory()" class="hidden bg-green-600 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">💾</button>
 </div>
 
 <div id="adminToggleContainer" class="no-screenshot">
@@ -332,7 +332,7 @@ function renderInventoryEditor() {
                     <div class="flex items-center gap-1 border-2 rounded-lg bg-white px-2 flex-shrink-0"><span class="text-[10px] text-gray-400">售</span><input type="number" class="w-12 text-xs font-black text-blue-600 border-none p-0" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div>
                     <div class="flex items-center gap-1 border-2 rounded-lg bg-white px-2 flex-shrink-0"><span class="text-[10px] text-gray-400">本</span><input type="number" class="w-12 text-xs font-black text-red-400 border-none p-0" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div>
                     <button onclick="toggleStockStatus('${cat}', ${idx})" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button>
-                    <button onclick="if(confirm('豬豬，確定要刪除這個品項嗎？')) { inv['${cat}'].splice(${idx}, 1); renderInventoryEditor(); }" class="text-red-200 text-xl px-1">×</button>
+                    <button onclick="if(confirm('豬豬，確定要刪除「' + (inv['${cat}'][${idx}].name || '此零件') + '」嗎？')) { inv['${cat}'].splice(${idx}, 1); renderInventoryEditor(); }" class="text-red-200 text-xl px-1">×</button>
                 </div>`;
             document.getElementById(`edit-${cat}`).appendChild(row);
         });
@@ -358,22 +358,21 @@ function showTab(t) {
     document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); 
     document.getElementById('btn-'+t).classList.add('tab-active'); 
     
-    // 強制控制懸浮儲存鈕顯示
     const fsBtn = document.getElementById('floatingSaveBtn');
     if(t === 'inventory') {
         renderInventoryEditor();
-        fsBtn.style.display = 'flex';
+        fsBtn.style.display = 'flex'; // 強制顯示
     } else {
-        fsBtn.style.display = 'none';
+        fsBtn.style.display = 'none'; // 強制隱藏
     }
 }
 
 function enterScreenshotMode() { 
-    // 豬豬，日期時間與頁尾數值強制顯示
     const now = new Date();
     const timeStr = now.getFullYear() + '/' + (now.getMonth() + 1).toString().padStart(2, '0') + '/' + now.getDate().toString().padStart(2, '0') + ' ' + now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
     document.getElementById('ss-time').innerText = '報價日期：' + timeStr;
 
+    calculate(); 
     document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value || 0).toLocaleString();
     document.getElementById('ss-val-untaxed').innerText = document.getElementById('ui-untaxed').innerText;
     document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText;
