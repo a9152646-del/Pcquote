@@ -14,6 +14,8 @@
             background-color: #f8fafc; 
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
             padding-top: 105px !important; 
+            /* 豬豬，這裡加了 padding-bottom 確保底部內容不會被按鈕擋住 */
+            padding-bottom: 150px !important; 
             font-size: 14px; 
             color: #334155; 
             line-height: 1.5;
@@ -69,8 +71,8 @@
 </head>
 <body class="p-2 md:p-4 hide-prices" id="mainBody">
 
-<div class="no-screenshot fixed right-4 bottom-6 z-[40] flex flex-col gap-3">
-    <button id="floatingSaveBtn" onclick="saveInventory()" class="hidden bg-green-600 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">💾</button>
+<div class="no-screenshot fixed right-4 bottom-6 z-[60] flex flex-col gap-3">
+    <button id="floatingSaveBtn" onclick="saveInventory()" style="display: none;" class="bg-green-600 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">💾</button>
     <button onclick="location.reload(true)" class="bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔄</button>
     <button onclick="goBack()" class="bg-black text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔙</button>
 </div>
@@ -358,12 +360,13 @@ function showTab(t) {
     document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); 
     document.getElementById('btn-'+t).classList.add('tab-active'); 
     
+    // 豬豬，按鈕顯示邏輯強勢回歸
     const fsBtn = document.getElementById('floatingSaveBtn');
     if(t === 'inventory') {
         renderInventoryEditor();
-        fsBtn.style.display = 'flex'; // 強制顯示
+        fsBtn.style.setProperty('display', 'flex', 'important');
     } else {
-        fsBtn.style.display = 'none'; // 強制隱藏
+        fsBtn.style.setProperty('display', 'none', 'important');
     }
 }
 
