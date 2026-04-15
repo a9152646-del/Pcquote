@@ -36,8 +36,8 @@
         .pick-item { transition: all 0.2s; border: 1px solid #e5e7eb; cursor: pointer; }
         .pick-item.active { background-color: #eff6ff; border-color: #3b82f6; }
         
-        /* 缺貨樣式 */
-        .out-of-stock { opacity: 0.5; background-color: #f1f5f9; color: #94a3b8; }
+        /* 缺貨物品樣式：變淡、變灰 */
+        .is-out-of-stock { opacity: 0.4; background-color: #f1f5f9 !important; border-color: #cbd5e1 !important; color: #64748b !important; }
 
         @media print { .no-print, button, #sellerBox, .no-screenshot { display: none !important; } }
     </style>
@@ -255,9 +255,10 @@ function renderConfig() {
     calculate();
 }
 
+// 修改: 更新人員功能
 function updateSeller(id, name) { db.ref(`records/${id}/seller`).set(name); }
-// 新增: 更新訂單狀態
-function updateStatus(id, status) { db.ref(`records/${id}/progressStatus`).set(status); }
+// 新增: 更新進度狀態功能
+function updateProgress(id, status) { db.ref(`records/${id}/progress`).set(status); }
 
 function renderRecords() {
     const dList = document.getElementById('draftList'), oList = document.getElementById('orderList');
@@ -265,10 +266,10 @@ function renderRecords() {
     records.sort((a,b)=>b.id-a.id).forEach(r => {
         const sellers = ["未選擇", "朱冠穎", "江鈞宇", "江苙翔"];
         const sellerOptions = sellers.map(s => `<option value="${s}" ${r.seller === s ? 'selected' : ''}>${s}</option>`).join('');
-        
-        // 新增: 狀態選單
+
+        // 新增: 進度狀態清單
         const statuses = ["待處理", "組裝中", "測試中", "已完工", "已寄出"];
-        const statusOptions = statuses.map(s => `<option value="${s}" ${r.progressStatus === s ? 'selected' : ''}>${s}</option>`).join('');
+        const progressOptions = statuses.map(s => `<option value="${s}" ${r.progress === s ? 'selected' : ''}>${s}</option>`).join('');
 
         const hasNoCard = (r.noCard && Number(r.noCard) > 0);
         const priceDisplay = hasNoCard 
@@ -276,19 +277,19 @@ function renderRecords() {
             : `<div class="text-blue-600 font-black">${r.total}</div>`;
         const div = `<div class="p-4 border rounded-xl bg-white flex flex-col gap-3 shadow-sm">
             <div class="flex justify-between items-start">
-                <div class="flex-1">
+                <div>
                     <div class="text-[10px] text-gray-400 font-bold">${r.time}</div>
                     <div class="text-sm font-bold text-gray-700">[${r.source||'無'}] ${r.name}</div>
                     ${priceDisplay}
                 </div>
                 <div class="flex flex-col items-end gap-2">
                     <div class="flex flex-col items-end">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase">Seller</span>
+                        <span class="text-[10px] font-bold text-gray-400">販售人員</span>
                         <select onchange="updateSeller(${r.id}, this.value)" class="text-xs p-1 bg-gray-50 border-gray-200 rounded w-24">${sellerOptions}</select>
                     </div>
                     <div class="flex flex-col items-end">
-                        <span class="text-[10px] font-bold text-blue-400 uppercase tracking-tighter">Progress</span>
-                        <select onchange="updateStatus(${r.id}, this.value)" class="text-xs p-1 bg-blue-50 border-blue-100 text-blue-600 rounded w-24 font-bold">${statusOptions}</select>
+                        <span class="text-[10px] font-bold text-blue-500 uppercase">Progress</span>
+                        <select onchange="updateProgress(${r.id}, this.value)" class="text-xs p-1 bg-blue-50 border-blue-100 text-blue-700 rounded w-24 font-bold">${progressOptions}</select>
                     </div>
                 </div>
             </div>
@@ -314,11 +315,14 @@ function renderModalList() {
     const selections = currentSelections[currentCat] || [];
     (inv[currentCat] || []).forEach((item, idx) => {
         const sel = selections.find(s => !s.isTemp && s.idx === idx);
-        // 修改: 增加缺貨樣式判斷
-        const isOut = item.outOfStock;
-        list.innerHTML += `<div class="pick-item p-3 rounded-lg flex justify-between items-center mb-1 ${sel?'active':''} ${isOut?'out-of-stock':''}" onclick="togglePick(${idx}, false)">
+        
+        // 修改: 判斷缺貨狀態並給予樣式
+        const outText = item.outOfStock ? '(缺貨) ' : '';
+        const outClass = item.outOfStock ? 'is-out-of-stock' : '';
+
+        list.innerHTML += `<div class="pick-item p-3 rounded-lg flex justify-between items-center mb-1 ${sel?'active':''} ${outClass}" onclick="togglePick(${idx}, false)">
             <div class="flex-1">
-                <div class="font-bold text-sm">${isOut?'(缺貨) ':''}${item.name}</div>
+                <div class="font-bold text-sm">${outText}${item.name}</div>
                 <div class="text-xs text-blue-500 font-bold">$${Number(item.p).toLocaleString()}</div>
             </div>
             <div class="flex items-center gap-3" onclick="event.stopPropagation()">
@@ -331,7 +335,6 @@ function renderModalList() {
             </div>
         </div>`;
     });
-    // ... 臨時品項部分保持不變
     selections.filter(s => s.isTemp).forEach((temp, tIdx) => {
         list.innerHTML += `<div class="pick-item p-3 rounded-lg flex justify-between items-center active border-orange-200 bg-orange-50 mb-1">
             <div class="flex-1"><div class="font-bold text-sm text-orange-700">[臨時] ${temp.name}</div><div class="text-xs text-orange-500 font-bold">$${Number(temp.p).toLocaleString()}</div></div>
@@ -398,12 +401,12 @@ function renderInventoryEditor() {
         area.appendChild(sec);
         (inv[cat] || []).forEach((item, idx) => {
             const row = document.createElement('div'); row.className = "flex flex-col gap-1 bg-gray-50 p-2 rounded relative border border-transparent hover:border-blue-200";
-            // 修改: 增加缺貨切換按鈕
+            // 修改: 新增缺貨勾選框
             row.innerHTML = `<input type="text" class="text-xs font-bold" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value"><div class="flex gap-1"><input type="number" class="w-1/2 text-xs" value="${item.p}" onchange="inv['${cat}'][${idx}].p=this.value"><input type="number" class="w-1/2 text-xs text-red-500" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=this.value"></div><div class="flex gap-2 mt-1 items-center">
                 <button onclick="moveItem('${cat}', ${idx}, -1)" class="text-[9px] bg-white px-2 border">上移</button>
                 <button onclick="moveItem('${cat}', ${idx}, 1)" class="text-[9px] bg-white px-2 border">下移</button>
-                <label class="text-[9px] flex items-center gap-1 cursor-pointer bg-gray-200 px-1 rounded">
-                    <input type="checkbox" ${item.outOfStock?'checked':''} onchange="inv['${cat}'][${idx}].outOfStock=this.checked; renderInventoryEditor();"> 缺貨
+                <label class="text-[9px] flex items-center gap-1 cursor-pointer bg-gray-200 px-1 rounded font-bold">
+                    <input type="checkbox" ${item.outOfStock ? 'checked' : ''} onchange="inv['${cat}'][${idx}].outOfStock = this.checked"> 缺貨
                 </label>
                 <button onclick="removeInvItem('${cat}',${idx})" class="absolute top-1 right-1 text-gray-300">×</button></div>`;
             document.getElementById(`edit-${cat}`).appendChild(row);
