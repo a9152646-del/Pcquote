@@ -249,8 +249,15 @@ function calculate() {
             if(!s.isGift) subP += (p * (s.qty || 1)); subC += (c * (s.qty || 1));
         });
     });
-    const finalSale = subP - disc;
-    const untaxed = Math.round(finalSale / 1.05);
+
+    // 豬豬修正邏輯：
+    // 總額 (給客戶看的現金部分) = (零件總價 - 折扣) - 無卡分期
+    const finalSale = (subP - disc) - noCard; 
+    
+    // 利潤 (含無卡整筆) = (零件總價 - 折扣 - 成本) + 無卡分期
+    const profit = (subP - disc - subC) + noCard;
+
+    const untaxed = Math.round((subP - disc) / 1.05); // 未稅按原本零件折扣後總價算
     document.getElementById('ui-untaxed').innerText = `$${untaxed.toLocaleString()}`;
     document.getElementById('ui-totalSale').innerText = `$${finalSale.toLocaleString()}`;
     
@@ -261,9 +268,8 @@ function calculate() {
         document.getElementById('ui-noCardShow').classList.add('hidden');
     }
 
-    const baseRev = noCard > 0 ? noCard : finalSale;
     document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`;
-    document.getElementById('ui-totalProfit').innerText = `$${(baseRev - subC).toLocaleString()}`;
+    document.getElementById('ui-totalProfit').innerText = `$${profit.toLocaleString()}`;
 }
 
 function renderConfig() {
@@ -341,8 +347,14 @@ function toggleAdminMode() {
     const isChecked = document.getElementById('adminToggle').checked;
     const body = document.getElementById('mainBody');
     const box = document.getElementById('sellerBox');
-    if(isChecked) { body.classList.remove('hide-prices'); box.classList.remove('invisible'); }
-    else { body.classList.add('hide-prices'); box.classList.add('invisible'); }
+    if(isChecked) { 
+        body.classList.remove('hide-prices'); 
+        box.classList.remove('invisible'); 
+        box.classList.remove('hidden'); // 雙重保險確保利潤顯示
+    } else { 
+        body.classList.add('hide-prices'); 
+        box.classList.add('invisible'); 
+    }
 }
 
 function showTab(t) { 
@@ -461,7 +473,6 @@ function closeDeliveryModal() { document.getElementById('deliveryModal').classLi
 
 window.onload = () => {
     renderConfig();
-    // 豬豬，一載入先強制隱藏儲存鈕，確保狀態正確
     showTab('calc');
 };
 </script>
