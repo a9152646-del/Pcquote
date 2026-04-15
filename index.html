@@ -56,7 +56,6 @@
         .screenshot-mode body { background: #fff !important; padding-top: 80px !important; }
         .screenshot-mode .max-w-7xl { max-width: 700px !important; margin: 0 auto !important; }
         
-        /* 雲端項目排版 */
         .inv-item-row { display: flex; flex-direction: column; padding: 10px 12px; border-radius: 8px; border: 1px solid #f1f5f9; background: #fff; margin-bottom: 8px; }
         .inv-item-name-row { display: flex; align-items: center; gap: 8px; width: 100%; padding-bottom: 6px; border-bottom: 1px dashed #f1f5f9; }
         .inv-item-name-row input[type="text"] { border: none !important; background: transparent !important; padding: 0 !important; flex: 1; font-weight: bold; font-size: 13px; min-width: 0; }
@@ -75,6 +74,7 @@
 <div class="no-screenshot fixed right-4 bottom-6 z-[40] flex flex-col gap-3">
     <button onclick="location.reload(true)" class="bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔄</button>
     <button onclick="goBack()" class="bg-black text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔙</button>
+    <button id="floatingSaveBtn" onclick="saveInventory()" class="hidden bg-green-600 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">💾</button>
 </div>
 
 <div id="adminToggleContainer" class="no-screenshot">
@@ -334,16 +334,16 @@ function renderInventoryEditor() {
                     <div class="flex items-center gap-1 border-2 rounded-lg bg-white px-2 flex-shrink-0"><span class="text-[10px] text-gray-400">售</span><input type="number" class="w-12 text-xs font-black text-blue-600 border-none p-0" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div>
                     <div class="flex items-center gap-1 border-2 rounded-lg bg-white px-2 flex-shrink-0"><span class="text-[10px] text-gray-400">本</span><input type="number" class="w-12 text-xs font-black text-red-400 border-none p-0" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div>
                     <button onclick="toggleStockStatus('${cat}', ${idx})" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button>
-                    <button onclick="handleItemDelete('${cat}', ${idx})" class="text-red-200 text-xl px-1">×</button>
+                    <button onclick="removeItem('${cat}', ${idx})" class="text-red-200 text-xl px-1">×</button>
                 </div>`;
             document.getElementById(`edit-${cat}`).appendChild(row);
         });
     });
 }
 
-// 修正：獨立出來的刪除零件邏輯
-function handleItemDelete(cat, idx) {
-    if (confirm('豬豬，確定要刪除「' + (inv[cat][idx].name || '此零件') + '」嗎？')) {
+function removeItem(cat, idx) {
+    const itemName = inv[cat][idx].name || '此零件';
+    if (confirm('豬豬，確定要刪除「' + itemName + '」嗎？\n此動作將從雲端資料庫移除。')) {
         inv[cat].splice(idx, 1);
         renderInventoryEditor();
     }
@@ -362,16 +362,28 @@ function toggleAdminMode() {
     else { body.classList.add('hide-prices'); box.classList.add('invisible'); }
 }
 
-function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); if(t==='inventory') renderInventoryEditor(); }
+function showTab(t) { 
+    document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); 
+    document.getElementById('tab-'+t).classList.remove('hidden'); 
+    document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); 
+    document.getElementById('btn-'+t).classList.add('tab-active'); 
+    
+    // 控制懸浮儲存鍵顯示：僅在品項管理頁顯示
+    const fSave = document.getElementById('floatingSaveBtn');
+    if(t==='inventory') {
+        renderInventoryEditor();
+        fSave.classList.remove('hidden');
+    } else {
+        fSave.classList.add('hidden');
+    }
+}
 
-// 修正：進入截圖模式顯示日期與右下角資訊
 function enterScreenshotMode() { 
-    // 設定時間
     const now = new Date();
     const timeStr = now.getFullYear() + '/' + (now.getMonth() + 1).toString().padStart(2, '0') + '/' + now.getDate().toString().padStart(2, '0') + ' ' + now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
     document.getElementById('ss-time').innerText = '報價日期：' + timeStr;
 
-    // 設定右下角數值
+    calculate(); 
     document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value || 0).toLocaleString();
     document.getElementById('ss-val-untaxed').innerText = document.getElementById('ui-untaxed').innerText;
     document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText;
@@ -379,6 +391,7 @@ function enterScreenshotMode() {
     document.getElementById('mainBody').classList.add('screenshot-mode'); 
     document.getElementById('screenshot-header').classList.remove('hidden');
     document.getElementById('screenshot-footer').classList.remove('hidden');
+    
     renderConfig(); 
 }
 
