@@ -13,17 +13,11 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        /* --- 問題 1 修正：解決動態島重疊方案 --- */
+        /* 避開動態島修正：強制增加頂部間距 */
         body { 
             background-color: #f4f9fc; 
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
-            /* 使用 iOS 標準避讓間距，確保不擋住動態島 */
-            padding-top: calc(60px + env(safe-area-inset-top)) !important; 
-        }
-        
-        /* 導航欄位避讓 */
-        #main-nav {
-            top: env(safe-area-inset-top);
+            padding-top: 60px !important; /* 強制推開動態島距離 */
         }
         
         .tab-active { border-bottom: 4px solid #3b82f6; color: #3b82f6; font-weight: bold; }
@@ -34,18 +28,19 @@
         .item-row:hover { background-color: #f8fafc; border-color: #3b82f6; }
         .selected-badge { background: #f1f5f9; color: #334155; padding: 4px 10px; border-radius: 6px; font-size: 12px; margin: 2px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid #e2e8f0; }
         
-        /* 截圖模式：依照您要求修正隱藏 logic */
+        /* 截圖模式 */
         #screenshot-header, #screenshot-footer { display: none; }
         .hide-price .price-tag { display: none !important; }
-        #mainBody.screenshot-mode { background: #fff !important; padding: 40px !important; }
+        #mainBody.screenshot-mode { background: #fff !important; padding: 40px !important; padding-top: 40px !important; }
         .screenshot-mode .no-screenshot { display: none !important; }
-        .screenshot-mode .empty-row { display: none !important; } /* 隱藏未選類別 */
         .screenshot-mode .max-w-7xl { max-width: 800px !important; margin: 0 auto !important; }
         .screenshot-mode .card { box-shadow: none !important; border: 2px solid #334155 !important; border-radius: 0 !important; padding: 2rem !important; }
         .screenshot-mode .item-row { border: none; border-bottom: 1px dashed #ccc; padding: 8px 0; }
         
         .screenshot-mode #screenshot-header { display: flex !important; flex-direction: column; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #334155; padding-bottom: 10px; }
         .screenshot-mode #screenshot-header .ss-title { width: 100%; text-align: center; font-size: 1.5rem; font-weight: 900; margin-bottom: 8px; color: #000; }
+        .screenshot-mode #screenshot-header #ss-time { width: 100%; text-align: left; font-size: 0.875rem; color: #4b5563; }
+        .screenshot-mode #screenshot-footer { display: block !important; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; }
 
         .pick-item { transition: all 0.2s; border: 2px solid #e5e7eb; cursor: pointer; border-radius: 10px; }
         .pick-item.active { background-color: #eff6ff; border-color: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.2); }
@@ -67,7 +62,10 @@ const firebaseConfig = {
   apiKey: "AIzaSyDeCI3yFPr1v9KxOmko-qim2a7EtllEHKM",
   authDomain: "magic-conch-gaming.firebaseapp.com",
   databaseURL: "https://magic-conch-gaming-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "magic-conch-gaming"
+  projectId: "magic-conch-gaming",
+  storageBucket: "magic-conch-gaming.firebasestorage.app",
+  messagingSenderId: "105735978925",
+  appId: "1:105735978925:web:3ec77acbfd344475322b24"
 };
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
@@ -79,7 +77,7 @@ const db = firebase.database();
         <div id="ss-time"></div>
     </div>
 
-    <div id="main-nav" class="flex border-b mb-6 no-screenshot overflow-x-auto bg-white sticky z-50 p-1">
+    <div class="flex border-b mb-6 no-screenshot overflow-x-auto bg-white sticky top-0 z-10 p-1">
         <button onclick="showTab('calc')" id="btn-calc" class="px-5 py-4 tab-active whitespace-nowrap">🐚 報價配單</button>
         <button onclick="showTab('drafts')" id="btn-drafts" class="px-5 py-4 whitespace-nowrap">📂 訂單草稿</button>
         <button onclick="showTab('orders')" id="btn-orders" class="px-5 py-4 whitespace-nowrap">✅ 正式訂單</button>
@@ -116,9 +114,8 @@ const db = firebase.database();
                 <div class="card p-6 sticky top-20">
                     <div class="space-y-1 mb-4">
                         <div class="text-xs text-gray-400 font-bold">折扣金額</div><input type="number" id="discountAmt" class="w-full mb-2" value="0" oninput="calculate()">
-                        <div class="text-xs text-gray-400 font-bold">未稅總計</div><div id="ui-untaxed" class="text-xl font-bold text-gray-700">$0</div>
-                        <div class="text-xs text-gray-400 font-bold">含稅總計</div><div id="ui-totalSale" class="text-4xl font-black text-blue-600">$0</div>
-                        
+                        <div id="ui-untaxed" class="text-xl font-bold text-gray-700">$0</div>
+                        <div id="ui-totalSale" class="text-4xl font-black text-blue-600">$0</div>
                         <div class="pt-4 border-t mt-4 text-xs text-orange-500 font-bold">無卡分期金額</div>
                         <input type="number" id="noCardTotal" class="w-full mt-1 border-orange-200" placeholder="請輸入分期總額" oninput="calculate()">
                     </div>
@@ -130,6 +127,7 @@ const db = firebase.database();
                         <button onclick="saveRecord('current')" class="w-full bg-blue-500 text-white py-3 rounded-xl font-bold">儲存/更新</button>
                         <button id="btnConvertToOrder" onclick="saveRecord('order')" class="hidden w-full bg-green-600 text-white py-3 rounded-xl font-bold">✅ 轉為正式訂單</button>
                         <button onclick="enterScreenshotMode()" class="w-full bg-orange-500 text-white py-3 rounded-xl font-bold">📸 進入截圖模式</button>
+                        <button onclick="exitToOrdersWithoutSaving()" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold">❌ 不儲存並返回</button>
                         <button onclick="resetForm()" class="w-full text-gray-400 text-xs mt-2 underline font-bold">清空重填</button>
                     </div>
                 </div>
@@ -167,7 +165,7 @@ const db = firebase.database();
         <div id="modalList" class="overflow-y-auto flex-1 p-4 space-y-2"></div>
         <div class="p-4 border-t bg-gray-50 space-y-2">
             <div class="flex gap-2">
-                <input type="text" id="tempName" class="flex-1" placeholder="臨時名稱">
+                <input type="text" id="tempName" class="flex-1" placeholder="名稱">
                 <input type="number" id="tempPrice" class="w-20" placeholder="售價">
                 <button onclick="addTempItem()" class="bg-orange-500 text-white px-4 py-1 rounded text-sm font-bold">新增</button>
             </div>
@@ -187,6 +185,13 @@ db.ref('records').on('value', s => {
     renderRecords();
 });
 
+function filterModalList() {
+    const term = document.getElementById('modalSearch').value.toLowerCase();
+    document.querySelectorAll('#modalList .pick-item').forEach(item => {
+        item.style.display = item.innerText.toLowerCase().includes(term) ? 'flex' : 'none';
+    });
+}
+
 function calculate() {
     let subP = 0, subC = 0, disc = parseFloat(document.getElementById('discountAmt')?.value || 0);
     let noCard = parseFloat(document.getElementById('noCardTotal').value) || 0;
@@ -205,9 +210,13 @@ function calculate() {
     document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`;
     const profit = noCard > 0 ? (noCard - subC) : (finalSale - subC);
     document.getElementById('ui-totalProfit').innerText = `$${profit.toLocaleString()}`;
+    
+    document.getElementById('ss-time').innerText = `報價時間：${new Date().toLocaleString()}`;
+    document.getElementById('ss-discount').innerText = disc > 0 ? `折扣：-$${disc.toLocaleString()}` : "";
+    document.getElementById('ss-untaxed').innerText = `未稅總計：$${untaxed.toLocaleString()}`;
+    document.getElementById('ss-total').innerText = `含稅總計：$${finalSale.toLocaleString()}`;
 }
 
-// 問題 1 修正：確保品項區可以點擊觸發彈窗
 function renderConfig() {
     const container = document.getElementById('configRows'); if(!container) return;
     container.innerHTML = '';
@@ -229,7 +238,6 @@ function renderConfig() {
 
 function updateField(id, field, value) { db.ref(`records/${id}/${field}`).set(value); }
 
-// 問題 2 & 3 修正：補回正式訂單下拉選單、缺貨品項按鈕與管理邏輯
 function renderRecords() {
     const dList = document.getElementById('draftList'), oList = document.getElementById('orderList'), cList = document.getElementById('completedList');
     dList.innerHTML = ''; oList.innerHTML = ''; cList.innerHTML = '';
@@ -251,7 +259,7 @@ function renderRecords() {
             }
         }
 
-        const div = `<div class="p-4 border-2 rounded-xl bg-white flex flex-col gap-3 shadow-sm relative z-10 ${missingItems.length>0?'border-red-400':'border-transparent'}">
+        const div = `<div class="p-4 border-2 rounded-xl bg-white flex flex-col gap-3 shadow-sm relative ${missingItems.length>0?'border-red-400':'border-transparent'}">
             <div class="flex justify-between items-start">
                 <div class="flex-1 space-y-1">
                     <div class="text-[10px] text-gray-400 font-bold">${r.time}</div>
@@ -260,14 +268,13 @@ function renderRecords() {
                     ${missingItems.length > 0 ? `<div class="text-[11px] text-red-600 font-black">⚠️ 未出貨：${missingItems.join(', ')}</div>` : ''}
                     ${r.completedTime ? `<div class="text-[10px] text-red-600 font-black bg-red-50 px-2 py-1 rounded inline-block">🏁 已結案：${r.completedTime}</div>` : ''}
                 </div>
-                <div class="flex flex-col items-end gap-2 pr-2 no-screenshot">
-                    <select onchange="updateField(${r.id}, 'seller', this.value)" class="text-xs p-1 bg-gray-50 border rounded w-24 relative z-20">${sOpts}</select>
-                    <select onchange="updateField(${r.id}, 'progress', this.value)" class="text-xs p-1 bg-blue-50 border-blue-100 text-blue-700 rounded w-24 font-bold relative z-20">${pOpts}</select>
+                <div class="flex flex-col items-end gap-2 pr-2">
+                    <select onchange="updateField(${r.id}, 'seller', this.value)" class="text-xs p-1 bg-gray-50 border rounded w-24">${sOpts}</select>
+                    <select onchange="updateField(${r.id}, 'progress', this.value)" class="text-xs p-1 bg-blue-50 border-blue-100 text-blue-700 rounded w-24 font-bold">${pOpts}</select>
                 </div>
             </div>
-            <div class="flex gap-2 border-t pt-2 no-screenshot">
+            <div class="flex gap-2 border-t pt-2">
                 <button onclick="editRecord(${r.id})" class="flex-1 py-1 bg-blue-500 text-white text-xs rounded font-bold">編輯</button>
-                <button onclick="openDeliveryManager(${r.id})" class="flex-1 py-1 bg-orange-500 text-white text-xs rounded font-bold">📦 出貨管理</button>
                 <button onclick="if(confirm('確定刪除？')) db.ref('records/'+${r.id}).remove()" class="px-3 py-1 bg-red-50 text-red-400 text-xs rounded font-bold">刪除</button>
             </div>
         </div>`;
@@ -276,14 +283,6 @@ function renderRecords() {
         else if(r.status === 'completed') cList.innerHTML += div;
         else oList.innerHTML += div;
     });
-}
-
-// 補回出貨管理按鈕與功能 logic
-function openDeliveryManager(id) {
-    const r = records.find(x => x.id === id);
-    if(!r) return;
-    alert("出貨管理模式已開啟，請在編輯頁面勾選已交付品項。");
-    editRecord(id);
 }
 
 function renderModalList() {
@@ -344,7 +343,6 @@ function editRecord(id) {
     renderConfig(); showTab('calc');
 }
 
-// 品項管理部分 (補回歷史功能與刪除 logic)
 function renderInventoryEditor() {
     const area = document.getElementById('inventoryEditor'); area.innerHTML = '';
     catOrder.forEach((cat, cIdx) => {
@@ -353,7 +351,7 @@ function renderInventoryEditor() {
         area.appendChild(sec);
         (inv[cat] || []).forEach((item, idx) => {
             const row = document.createElement('div'); row.className = "bg-gray-50 p-2 rounded relative border";
-            row.innerHTML = `<input type="text" class="text-xs font-bold w-full" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value"><div class="flex gap-1 mt-1"><input type="number" class="w-1/2 text-xs" value="${item.p}" onchange="inv['${cat}'][${idx}].p=this.value"><button onclick="inv['${cat}'][${idx}].outOfStock=!inv['${cat}'][${idx}].outOfStock; renderInventoryEditor();" class="text-[9px] px-2 rounded ${item.outOfStock?'bg-red-500 text-white':'bg-gray-200'}">缺貨</button></div><div class="flex gap-2 mt-1 items-center"><button onclick="moveItem('${cat}', ${idx}, -1)" class="text-[9px] bg-white px-2 border font-bold">上移</button><button onclick="moveItem('${cat}', ${idx}, 1)" class="text-[9px] bg-white px-2 border font-bold">下移</button><button onclick="inv['${cat}'].splice(${idx},1); renderInventoryEditor();" class="absolute top-1 right-1 text-gray-300">×</button></div>`;
+            row.innerHTML = `<input type="text" class="text-xs font-bold w-full" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value"><div class="flex gap-1 mt-1"><input type="number" class="w-1/2 text-xs" value="${item.p}" onchange="inv['${cat}'][${idx}].p=this.value"></div><div class="flex gap-2 mt-1 items-center"><button onclick="moveItem('${cat}', ${idx}, -1)" class="text-[9px] bg-white px-2 border font-bold">上移</button><button onclick="moveItem('${cat}', ${idx}, 1)" class="text-[9px] bg-white px-2 border font-bold">下移</button><button onclick="inv['${cat}'].splice(${idx},1); renderInventoryEditor();" class="absolute top-1 right-1 text-gray-300">×</button></div>`;
             document.getElementById(`edit-${cat}`).appendChild(row);
         });
     });
@@ -368,7 +366,7 @@ function saveInventory() { db.ref('inventory').set(inv); db.ref('catOrder').set(
 function enterScreenshotMode() { calculate(); document.getElementById('mainBody').classList.add('screenshot-mode'); document.getElementById('screenshotNav').style.display='flex'; }
 function exitScreenshotMode() { document.getElementById('mainBody').classList.remove('screenshot-mode'); document.getElementById('screenshotNav').style.display='none'; }
 function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); if(t==='inventory') renderInventoryEditor(); }
-function toggleSellerMode() { isSellerMode = !isSellerMode; document.getElementById('sellerBox').classList.toggle('hidden'); renderConfig(); }
+function toggleSellerMode() { isSellerMode = !isSellerMode; document.getElementById('sellerBox').classList.toggle('hidden'); document.getElementById('sellerBtn').innerText = `管理員模式: ${isSellerMode?'ON':'OFF'}`; renderConfig(); }
 function resetForm() { editingRecordId=null; currentSelections={}; document.querySelectorAll('input:not([type="checkbox"])').forEach(i=>i.value=""); document.getElementById('btnConvertToOrder').classList.add('hidden'); renderConfig(); }
 function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
 window.onload = () => renderConfig();
