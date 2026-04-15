@@ -6,8 +6,8 @@
     <title>神奇海螺電競 | 專業報價與庫存系統 v8.2</title>
 
     <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="apple-touch-icon" href="IMG_4759.jpeg?v=1">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="IMG_4759.jpeg?v=1">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -22,7 +22,6 @@
         .item-row:hover { background-color: #f8fafc; border-color: #3b82f6; }
         .selected-badge { background: #f1f5f9; color: #334155; padding: 4px 10px; border-radius: 6px; font-size: 12px; margin: 2px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid #e2e8f0; }
         
-        /* 截圖模式優化 */
         #screenshot-header, #screenshot-footer { display: none; }
         .hide-price .price-tag { display: none !important; }
         #mainBody.screenshot-mode { background: #fff !important; padding: 40px !important; }
@@ -33,10 +32,6 @@
         .screenshot-mode .item-row.empty-row { display: none !important; }
         .screenshot-mode #screenshot-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #334155; padding-bottom: 10px; }
         .screenshot-mode #screenshot-footer { display: block; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; }
-
-        /* 方案切換按鈕樣式 */
-        .plan-btn { background: #f1f5f9; color: #64748b; }
-        .plan-btn.active { background-color: #3b82f6 !important; color: white !important; }
 
         .pick-item { transition: all 0.2s; border: 1px solid #e5e7eb; cursor: pointer; }
         .pick-item.active { background-color: #eff6ff; border-color: #3b82f6; }
@@ -81,10 +76,6 @@ const db = firebase.database();
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 no-screenshot gap-4">
                         <div class="flex items-center gap-3">
                             <h2 class="font-bold text-xl text-blue-600">電腦配置區</h2>
-                            <div class="flex bg-gray-200 rounded-lg p-1 shadow-inner">
-                                <button onclick="switchPlan('A')" id="planBtnA" class="plan-btn active px-4 py-1.5 rounded-md text-xs font-black transition-all uppercase">方案 A</button>
-                                <button onclick="switchPlan('B')" id="planBtnB" class="plan-btn px-4 py-1.5 rounded-md text-xs font-black transition-all uppercase">方案 B</button>
-                            </div>
                         </div>
                         <button onclick="toggleSellerMode()" id="sellerBtn" class="text-xs bg-blue-100 text-blue-600 px-4 py-2 rounded-full font-bold">管理員模式: ON</button>
                     </div>
@@ -202,8 +193,6 @@ const db = firebase.database();
 <script>
 let inv = {}; let catOrder = []; let records = []; 
 let currentSelections = {}; 
-let plans = { A: {}, B: {} }; 
-let currentPlanId = 'A';
 let editingRecordId = null; let currentCat = ""; let isSellerMode = true; let currentStatus = 'draft';
 
 db.ref('inventory').on('value', s => { if(s.exists()) inv = s.val(); renderConfig(); });
@@ -212,15 +201,6 @@ db.ref('records').on('value', s => {
     records = []; if(s.exists()) { const data = s.val(); for(let id in data) records.push(data[id]); }
     renderRecords();
 });
-
-function switchPlan(pId) {
-    plans[currentPlanId] = JSON.parse(JSON.stringify(currentSelections));
-    currentPlanId = pId;
-    currentSelections = JSON.parse(JSON.stringify(plans[pId]));
-    document.querySelectorAll('.plan-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('planBtn' + pId).classList.add('active');
-    renderConfig();
-}
 
 function calculate() {
     let subP = 0, subC = 0, disc = parseFloat(document.getElementById('discountAmt')?.value || 0);
@@ -390,10 +370,6 @@ function saveRecord(targetStatus) {
 function editRecord(id) {
     const r = records.find(x => x.id === id); editingRecordId = id; currentStatus = r.status; 
     currentSelections = r.selections || {};
-    plans.A = JSON.parse(JSON.stringify(currentSelections));
-    plans.B = {}; currentPlanId = 'A';
-    document.querySelectorAll('.plan-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('planBtnA').classList.add('active');
     document.getElementById('custName').value = r.name || ''; document.getElementById('custPhone').value = r.phone || ''; document.getElementById('custAddr').value = r.addr || ''; document.getElementById('discountAmt').value = r.discount || 0; document.getElementById('noCardTotal').value = r.noCard || '';
     const cBtn = document.getElementById('btnConvertToOrder'); if(r.status === 'draft') cBtn.classList.remove('hidden'); else cBtn.classList.add('hidden');
     renderConfig(); showTab('calc');
@@ -424,10 +400,9 @@ function exitScreenshotMode() { document.getElementById('mainBody').classList.re
 function exitToOrdersWithoutSaving() { if(confirm("確定返回？")) { resetForm(); showTab('orders'); } }
 function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); if(t==='inventory') renderInventoryEditor(); }
 function toggleSellerMode() { isSellerMode = !isSellerMode; document.getElementById('sellerBox').classList.toggle('hidden'); renderConfig(); }
-function resetForm() { editingRecordId = null; currentSelections = {}; plans = { A: {}, B: {} }; currentPlanId = 'A'; document.querySelectorAll('.plan-btn').forEach(b => b.classList.remove('active')); document.getElementById('planBtnA').classList.add('active'); document.getElementById('custName').value = ""; document.getElementById('custPhone').value = ""; document.getElementById('custAddr').value = ""; document.getElementById('discountAmt').value = 0; document.getElementById('noCardTotal').value = ""; document.getElementById('btnConvertToOrder').classList.add('hidden'); calculate(); renderConfig(); }
+function resetForm() { editingRecordId = null; currentSelections = {}; document.getElementById('custName').value = ""; document.getElementById('custPhone').value = ""; document.getElementById('custAddr').value = ""; document.getElementById('discountAmt').value = 0; document.getElementById('noCardTotal').value = ""; document.getElementById('btnConvertToOrder').classList.add('hidden'); calculate(); renderConfig(); }
 function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
 window.onload = () => { renderConfig(); };
 </script>
 </body>
 </html>
-
