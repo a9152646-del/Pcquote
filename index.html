@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v8.83</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v8.85</title>
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -211,12 +211,14 @@ function renderRecords() {
     const dList = document.getElementById('draftList'), oList = document.getElementById('orderList'), cList = document.getElementById('completedList');
     dList.innerHTML = ''; oList.innerHTML = ''; cList.innerHTML = '';
     records.sort((a,b)=>b.id-a.id).forEach(r => {
-        const sellers = ["朱冠穎", "江苙翔"];
+        const sellers = ["朱冠穎", "江苙翔", "江鈞宇"];
         const progressList = ["待處理", "組裝中", "測試中", "已完工", "已寄出"];
         const sOpts = sellers.map(s => `<option value="${s}" ${r.seller===s?'selected':''}>${s}</option>`).join('');
         const pOpts = progressList.map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
         
-        const cardHtml = `<div class="p-4 card bg-white mb-2 relative">
+        const isOutOfStock = r.outOfStock ? 'border-red-500 bg-red-50' : 'bg-white';
+
+        const cardHtml = `<div class="p-4 card mb-2 relative ${isOutOfStock}">
             <div class="flex justify-between items-start mb-4">
                 <div class="flex-1">
                     <div class="text-[10px] text-gray-400 font-bold mb-1">${r.time}</div>
@@ -224,15 +226,23 @@ function renderRecords() {
                     <div class="text-blue-600 font-black text-xl">${r.total}</div>
                 </div>
                 <div class="flex flex-col gap-1 items-end">
-                    <div class="flex gap-1"><span class="bg-gray-100 text-[10px] px-2 py-0.5 rounded font-bold">${r.seller||'未選'}</span><span class="bg-red-100 text-red-500 text-[10px] px-2 py-0.5 rounded font-bold">${r.progress||'待處理'}</span></div>
-                    <select onchange="db.ref('records/'+${r.id}+'/progress').set(this.value)" class="text-xs p-1 bg-blue-50 border-blue-100 text-blue-600 rounded font-bold w-28 mt-1">${pOpts}</select>
+                    <div class="flex gap-1">
+                        <span class="bg-gray-100 text-[10px] px-2 py-0.5 rounded font-bold">${r.seller||'未選'}</span>
+                        <span class="${r.outOfStock?'bg-red-500 text-white':'bg-red-100 text-red-500'} text-[10px] px-2 py-0.5 rounded font-bold">${r.outOfStock?'缺貨中':(r.progress||'待處理')}</span>
+                    </div>
+                    <div class="flex gap-1 mt-1">
+                        <select onchange="db.ref('records/'+${r.id}+'/seller').set(this.value)" class="text-[10px] p-1 border rounded">${sOpts}</select>
+                        <select onchange="db.ref('records/'+${r.id}+'/progress').set(this.value)" class="text-[10px] p-1 bg-blue-50 border-blue-100 text-blue-600 rounded font-bold">${pOpts}</select>
+                    </div>
                 </div>
             </div>
             <div class="flex flex-wrap gap-2 border-t pt-3">
                 <button onclick="editRecord(${r.id})" class="bg-blue-500 text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm">編輯</button>
+                ${r.status === 'draft' ? `<button onclick="if(confirm('轉為正式訂單？')) db.ref('records/'+${r.id}+'/status').set('order')" class="bg-green-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm">✅ 轉正式訂單</button>` : ''}
                 <button onclick="openDeliveryFast(${r.id})" class="bg-orange-500 text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm">📦 出貨管理</button>
-                <button onclick="if(confirm('完成此訂單？')) db.ref('records/'+${r.id}+'/status').set('completed')" class="bg-green-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm">🏁 結案歸檔</button>
-                <button onclick="if(confirm('刪除？')) db.ref('records/'+${r.id}).remove()" class="bg-red-50 text-red-400 px-3 py-1.5 rounded-lg text-xs font-bold">刪除</button>
+                ${r.status === 'order' ? `<button onclick="db.ref('records/'+${r.id}+'/outOfStock').set(${!r.outOfStock})" class="${r.outOfStock?'bg-red-600':'bg-red-100 text-red-600'} px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm">⚠️ 缺貨標記</button>` : ''}
+                <button onclick="if(confirm('完成此訂單？')) db.ref('records/'+${r.id}+'/status').set('completed')" class="bg-gray-700 text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm">🏁 結案歸檔</button>
+                <button onclick="if(confirm('刪除？')) db.ref('records/'+${r.id}).remove()" class="bg-red-50 text-red-400 px-3 py-1.5 rounded-lg text-xs font-bold ml-auto">刪除</button>
             </div>
         </div>`;
         if(r.status === 'draft') dList.innerHTML += cardHtml; else if(r.status === 'order') oList.innerHTML += cardHtml; else cList.innerHTML += cardHtml;
