@@ -74,9 +74,7 @@ const db = firebase.database();
             <div class="lg:col-span-3 space-y-4">
                 <div class="card p-6">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 no-screenshot gap-4">
-                        <div class="flex items-center gap-3">
-                            <h2 class="font-bold text-xl text-blue-600">電腦配置區</h2>
-                        </div>
+                        <h2 class="font-bold text-xl text-blue-600">電腦配置區</h2>
                         <button onclick="toggleSellerMode()" id="sellerBtn" class="text-xs bg-blue-100 text-blue-600 px-4 py-2 rounded-full font-bold">管理員模式: ON</button>
                     </div>
                     <div id="configRows" class="grid grid-cols-1 md:grid-cols-1 gap-1"></div>
@@ -191,8 +189,7 @@ const db = firebase.database();
 </div>
 
 <script>
-let inv = {}; let catOrder = []; let records = []; 
-let currentSelections = {}; 
+let inv = {}; let catOrder = []; let records = []; let currentSelections = {}; 
 let editingRecordId = null; let currentCat = ""; let isSellerMode = true; let currentStatus = 'draft';
 
 db.ref('inventory').on('value', s => { if(s.exists()) inv = s.val(); renderConfig(); });
@@ -398,8 +395,29 @@ function saveInventory() { db.ref('inventory').set(inv); db.ref('catOrder').set(
 function enterScreenshotMode() { calculate(); document.getElementById('mainBody').classList.add('screenshot-mode'); document.getElementById('screenshotNav').style.display='flex'; }
 function exitScreenshotMode() { document.getElementById('mainBody').classList.remove('screenshot-mode'); document.getElementById('screenshotNav').style.display='none'; }
 function exitToOrdersWithoutSaving() { if(confirm("確定返回？")) { resetForm(); showTab('orders'); } }
-function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); if(t==='inventory') renderInventoryEditor(); }
-function toggleSellerMode() { isSellerMode = !isSellerMode; document.getElementById('sellerBox').classList.toggle('hidden'); renderConfig(); }
+
+// 修正 showTab 函數
+function showTab(t) {
+    document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
+    const target = document.getElementById('tab-' + t);
+    if(target) target.classList.remove('hidden');
+    
+    document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active'));
+    const btn = document.getElementById('btn-' + t);
+    if(btn) btn.classList.add('tab-active');
+    
+    if(t === 'inventory') renderInventoryEditor();
+}
+
+function toggleSellerMode() {
+    isSellerMode = !isSellerMode;
+    const box = document.getElementById('sellerBox');
+    if(isSellerMode) box.classList.remove('hidden'); else box.classList.add('hidden');
+    const btn = document.getElementById('sellerBtn');
+    btn.innerText = `管理員模式: ${isSellerMode ? 'ON' : 'OFF'}`;
+    renderConfig();
+}
+
 function resetForm() { editingRecordId = null; currentSelections = {}; document.getElementById('custName').value = ""; document.getElementById('custPhone').value = ""; document.getElementById('custAddr').value = ""; document.getElementById('discountAmt').value = 0; document.getElementById('noCardTotal').value = ""; document.getElementById('btnConvertToOrder').classList.add('hidden'); calculate(); renderConfig(); }
 function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
 window.onload = () => { renderConfig(); };
