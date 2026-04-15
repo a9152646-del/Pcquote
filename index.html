@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v8.89</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v8.90</title>
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -23,7 +23,7 @@
         .selected-badge { color: #000; font-size: 14px; margin-right: 12px; display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
         .price-tag { color: #000; font-weight: 900; }
         
-        /* 截圖模式設定 */
+        /* 截圖模式核心設定 */
         #screenshot-header, #screenshot-footer { display: none; }
         #mainBody.screenshot-mode { background: #fff !important; padding: 40px !important; }
         .screenshot-mode .no-screenshot { display: none !important; }
@@ -38,6 +38,7 @@
         .ss-amount-row { font-size: 1.2rem; font-weight: 800; color: #000; margin-bottom: 5px; }
         .ss-total-row { font-size: 1.8rem; font-weight: 900; color: #000; border-top: 2px solid #000; margin-top: 10px; padding-top: 5px; display: inline-block; min-width: 250px; }
         
+        /* 截圖模式返回按鈕 */
         #screenshotNav { position: fixed; top: 40px; right: 20px; z-index: 9999999; }
         .pick-item { transition: all 0.2s; border: 2px solid #e5e7eb; cursor: pointer; border-radius: 10px; }
         .pick-item.active { background-color: #eff6ff; border-color: #3b82f6; }
@@ -218,9 +219,7 @@ function renderRecords() {
     const dList = document.getElementById('draftList'), oList = document.getElementById('orderList'), cList = document.getElementById('completedList');
     dList.innerHTML = ''; oList.innerHTML = ''; cList.innerHTML = '';
     records.sort((a,b)=>b.id-a.id).forEach(r => {
-        const sellers = ["朱冠穎", "江苙翔", "江鈞宇"];
         const progressList = ["待處理", "組裝中", "測試中", "已完工", "已寄出"];
-        const sOpts = sellers.map(s => `<option value="${s}" ${r.seller===s?'selected':''}>${s}</option>`).join('');
         const pOpts = progressList.map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
         
         let missingItems = [];
@@ -248,7 +247,7 @@ function renderRecords() {
                 </div>
                 <div class="flex flex-col gap-1 items-end">
                     <div class="flex gap-1 mt-1">
-                        <select onchange="db.ref('records/'+${r.id}+'/seller').set(this.value)" class="text-[10px] p-1 border rounded w-24 mt-1">${sOpts}</select>
+                        <span class="bg-gray-100 text-[10px] px-2 py-0.5 rounded font-bold">${r.seller||'未選'}</span>
                         <select onchange="db.ref('records/'+${r.id}+'/progress').set(this.value)" class="text-[10px] p-1 border rounded w-24">${pOpts}</select>
                     </div>
                 </div>
@@ -263,10 +262,19 @@ function renderRecords() {
                 <button onclick="if(confirm('刪除？')) db.ref('records/'+${r.id}).remove()" class="px-3 py-1 bg-red-50 text-red-400 text-xs rounded">刪除</button>
             </div>
         </div>`;
-        if(r.status === 'draft') dList.innerHTML += div; 
-        else if(r.status === 'completed') cList.innerHTML += div;
-        else oList.innerHTML += div;
+        if(r.status === 'draft') dList.innerHTML += div; else if(r.status === 'completed') cList.innerHTML += div; else oList.innerHTML += div;
     });
+}
+
+function enterScreenshotMode() { 
+    document.getElementById('mainBody').classList.add('screenshot-mode'); 
+    document.getElementById('screenshotNav').classList.remove('hidden');
+    renderConfig(); 
+}
+function exitScreenshotMode() { 
+    document.getElementById('mainBody').classList.remove('screenshot-mode'); 
+    document.getElementById('screenshotNav').classList.add('hidden');
+    renderConfig(); 
 }
 
 function renderModalList() {
@@ -351,8 +359,6 @@ function openDeliveryFast(id) {
 }
 function saveDeliveryStatus() { db.ref('records/'+deliveryId+'/deliveredItems').set(tempDeliv).then(() => document.getElementById('deliveryModal').classList.add('hidden')); }
 function closeDeliveryModal() { document.getElementById('deliveryModal').classList.add('hidden'); }
-function enterScreenshotMode() { document.getElementById('mainBody').classList.add('screenshot-mode'); document.getElementById('screenshotNav').classList.remove('hidden'); renderConfig(); }
-function exitScreenshotMode() { document.getElementById('mainBody').classList.remove('screenshot-mode'); document.getElementById('screenshotNav').classList.add('hidden'); renderConfig(); }
 function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
 function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); if(t==='inventory') renderInventoryEditor(); }
 function togglePick(idx) {
@@ -365,6 +371,7 @@ function addInvItem(c) { if(!inv[c]) inv[c]=[]; inv[c].push({name:"", p:0, c:0, 
 function deleteInvItem(cat, idx) { const item = inv[cat][idx]; recycleBin.push({ type: 'item', name: item.name, cat: cat, data: item }); inv[cat].splice(idx, 1); renderInventoryEditor(); }
 function resetForm() { editingRecordId=null; currentSelections={}; document.querySelectorAll('input:not([type="checkbox"])').forEach(i=>i.value=""); renderConfig(); }
 function resetFormOnly() { document.querySelectorAll('input:not([type="checkbox"])').forEach(i=>i.value=""); renderConfig(); }
+function addCustomSeller() { const name = prompt("請輸入新的人員姓名："); if (name) { const select = document.getElementById('infoSeller'); const opt = document.createElement('option'); opt.value = name; opt.text = name; opt.selected = true; select.add(opt); } }
 window.onload = () => renderConfig();
 </script>
 </body>
