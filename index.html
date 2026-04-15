@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.09</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.10</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -13,7 +13,7 @@
         body { 
             background-color: #f8fafc; 
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
-            padding-top: 130px !important; 
+            padding-top: 110px !important; /* 頁面稍微往上移動一點點 */
             font-size: 14px; 
             color: #334155; 
             line-height: 1.5;
@@ -30,6 +30,7 @@
         
         .hide-prices .price-tag { display: none !important; }
 
+        /* 左下角金額按鈕 */
         #adminToggleContainer {
             position: fixed;
             bottom: 25px;
@@ -48,6 +49,7 @@
             cursor: pointer;
         }
 
+        /* 截圖模式設置 */
         #screenshotNav { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 99999; display: none; }
         .screenshot-mode #screenshotNav { display: block !important; }
         #screenshotNav button { font-size: 14px; padding: 10px 20px; border-radius: 30px; background: #1e293b; color: white; box-shadow: 0 8px 20px rgba(0,0,0,0.3); font-weight: bold; }
@@ -55,10 +57,10 @@
         .screenshot-mode .no-screenshot, .screenshot-mode #adminToggleContainer { display: none !important; }
         .screenshot-mode #screenshot-header { display: block !important; }
         .screenshot-mode #screenshot-footer { display: flex !important; flex-direction: column; }
-        .screenshot-mode body { background: #fff !important; padding-top: 100px !important; }
+        .screenshot-mode body { background: #fff !important; padding-top: 80px !important; }
         .screenshot-mode .max-w-7xl { max-width: 700px !important; margin: 0 auto !important; }
         
-        /* 雲端項目優化：名稱額外一排且對齊 */
+        /* 雲端項目優化：名稱額外一排 */
         .inv-item-row { display: flex; flex-direction: column; padding: 10px 12px; border-radius: 8px; border: 1px solid #f1f5f9; background: #fff; margin-bottom: 8px; }
         .inv-item-name-row { display: flex; align-items: center; gap: 8px; width: 100%; padding-bottom: 6px; border-bottom: 1px dashed #f1f5f9; }
         .inv-item-name-row input[type="text"] { border: none !important; background: transparent !important; padding: 0 !important; flex: 1; font-weight: bold; font-size: 13px; }
@@ -74,7 +76,10 @@
 </head>
 <body class="p-2 md:p-4 hide-prices" id="mainBody">
 
-<button onclick="location.reload(true)" class="no-screenshot fixed right-4 bottom-6 z-[40] bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔄</button>
+<div class="no-screenshot fixed right-4 bottom-6 z-[40] flex flex-col gap-3">
+    <button onclick="location.reload(true)" class="bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔄</button>
+    <button onclick="history.back()" class="bg-gray-700 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔙</button>
+</div>
 
 <div id="adminToggleContainer" class="no-screenshot">
     <label id="adminToggleLabel">
@@ -285,7 +290,7 @@ function renderRecords() {
             });
         }
         
-        // 草稿不顯示未出貨清單，僅在正式/結案顯示
+        // 草稿不顯示未出貨內容
         const undeliveredHtml = (r.status !== 'draft' && undelivered.length > 0) ? `<div class="mt-2 p-2 bg-red-50 rounded text-[10px] text-red-600 font-bold"><div class="border-b border-red-100 mb-1">⚠️ 未出貨項目：</div>${undelivered.join('、')}</div>` : '';
 
         const div = `<div class="p-4 border-2 rounded-xl bg-white shadow-sm space-y-3">
