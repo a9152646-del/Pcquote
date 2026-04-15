@@ -13,14 +13,12 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        /* 避開動態島修正：增加上方安全距離 */
-        :root {
-            --sat: env(safe-area-inset-top);
-        }
+        /* 避開動態島修正 */
         body { 
             background-color: #f4f9fc; 
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
-            padding-top: calc(var(--sat) + 20px); /* 確保按鈕完全避開動態島 */
+            /* 增加頂部間距，確保避開動態島 */
+            padding-top: calc(env(safe-area-inset-top) + 50px); 
         }
         
         .tab-active { border-bottom: 4px solid #3b82f6; color: #3b82f6; font-weight: bold; }
@@ -31,7 +29,7 @@
         .item-row:hover { background-color: #f8fafc; border-color: #3b82f6; }
         .selected-badge { background: #f1f5f9; color: #334155; padding: 4px 10px; border-radius: 6px; font-size: 12px; margin: 2px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid #e2e8f0; }
         
-        /* 截圖模式樣式 */
+        /* 截圖模式 */
         #screenshot-header, #screenshot-footer { display: none; }
         .hide-price .price-tag { display: none !important; }
         #mainBody.screenshot-mode { background: #fff !important; padding: 40px !important; }
@@ -39,7 +37,7 @@
         .screenshot-mode .max-w-7xl { max-width: 800px !important; margin: 0 auto !important; }
         .screenshot-mode .card { box-shadow: none !important; border: 2px solid #334155 !important; border-radius: 0 !important; padding: 2rem !important; }
         .screenshot-mode .item-row { border: none; border-bottom: 1px dashed #ccc; padding: 8px 0; }
-        .screenshot-mode .item-row.empty-row { display: none !important; visibility: hidden !important; height: 0 !important; }
+        .screenshot-mode .item-row.empty-row { display: none !important; visibility: hidden !important; }
         
         .screenshot-mode #screenshot-header { display: flex !important; flex-direction: column; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #334155; padding-bottom: 10px; }
         .screenshot-mode #screenshot-header .ss-title { width: 100%; text-align: center; font-size: 1.5rem; font-weight: 900; margin-bottom: 8px; color: #000; }
@@ -169,7 +167,7 @@ const db = firebase.database();
             <h3 id="modalTitle" class="font-bold text-blue-600">選擇品項</h3>
             <button onclick="closeModal()" class="text-gray-400 text-xl font-bold">×</button>
         </div>
-        <div class="p-2 border-b bg-white">
+        <div class="p-3 border-b bg-white">
             <input type="text" id="modalSearch" class="w-full" placeholder="🔍 搜尋零件名稱..." oninput="filterModalList()">
         </div>
         <div id="modalList" class="overflow-y-auto flex-1 p-4 space-y-2"></div>
@@ -205,6 +203,15 @@ db.ref('records').on('value', s => {
     renderRecords();
 });
 
+// 搜尋過濾邏輯
+function filterModalList() {
+    const term = document.getElementById('modalSearch').value.toLowerCase();
+    document.querySelectorAll('#modalList .pick-item').forEach(item => {
+        const text = item.innerText.toLowerCase();
+        item.style.display = text.includes(term) ? 'flex' : 'none';
+    });
+}
+
 function calculate() {
     let subP = 0, subC = 0, disc = parseFloat(document.getElementById('discountAmt')?.value || 0);
     let noCard = parseFloat(document.getElementById('noCardTotal').value) || 0;
@@ -223,11 +230,6 @@ function calculate() {
     document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`;
     const profit = noCard > 0 ? (noCard - subC) : (finalSale - subC);
     document.getElementById('ui-totalProfit').innerText = `$${profit.toLocaleString()}`;
-    
-    document.getElementById('ss-time').innerText = `報價時間：${new Date().toLocaleString()}`;
-    document.getElementById('ss-discount').innerText = disc > 0 ? `折扣：-$${disc.toLocaleString()}` : "";
-    document.getElementById('ss-untaxed').innerText = `未稅總計：$${untaxed.toLocaleString()}`;
-    document.getElementById('ss-total').innerText = `含稅總計：$${finalSale.toLocaleString()}`;
 }
 
 function renderConfig() {
@@ -256,7 +258,7 @@ function renderRecords() {
     dList.innerHTML = ''; oList.innerHTML = ''; cList.innerHTML = '';
     
     records.sort((a,b)=>b.id-a.id).forEach(r => {
-        const sellers = ["未選擇", "朱冠穎", "江鈞宇", "江苙翔"];
+        const sellers = ["未選擇", "朱冠穎", "江苙翔"];
         const statuses = ["待處理", "組裝中", "測試中", "已完工", "已寄出"];
         const sOpts = sellers.map(s => `<option value="${s}" ${r.seller===s?'selected':''}>${s}</option>`).join('');
         const pOpts = statuses.map(s => `<option value="${s}" ${r.progress===s?'selected':''}>${s}</option>`).join('');
@@ -277,7 +279,7 @@ function renderRecords() {
             ? `<div class="text-gray-400 text-xs line-through">原計: ${r.total}</div><div class="text-orange-600 font-black">分期: $${Number(r.noCard).toLocaleString()}</div>`
             : `<div class="text-blue-600 font-black">${r.total}</div>`;
 
-        // 核心修正: 完全移除重複出現的文字標籤
+        // 核心修正：移除重複文字標籤，僅保留下拉選單
         const div = `<div class="p-4 border-2 rounded-xl bg-white flex flex-col gap-3 shadow-sm relative ${missingNames.length>0?'border-red-400':'border-transparent'}">
             <div class="flex justify-between items-start">
                 <div class="flex-1 space-y-1">
@@ -285,7 +287,6 @@ function renderRecords() {
                     <div class="text-sm font-bold text-gray-700">[${r.source||'無'}] ${r.name}</div>
                     ${priceDisplay}
                     ${missingNames.length > 0 ? `<div class="mt-2 text-[11px] text-red-600 font-black bg-red-50 p-2 rounded italic border border-red-100">⚠️ 未出貨：${missingNames.join(', ')}</div>` : ''}
-                    ${r.completedTime ? `<div class="mt-2 text-[10px] text-red-600 font-black bg-red-50 px-2 py-1 rounded inline-block">🏁 已結案：完成於 ${r.completedTime}</div>` : ''}
                 </div>
                 <div class="flex flex-col items-end gap-2 pr-2">
                     <select onchange="updateField(${r.id}, 'seller', this.value)" class="text-xs p-1 bg-gray-50 border rounded w-24">${sOpts}</select>
@@ -295,7 +296,6 @@ function renderRecords() {
             <div class="flex gap-2 border-t pt-2">
                 <button onclick="editRecord(${r.id})" class="flex-1 py-1 bg-blue-500 text-white text-xs rounded font-bold">${r.status==='completed'?'查看':'編輯'}</button>
                 ${r.status==='order' ? `<button onclick="openShippingManager(${r.id})" class="flex-1 py-1 bg-orange-500 text-white text-xs rounded font-bold">📦 出貨管理</button>` : ''}
-                ${r.status==='order' ? `<button onclick="archiveOrder(${r.id})" class="flex-1 py-1 bg-green-600 text-white text-xs rounded font-bold">🏁 結案歸檔</button>` : ''}
                 <button onclick="if(confirm('確定刪除？')) db.ref('records/'+${r.id}).remove()" class="px-3 py-1 bg-red-50 text-red-400 text-xs rounded font-bold">刪除</button>
             </div>
         </div>`;
@@ -303,44 +303,6 @@ function renderRecords() {
         if(r.status === 'draft') dList.innerHTML += div; 
         else if(r.status === 'completed') cList.innerHTML += div;
         else oList.innerHTML += div;
-    });
-    document.getElementById('count-draft').innerText = records.filter(r=>r.status==='draft').length;
-    document.getElementById('count-order').innerText = records.filter(r=>r.status==='order').length;
-    document.getElementById('count-completed').innerText = records.filter(r=>r.status==='completed').length;
-}
-
-function archiveOrder(id) {
-    if(confirm('確定結案並歸檔嗎？')) {
-        const now = new Date();
-        const t = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${now.getMinutes()}`;
-        db.ref(`records/${id}`).update({ status: 'completed', completedTime: t });
-    }
-}
-
-function openShippingManager(id) {
-    const r = records.find(x => x.id === id); if(!r) return;
-    editingRecordId = id; const list = document.getElementById('shippingList'); list.innerHTML = '';
-    if(!r.deliveredItems) r.deliveredItems = {};
-    for(let cat in r.selections) {
-        r.selections[cat].forEach((sel, i) => {
-            const key = `${cat}_${i}`; const isDel = r.deliveredItems[key] !== false;
-            let name = sel.isTemp ? sel.name : ((inv[cat] && inv[cat][sel.idx]) ? inv[cat][sel.idx].name : "未知");
-            list.innerHTML += `<div class="flex justify-between items-center p-3 border rounded-lg ${isDel?'bg-gray-50':'bg-red-50 border-red-200'}">
-                <div><div class="text-[10px] font-bold text-gray-400">${cat}</div><div class="text-sm font-bold ${isDel?'':'text-red-700'}">${name}</div></div>
-                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="w-6 h-6" ${isDel?'checked':''} onchange="db.ref('records/${id}/deliveredItems/${key}').set(this.checked)"> <span class="text-xs font-bold">${isDel?'已出':'未出'}</span></label>
-            </div>`;
-        });
-    }
-    document.getElementById('shippingModal').classList.remove('hidden');
-}
-
-function closeShippingModal() { document.getElementById('shippingModal').classList.add('hidden'); editingRecordId=null; }
-
-// 搜尋過濾功能
-function filterModalList() {
-    const term = document.getElementById('modalSearch').value.toLowerCase();
-    document.querySelectorAll('#modalList .pick-item').forEach(item => {
-        item.style.display = item.innerText.toLowerCase().includes(term) ? 'flex' : 'none';
     });
 }
 
@@ -360,14 +322,14 @@ function renderModalList() {
             </div>
         </div>`;
     });
-    // 渲染臨時項目時也支援搜尋
+    // 加入臨時品項顯示
     selections.filter(s => s.isTemp).forEach((temp, tIdx) => {
         list.innerHTML += `<div class="pick-item p-3 rounded-lg flex justify-between items-center active border-orange-200 bg-orange-50 mb-1">
             <div class="flex-1"><div class="font-bold text-sm text-orange-700">[臨時] ${temp.name}</div></div>
             <button onclick="removeTempItem(${tIdx})" class="text-red-400 text-lg ml-2 font-bold">×</button>
         </div>`;
     });
-    filterModalList();
+    filterModalList(); // 渲染後立刻套用過濾
 }
 
 function togglePick(idx, isTemp) {
@@ -391,7 +353,13 @@ function addTempItem() {
     document.getElementById('tempName').value = ""; document.getElementById('tempPrice').value = ""; renderConfig(); renderModalList();
 }
 function removeTempItem(tIdx) { const all = currentSelections[currentCat], temps = all.filter(s=>s.isTemp); all.splice(all.indexOf(temps[tIdx]), 1); renderConfig(); renderModalList(); }
-function openSelection(cat) { currentCat = cat; document.getElementById('modalTitle').innerText = `選擇 ${cat}`; document.getElementById('modalSearch').value = ''; renderModalList(); document.getElementById('selectionModal').classList.remove('hidden'); }
+function openSelection(cat) { 
+    currentCat = cat; 
+    document.getElementById('modalTitle').innerText = `選擇 ${cat}`; 
+    document.getElementById('modalSearch').value = ''; // 開啟時清空搜尋
+    renderModalList(); 
+    document.getElementById('selectionModal').classList.remove('hidden'); 
+}
 
 function saveRecord(targetStatus) {
     const id = editingRecordId || Date.now(), status = targetStatus === 'current' ? currentStatus : targetStatus;
@@ -417,18 +385,8 @@ function renderInventoryEditor() {
             document.getElementById(`edit-${cat}`).appendChild(row);
         });
     });
-    renderTrash();
 }
 
-function moveToTrash(cat, idx) { const item = inv[cat].splice(idx,1)[0]; trashInv.push({cat, item}); renderInventoryEditor(); }
-function renderTrash() {
-    const area = document.getElementById('trashContainer'); area.innerHTML = trashInv.length === 0 ? '<div class="text-gray-400 text-xs">尚無刪除紀錄</div>' : '';
-    trashInv.forEach((t, i) => { area.innerHTML += `<div class="flex justify-between items-center bg-white p-2 border rounded text-xs mb-1"><span>[${t.cat}] ${t.item.name}</span><div class="flex gap-2"><button onclick="restoreFromTrash(${i})" class="text-blue-500 font-bold">救回</button><button onclick="trashInv.splice(${i},1); renderTrash();" class="text-red-400">刪除</button></div></div>`; });
-}
-function restoreFromTrash(i) { const t = trashInv.splice(i,1)[0]; if(!inv[t.cat]) inv[t.cat]=[]; inv[t.cat].push(t.item); renderInventoryEditor(); }
-
-function moveCat(i, d) { let n = i+d; if(n>=0 && n<catOrder.length) { [catOrder[i], catOrder[n]] = [catOrder[n], catOrder[i]]; renderInventoryEditor(); } }
-function moveItem(cat, i, d) { let n = i+d; if(n>=0 && n<inv[cat].length) { [inv[cat][i], inv[cat][n]] = [inv[cat][n], inv[cat][i]]; renderInventoryEditor(); } }
 function addNewCategory() { const name = prompt("名稱"); if(name) { catOrder.push(name); inv[name]=[]; renderInventoryEditor(); } }
 function removeCat(i) { if(confirm("確定刪除大項？")) { delete inv[catOrder[i]]; catOrder.splice(i,1); renderInventoryEditor(); } }
 function renameCat(i, n) { const o = catOrder[i]; inv[n]=inv[o]; delete inv[o]; catOrder[i]=n; renderInventoryEditor(); }
@@ -442,6 +400,7 @@ function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.
 function toggleSellerMode() { isSellerMode = !isSellerMode; document.getElementById('sellerBox').classList.toggle('hidden'); document.getElementById('sellerBtn').innerText = `管理員模式: ${isSellerMode?'ON':'OFF'}`; renderConfig(); }
 function resetForm() { editingRecordId=null; currentSelections={}; document.querySelectorAll('input:not([type="checkbox"])').forEach(i=>i.value=""); document.getElementById('btnConvertToOrder').classList.add('hidden'); renderConfig(); }
 function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
+function closeShippingModal() { document.getElementById('shippingModal').classList.add('hidden'); }
 window.onload = () => renderConfig();
 </script>
 </body>
