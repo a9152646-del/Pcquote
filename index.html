@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.01</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.02</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        body { background-color: #f4f9fc; font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; padding-top: 60px !important; }
+        body { background-color: #f4f9fc; font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; padding-top: 20px !important; }
         .tab-active { border-bottom: 4px solid #3b82f6; color: #3b82f6; font-weight: bold; }
         .card { background: white; border-radius: 12px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); }
         .hidden { display: none !important; }
@@ -19,13 +19,14 @@
         .item-row:hover { background-color: #f8fafc; }
         .selected-badge { color: #1e293b; font-size: 14px; margin-right: 12px; display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
         .price-tag { color: #64748b; font-weight: 500; }
+        
+        /* 隱藏單價的樣式 */
+        .hide-prices .price-tag { display: none !important; }
 
-        /* 1. 截圖模式按鈕固定在左下角 */
         #screenshotNav { position: fixed; bottom: 30px; left: 20px; z-index: 9999999; display: none; }
         .screenshot-mode #screenshotNav { display: block !important; }
         #screenshotNav button { font-size: 14px; padding: 12px 24px; border-radius: 50px; background: rgba(30, 41, 59, 0.9); color: white; box-shadow: 0 8px 32px rgba(0,0,0,0.2); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1); }
 
-        /* 截圖模式排版 */
         #screenshot-header, #screenshot-footer { display: none; }
         .screenshot-mode .no-screenshot { display: none !important; }
         .screenshot-mode body { background: #fff !important; padding-top: 20px !important; }
@@ -39,12 +40,11 @@
         .ss-amount-row { font-size: 1rem; font-weight: 600; color: #475569; display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 4px; }
         .ss-total-row { font-size: 1.8rem; font-weight: 900; color: #1d4ed8; display: flex; justify-content: flex-end; align-items: baseline; gap: 10px; margin-top: 10px; }
 
-        /* 3. 雲端管理介面優化 */
-        .inv-item-row { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 8px; border: 1px solid #f1f5f9; background: #fff; transition: all 0.2s; }
-        .inv-item-row:hover { border-color: #3b82f6; }
+        /* 雲端管理介面修正：防止凸出 */
+        .inv-item-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px; border-radius: 10px; border: 1px solid #f1f5f9; background: #fff; position: relative; }
+        .inv-item-row:hover { border-color: #3b82f6; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
         .inv-out-of-stock { background-color: #fff1f2 !important; border-color: #fecdd3 !important; }
-        .inv-out-of-stock input { color: #e11d48 !important; }
-        .stock-btn { font-size: 10px; padding: 4px 8px; border-radius: 6px; font-weight: bold; border: 1px solid #e2e8f0; transition: all 0.2s; }
+        .stock-btn { font-size: 10px; padding: 4px 10px; border-radius: 6px; font-weight: bold; border: 1px solid #e2e8f0; }
         .stock-btn.active { background: #22c55e; color: white; border-color: #22c55e; }
         .stock-btn.oos { background: #ef4444; color: white; border-color: #ef4444; }
 
@@ -57,13 +57,14 @@
 <button onclick="location.reload(true)" class="no-screenshot fixed right-4 bottom-24 z-[40] bg-orange-500 text-white shadow-lg w-12 h-12 rounded-full flex items-center justify-center text-xl">🔄</button>
 <div id="screenshotNav" class="no-print"><button onclick="exitScreenshotMode()">🔙 返回編輯模式</button></div>
 
-<script>
-const firebaseConfig = { apiKey: "AIzaSyDeCI3yFPr1v9KxOmko-qim2a7EtllEHKM", authDomain: "magic-conch-gaming.firebaseapp.com", databaseURL: "https://magic-conch-gaming-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "magic-conch-gaming", storageBucket: "magic-conch-gaming.firebasestorage.app", messagingSenderId: "105735978925", appId: "1:105735978925:web:3ec77acbfd344475322b24" };
-if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-</script>
-
 <div class="max-w-7xl mx-auto">
+    <div class="no-screenshot mb-4 flex justify-end">
+        <label class="flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100">
+            <span class="text-xs font-bold text-gray-500">管理員模式 (顯示金額)</span>
+            <input type="checkbox" id="adminToggle" checked onchange="toggleAdminMode()" class="w-4 h-4 text-blue-600">
+        </label>
+    </div>
+
     <div id="screenshot-header"><div class="ss-title">神奇海螺電競 報價單</div><div id="ss-time"></div></div>
     
     <div class="flex border-b mb-6 no-screenshot overflow-x-auto bg-white sticky top-0 z-10 p-1 rounded-t-xl">
@@ -73,6 +74,12 @@ const db = firebase.database();
         <button onclick="showTab('completed')" id="btn-completed" class="px-5 py-4 whitespace-nowrap">🏁 已結案</button>
         <button onclick="showTab('inventory')" id="btn-inventory" class="px-5 py-4 whitespace-nowrap">⚙️ 雲端品項</button>
     </div>
+
+    <script>
+    const firebaseConfig = { apiKey: "AIzaSyDeCI3yFPr1v9KxOmko-qim2a7EtllEHKM", authDomain: "magic-conch-gaming.firebaseapp.com", databaseURL: "https://magic-conch-gaming-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "magic-conch-gaming", storageBucket: "magic-conch-gaming.firebasestorage.app", messagingSenderId: "105735978925", appId: "1:105735978925:web:3ec77acbfd344475322b24" };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    </script>
 
     <div id="tab-calc" class="page-content">
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -112,7 +119,6 @@ const db = firebase.database();
                         <div class="flex justify-between text-sm text-blue-500 font-medium"><span>總成本</span><span id="ui-totalCost">$0</span></div>
                         <div class="flex justify-between text-lg font-bold text-green-600 border-t border-blue-200 mt-2 pt-2"><span>預計淨利</span><span id="ui-totalProfit">$0</span></div>
                     </div>
-                    <button onclick="toggleSellerMode()" class="w-full text-[10px] text-gray-400 mb-4 hover:text-blue-400 transition underline no-screenshot">👁️ 切換隱藏成本顯示</button>
 
                     <div class="space-y-2">
                         <button onclick="saveRecord('current')" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg">💾 儲存/更新草稿</button>
@@ -241,7 +247,7 @@ function renderRecords() {
     });
 }
 
-// 3. 雲端管理介面優化邏輯
+// 2. 雲端管理介面修正：優化間距與彈性排版
 function renderInventoryEditor() {
     const area = document.getElementById('inventoryEditor'); area.innerHTML = '';
     catOrder.forEach((cat, cIdx) => {
@@ -264,13 +270,13 @@ function renderInventoryEditor() {
             row.className = `inv-item-row ${item.outOfStock ? 'inv-out-of-stock' : ''}`;
             row.innerHTML = `
                 <div class="flex flex-col text-[8px] text-gray-300 px-1"><button onclick="moveItem('${cat}', ${idx}, -1)">▲</button><button onclick="moveItem('${cat}', ${idx}, 1)">▼</button></div>
-                <input class="flex-1 text-sm font-bold bg-transparent border-none focus:ring-0" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value">
-                <div class="flex gap-2">
-                    <div class="flex items-center gap-1 border rounded bg-white px-2 py-1"><span class="text-[9px] text-gray-400">售</span><input type="number" class="w-14 text-xs font-bold text-blue-600 border-none p-0" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div>
-                    <div class="flex items-center gap-1 border rounded bg-white px-2 py-1"><span class="text-[9px] text-gray-400">本</span><input type="number" class="w-14 text-xs font-bold text-red-400 border-none p-0" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div>
-                </div>
-                <button onclick="inv['${cat}'][${idx}].outOfStock=!inv['${cat}'][${idx}].outOfStock; renderInventoryEditor();" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button>
-                <button onclick="inv['${cat}'].splice(${idx}, 1); renderInventoryEditor();" class="text-red-200 hover:text-red-500 text-lg ml-1">×</button>`;
+                <input class="flex-grow min-w-[120px] text-sm font-bold bg-transparent border-none focus:ring-0" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value">
+                <div class="flex items-center gap-2 ml-auto">
+                    <div class="flex items-center gap-1 border rounded bg-white px-2 py-1"><span class="text-[9px] text-gray-400">售</span><input type="number" class="w-12 text-xs font-bold text-blue-600 border-none p-0" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div>
+                    <div class="flex items-center gap-1 border rounded bg-white px-2 py-1"><span class="text-[9px] text-gray-400">本</span><input type="number" class="w-12 text-xs font-bold text-red-400 border-none p-0" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div>
+                    <button onclick="inv['${cat}'][${idx}].outOfStock=!inv['${cat}'][${idx}].outOfStock; renderInventoryEditor();" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button>
+                    <button onclick="inv['${cat}'].splice(${idx}, 1); renderInventoryEditor();" class="text-red-200 hover:text-red-500 text-lg">×</button>
+                </div>`;
             document.getElementById(`edit-${cat}`).appendChild(row);
         });
     });
@@ -278,12 +284,19 @@ function renderInventoryEditor() {
 
 function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); if(t==='inventory') renderInventoryEditor(); }
 
-// 2. 修正隱藏成本功能
-function toggleSellerMode() { 
-    isSellerMode = !isSellerMode; 
+// 1. 管理員模式切換（隱藏利潤與細項金額）
+function toggleAdminMode() { 
     const box = document.getElementById('sellerBox');
-    if(isSellerMode) box.classList.remove('invisible');
-    else box.classList.add('invisible');
+    const body = document.getElementById('mainBody');
+    const isChecked = document.getElementById('adminToggle').checked;
+    
+    if(isChecked) {
+        box.classList.remove('invisible');
+        body.classList.remove('hide-prices');
+    } else {
+        box.classList.add('invisible');
+        body.classList.add('hide-prices');
+    }
 }
 
 function enterScreenshotMode() { document.getElementById('mainBody').classList.add('screenshot-mode'); renderConfig(); }
