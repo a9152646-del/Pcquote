@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v8.8</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v8.81</title>
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -26,37 +26,34 @@
         .seller-bg { background-color: #eff6ff; }
         .item-row:hover { background-color: #f8fafc; }
         
-        /* 報價模式文字樣式：去除標籤背景，統一黑色 */
-        .selected-badge { color: #000; font-size: 15px; margin-right: 12px; display: inline-flex; align-items: center; gap: 4px; font-weight: 500; }
-        .price-tag { color: #000; font-weight: bold; }
+        /* 報價模式：全黑文字、無邊框標籤 */
+        .selected-badge { color: #000; font-size: 15px; margin-right: 12px; display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
+        .price-tag { color: #000; font-weight: 900; }
         
-        /* 截圖模式核心設定 */
+        /* 截圖模式硬設定 */
         #screenshot-header, #screenshot-footer { display: none; }
         #mainBody.screenshot-mode { background: #fff !important; padding: 40px !important; }
         .screenshot-mode .no-screenshot { display: none !important; }
         .screenshot-mode .max-w-7xl { max-width: 800px !important; margin: 0 auto !important; }
-        .screenshot-mode .card { box-shadow: none !important; border: 2px solid #000 !important; border-radius: 0 !important; padding: 2rem !important; }
-        
-        /* 截圖模式下，沒選品項的 Row 直接消失 */
-        .screenshot-mode .item-row.is-empty { display: none !important; }
+        .screenshot-mode .card { box-shadow: none !important; border: 3px solid #000 !important; border-radius: 0 !important; padding: 2rem !important; }
         .screenshot-mode .item-row { border: none; border-bottom: 1px dashed #000; padding: 12px 0; }
         
-        .screenshot-mode #screenshot-header { display: flex !important; flex-direction: column; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-        .screenshot-mode #screenshot-header .ss-title { width: 100%; text-align: center; font-size: 1.8rem; font-weight: 900; color: #000; }
-        .screenshot-mode #screenshot-header #ss-time { width: 100%; text-align: left; font-size: 0.9rem; color: #000; font-weight: bold; }
+        .screenshot-mode #screenshot-header { display: flex !important; flex-direction: column; align-items: center; margin-bottom: 20px; border-bottom: 3px solid #000; padding-bottom: 10px; }
+        .screenshot-mode #screenshot-header .ss-title { width: 100%; text-align: center; font-size: 2rem; font-weight: 900; color: #000; }
+        .screenshot-mode #screenshot-header #ss-time { width: 100%; text-align: left; font-size: 0.9rem; color: #000; font-weight: bold; margin-top: 10px; }
         
-        /* 補回截圖模式底端金額區 */
-        .screenshot-mode #screenshot-footer { display: block !important; margin-top: 30px; border-top: 2px solid #000; padding-top: 15px; }
-        .ss-amount-box { display: flex; flex-direction: column; align-items: flex-end; width: 100%; }
-        .ss-amount-row { font-size: 1.1rem; font-weight: bold; color: #000; margin-bottom: 4px; }
-        .ss-total-row { font-size: 1.6rem; font-weight: 900; color: #000; border-top: 1px solid #000; margin-top: 10px; padding-top: 5px; }
+        /* 截圖模式底部金額 */
+        .screenshot-mode #screenshot-footer { display: block !important; margin-top: 30px; border-top: 2px solid #000; padding-top: 15px; text-align: right; }
+        .ss-amount-row { font-size: 1.2rem; font-weight: 800; color: #000; margin-bottom: 5px; }
+        .ss-total-row { font-size: 1.8rem; font-weight: 900; color: #000; border-top: 2px solid #000; margin-top: 10px; padding-top: 5px; display: inline-block; min-width: 250px; }
+
+        /* 返回按鈕強制最上層 */
+        #screenshotNav { position: fixed; top: 40px; right: 20px; z-index: 999999; display: none; }
+        #mainBody.screenshot-mode #screenshotNav { display: block; }
 
         .pick-item { transition: all 0.2s; border: 2px solid #e5e7eb; cursor: pointer; border-radius: 10px; }
         .pick-item.active { background-color: #eff6ff; border-color: #3b82f6; }
         .is-out-of-stock { opacity: 0.4; background-color: #f1f5f9 !important; border-color: #cbd5e1 !important; color: #64748b !important; }
-
-        /* 確保返回按鈕在截圖模式最上層 */
-        #screenshotNav { position: fixed; top: 30px; right: 30px; z-index: 99999; }
 
         @media print { .no-print, button, #sellerBox, .no-screenshot { display: none !important; } }
     </style>
@@ -65,8 +62,8 @@
 
 <button onclick="location.reload(true)" class="no-screenshot fixed right-4 bottom-24 z-[40] bg-orange-500 text-white shadow-lg w-10 h-10 rounded-full flex items-center justify-center text-lg active:scale-90 transition-all opacity-80">🔄</button>
 
-<div id="screenshotNav" class="hidden flex gap-2 no-screenshot">
-    <button onclick="exitScreenshotMode()" class="bg-blue-600 text-white px-8 py-3 rounded-full font-bold shadow-2xl active:scale-95 transition-all">← 返回編輯</button>
+<div id="screenshotNav" class="no-screenshot">
+    <button onclick="exitScreenshotMode()" class="bg-blue-600 text-white px-10 py-4 rounded-full font-black shadow-2xl border-4 border-white active:scale-90 transition-all">← 返回編輯模式</button>
 </div>
 
 <script>
@@ -178,7 +175,7 @@ const db = firebase.database();
     <div class="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
         <div class="p-4 border-b flex justify-between items-center bg-gray-50">
             <h3 id="modalTitle" class="font-bold text-blue-600">選擇品項</h3>
-            <button onclick="closeModal()" class="text-gray-400 text-2xl font-bold">×</button>
+            <button onclick="closeModal()" class="text-gray-400 text-3xl font-bold">×</button>
         </div>
         <div class="p-3 border-b bg-white">
             <input type="text" id="modalSearch" class="w-full" placeholder="🔍 搜尋零件名稱..." oninput="filterModalList()">
@@ -196,31 +193,10 @@ const db = firebase.database();
     </div>
 </div>
 
-<div id="deliveryModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[101]">
-    <div class="bg-white rounded-2xl max-w-xl w-full max-h-[80vh] overflow-hidden flex flex-col">
-        <div class="p-4 border-b flex justify-between items-center bg-blue-600 text-white">
-            <h3 class="font-bold">📦 出貨勾選</h3>
-            <button onclick="closeDeliveryModal()" class="text-2xl">×</button>
-        </div>
-        <div id="deliveryList" class="overflow-y-auto flex-1 p-4 space-y-2"></div>
-        <div class="p-4 border-t"><button onclick="saveDeliveryStatus()" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold">更新狀態</button></div>
-    </div>
-</div>
-
-<div id="recycleBinModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[101]">
-    <div class="bg-white rounded-2xl max-w-xl w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl">
-        <div class="p-4 border-b flex justify-between items-center bg-gray-800 text-white">
-            <h3 class="font-bold">🗑️ 刪除紀錄 (暫存)</h3>
-            <button onclick="closeRecycleBin()" class="text-2xl">×</button>
-        </div>
-        <div id="recycleList" class="overflow-y-auto flex-1 p-4 space-y-2 bg-gray-50"></div>
-    </div>
-</div>
-
 <script>
 let inv = {}; let catOrder = []; let records = []; let currentSelections = {}; 
 let editingRecordId = null; let currentCat = ""; let isSellerMode = true; let currentStatus = 'draft';
-let recycleBin = []; 
+let recycleBin = [];
 
 db.ref('inventory').on('value', s => { if(s.exists()) inv = s.val(); renderConfig(); });
 db.ref('catOrder').on('value', s => { if(s.exists()) catOrder = s.val(); renderConfig(); });
@@ -258,9 +234,13 @@ function calculate() {
 
 function renderConfig() {
     const container = document.getElementById('configRows'); if(!container) return;
+    const isSS = document.getElementById('mainBody').classList.contains('screenshot-mode');
     container.innerHTML = '';
+    
     catOrder.forEach(cat => {
         const items = currentSelections[cat] || [];
+        if (isSS && items.length === 0) return; // 截圖模式：沒選東西就完全不產生 HTML
+
         const badges = items.map(sel => {
             let name = "", p = 0;
             if(sel.isTemp) { name = sel.name; p = sel.p; } 
@@ -268,71 +248,39 @@ function renderConfig() {
             return `<div class="selected-badge">${sel.isGift?'[贈]':''}${name}${sel.qty>1?` x${sel.qty}`:''} <span class="price-tag ml-1">($${Number(p).toLocaleString()})</span></div>`;
         }).join('');
         
-        // 判斷是否為空
-        const isEmpty = items.length === 0;
-        container.innerHTML += `<div class="p-2 item-row cursor-pointer ${isEmpty ? 'is-empty' : ''}" onclick="openSelection('${cat}')">
-            <div class="text-sm font-black text-black uppercase border-l-4 border-black pl-2">${cat}</div>
+        container.innerHTML += `<div class="p-2 item-row cursor-pointer" onclick="openSelection('${cat}')">
+            <div class="text-sm font-black text-black uppercase border-l-4 border-black pl-2 tracking-widest">${cat}</div>
             <div class="mt-1 flex flex-wrap gap-1">${badges || '<span class="text-gray-300 italic text-xs no-screenshot">尚未選擇</span>'}</div>
         </div>`;
     });
     calculate();
 }
 
-function updateField(id, field, value) { db.ref(`records/${id}/${field}`).set(value); }
+function enterScreenshotMode() { 
+    document.getElementById('mainBody').classList.add('screenshot-mode'); 
+    renderConfig(); 
+}
+function exitScreenshotMode() { 
+    document.getElementById('mainBody').classList.remove('screenshot-mode'); 
+    renderConfig(); 
+}
 
 function renderRecords() {
     const dList = document.getElementById('draftList'), oList = document.getElementById('orderList'), cList = document.getElementById('completedList');
     dList.innerHTML = ''; oList.innerHTML = ''; cList.innerHTML = '';
     records.sort((a,b)=>b.id-a.id).forEach(r => {
-        const div = `<div class="p-4 border-2 rounded-xl bg-white flex flex-col gap-3 shadow-sm relative">
-            <div class="flex justify-between items-start">
-                <div class="flex-1 space-y-1">
-                    <div class="text-[10px] text-gray-400 font-bold">${r.time}</div>
-                    <div class="text-sm font-bold text-gray-700">${r.name || '[無名]'}</div>
-                    <div class="text-blue-600 font-black">${r.total}</div>
-                </div>
-                <div class="flex flex-col items-end gap-2 pr-2">
-                    <select onchange="updateField(${r.id}, 'seller', this.value)" class="text-xs p-1 border rounded w-24">
-                        <option value="朱冠穎" ${r.seller==='朱冠穎'?'selected':''}>朱冠穎</option>
-                        <option value="江苙翔" ${r.seller==='江苙翔'?'selected':''}>江苙翔</option>
-                    </select>
-                </div>
-            </div>
-            <div class="flex gap-2 border-t pt-2">
-                <button onclick="editRecord(${r.id})" class="flex-1 py-1 bg-blue-500 text-white text-xs rounded font-bold">編輯</button>
-                <button onclick="openDeliveryFast(${r.id})" class="flex-1 py-1 bg-orange-500 text-white text-xs rounded font-bold">📦 出貨管理</button>
-                <button onclick="if(confirm('確定刪除？')) db.ref('records/'+${r.id}).remove()" class="px-3 py-1 bg-red-50 text-red-400 text-xs rounded font-bold">刪除</button>
-            </div>
-        </div>`;
-        if(r.status === 'draft') dList.innerHTML += div; 
-        else if(r.status === 'completed') cList.innerHTML += div;
-        else oList.innerHTML += div;
+        const div = `<div class="p-4 border-2 rounded-xl bg-white shadow-sm"><div class="flex justify-between items-start"><div class="flex-1"><div class="text-[10px] text-gray-400 font-bold">${r.time}</div><div class="text-sm font-bold">${r.name || '[無名]'}</div><div class="text-blue-600 font-black">${r.total}</div></div></div><div class="flex gap-2 border-t mt-2 pt-2"><button onclick="editRecord(${r.id})" class="flex-1 py-1 bg-blue-500 text-white text-xs rounded font-bold">編輯</button><button onclick="if(confirm('刪除？')) db.ref('records/'+${r.id}).remove()" class="px-3 py-1 bg-red-50 text-red-400 text-xs rounded">刪除</button></div></div>`;
+        if(r.status === 'draft') dList.innerHTML += div; else oList.innerHTML += div;
     });
 }
-
 function editRecord(id) {
     const r = records.find(x => x.id === id); if(!r) return;
     editingRecordId = id; currentStatus = r.status; currentSelections = r.selections || {};
     document.getElementById('custName').value = r.name || ''; 
-    document.getElementById('custPhone').value = r.phone || ''; 
     document.getElementById('discountAmt').value = r.discount || 0; 
-    document.getElementById('noCardTotal').value = r.noCard || '';
     if(r.status === 'draft') document.getElementById('btnConvertToOrder').classList.remove('hidden'); 
     else document.getElementById('btnConvertToOrder').classList.add('hidden');
     renderConfig(); showTab('calc');
-}
-
-function enterScreenshotMode() { 
-    calculate(); 
-    document.getElementById('mainBody').classList.add('screenshot-mode'); 
-    document.getElementById('screenshotNav').classList.remove('hidden');
-    renderConfig(); // 重新渲染以隱藏空類別
-}
-
-function exitScreenshotMode() { 
-    document.getElementById('mainBody').classList.remove('screenshot-mode'); 
-    document.getElementById('screenshotNav').classList.add('hidden');
-    renderConfig(); // 恢復顯示
 }
 
 function showTab(t) { 
@@ -347,41 +295,45 @@ function renderInventoryEditor() {
     const area = document.getElementById('inventoryEditor'); area.innerHTML = '';
     catOrder.forEach((cat, cIdx) => {
         const sec = document.createElement('div'); sec.className = "bg-white p-4 rounded-xl border relative shadow-sm";
-        sec.innerHTML = `<div class="flex justify-between items-center mb-2"><input class="font-bold text-blue-600 w-2/3" value="${cat}" onchange="renameCat(${cIdx}, this.value)"><div class="flex gap-1"><button onclick="removeCat(${cIdx})" class="text-red-300 ml-1 text-xl">×</button></div></div><div id="edit-${cat}" class="space-y-2"></div><button onclick="addInvItem('${cat}')" class="w-full text-xs border-dashed border-2 mt-2 py-2 rounded-lg font-bold text-gray-400">+ 新增零件</button>`;
+        sec.innerHTML = `<div class="flex justify-between items-center mb-2"><input class="font-bold text-blue-600 w-2/3" value="${cat}" onchange="renameCat(${cIdx}, this.value)"><button onclick="removeCat(${cIdx})" class="text-red-300 text-xl">×</button></div><div id="edit-${cat}" class="space-y-2"></div><button onclick="addInvItem('${cat}')" class="w-full text-xs border-dashed border-2 mt-2 py-2 rounded-lg font-bold text-gray-400">+ 新增零件</button>`;
         area.appendChild(sec);
         (inv[cat] || []).forEach((item, idx) => {
             const row = document.createElement('div'); row.className = "bg-gray-50 p-3 rounded-lg border space-y-2 mb-2";
-            row.innerHTML = `<input type="text" class="text-sm font-black w-full bg-white border p-1" value="${item.name}" onchange="inv['${cat}'][idx].name=this.value">
-                <div class="flex gap-2">
-                    <input type="number" class="w-1/3 text-xs" value="${item.p}" placeholder="售價" onchange="inv['${cat}'][idx].p=this.value">
-                    <input type="number" class="w-1/3 text-xs text-red-600 font-bold" value="${item.c||0}" placeholder="成本" onchange="inv['${cat}'][idx].c=this.value">
-                    <button onclick="inv['${cat}'][idx].outOfStock=!inv['${cat}'][idx].outOfStock; renderInventoryEditor();" class="w-1/3 text-[10px] font-bold rounded ${item.outOfStock?'bg-red-500 text-white':'bg-white text-gray-400 border'}">缺貨</button>
-                </div>
-                <div class="flex justify-end pt-1"><button onclick="deleteInvItem('${cat}', ${idx})" class="text-[10px] bg-red-50 text-red-500 px-4 py-1 rounded-full font-black">刪除品項 ×</button></div>`;
+            row.innerHTML = `<input type="text" class="text-sm font-black w-full bg-white border p-1" value="${item.name}" onchange="inv['${cat}'][idx].name=this.value"><div class="flex gap-2"><input type="number" class="w-1/3 text-xs" value="${item.p}" placeholder="售價" onchange="inv['${cat}'][idx].p=this.value"><input type="number" class="w-1/3 text-xs text-red-600 font-bold" value="${item.c||0}" placeholder="成本" onchange="inv['${cat}'][idx].c=this.value"><button onclick="inv['${cat}'][idx].outOfStock=!inv['${cat}'][idx].outOfStock; renderInventoryEditor();" class="w-1/3 text-[10px] font-bold rounded ${item.outOfStock?'bg-red-500 text-white':'bg-white text-gray-400 border'}">缺貨</button></div><div class="flex justify-end pt-1"><button onclick="deleteInvItem('${cat}', ${idx})" class="text-[10px] bg-red-50 text-red-500 px-4 py-1 rounded-full font-black">刪除品項 ×</button></div>`;
             document.getElementById(`edit-${cat}`).appendChild(row);
         });
     });
 }
-
-function openDeliveryFast(id) {
-    deliveryRecordId = id; const r = records.find(x => x.id === id); tempDeliveryStatus = r.deliveredItems || {}; 
-    const list = document.getElementById('deliveryList'); list.innerHTML = '';
-    for (let cat in r.selections) {
-        r.selections[cat].forEach((sel, idx) => {
-            const key = `${cat}_${idx}`; const isDelivered = tempDeliveryStatus[key] !== false; 
-            let name = sel.isTemp ? sel.name : (inv[cat] && inv[cat][sel.idx] ? inv[cat][sel.idx].name : "未知");
-            list.innerHTML += `<div class="flex justify-between p-3 border rounded-lg bg-white"><div class="text-sm font-bold">${name}</div><input type="checkbox" ${isDelivered?'checked':''} onchange="tempDeliveryStatus['${key}']=this.checked"></div>`;
-        });
-    }
-    document.getElementById('deliveryModal').classList.remove('hidden');
-}
-function saveDeliveryStatus() { db.ref(`records/${deliveryRecordId}/deliveredItems`).set(tempDeliveryStatus).then(() => closeDeliveryModal()); }
-function closeDeliveryModal() { document.getElementById('deliveryModal').classList.add('hidden'); }
 function addInvItem(c) { if(!inv[c]) inv[c]=[]; inv[c].push({name:"", p:0, c:0, outOfStock: false}); renderInventoryEditor(); }
-function saveInventory() { db.ref('inventory').set(inv); db.ref('catOrder').set(catOrder).then(()=>alert('同步成功')); }
+function deleteInvItem(cat, idx) { inv[cat].splice(idx, 1); renderInventoryEditor(); }
+function saveInventory() { db.ref('inventory').set(inv); db.ref('catOrder').set(catOrder).then(()=>alert('同步')); }
 function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
-function toggleSellerMode() { isSellerMode = !isSellerMode; document.getElementById('sellerBox').classList.toggle('hidden'); document.getElementById('sellerBtn').innerText = `管理員模式: ${isSellerMode?'ON':'OFF'}`; renderConfig(); }
-function resetForm() { editingRecordId=null; currentSelections={}; document.querySelectorAll('input:not([type="checkbox"])').forEach(i=>i.value=""); renderConfig(); }
+function saveRecord(st) { 
+    const id = editingRecordId || Date.now();
+    const r = { id, time: new Date().toLocaleString(), name: document.getElementById('custName').value, selections: currentSelections, total: document.getElementById('ui-totalSale').innerText, status: st === 'current' ? currentStatus : st, discount: document.getElementById('discountAmt').value };
+    db.ref('records/' + id).update(r).then(() => { alert('成功'); showTab('drafts'); });
+}
+function toggleSellerMode() { isSellerMode = !isSellerMode; document.getElementById('sellerBox').classList.toggle('hidden'); renderConfig(); }
+function togglePick(idx, isT) {
+    if(!currentSelections[currentCat]) currentSelections[currentCat] = [];
+    const i = currentSelections[currentCat].findIndex(s => !s.isTemp && s.idx === idx);
+    if(i > -1) currentSelections[currentCat].splice(i,1); else currentSelections[currentCat].push({idx, isGift:false, qty:1, isTemp: false});
+    renderConfig(); renderModalList();
+}
+function renderModalList() {
+    const list = document.getElementById('modalList'); list.innerHTML = '';
+    (inv[currentCat] || []).forEach((item, idx) => {
+        const sel = (currentSelections[currentCat] || []).find(s => !s.isTemp && s.idx === idx);
+        list.innerHTML += `<div class="pick-item p-3 flex justify-between items-center ${sel?'active':''}" onclick="togglePick(${idx}, false)"><div>${item.name}</div><div class="font-bold">$${item.p}</div></div>`;
+    });
+}
+function addTempItem() {
+    const name = document.getElementById('tempName').value, p = document.getElementById('tempPrice').value, c = document.getElementById('tempCost').value; 
+    if(!name||!p) return; if(!currentSelections[currentCat]) currentSelections[currentCat] = [];
+    currentSelections[currentCat].push({ name, p, c: c||0, qty:1, isTemp:true });
+    renderConfig(); renderModalList();
+}
+function openSelection(cat) { currentCat = cat; document.getElementById('modalTitle').innerText = `選擇 ${cat}`; renderModalList(); document.getElementById('selectionModal').classList.remove('hidden'); }
 window.onload = () => renderConfig();
 </script>
 </body>
