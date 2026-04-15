@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>神奇海螺電競 | 專業報價與庫存系統 v8.2</title>
 
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,7 +13,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        body { background-color: #f4f9fc; font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; }
+        body { background-color: #f4f9fc; font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; padding-top: env(safe-area-inset-top); }
         .tab-active { border-bottom: 4px solid #3b82f6; color: #3b82f6; font-weight: bold; }
         .card { background: white; border-radius: 12px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); }
         .hidden { display: none !important; }
@@ -22,39 +22,33 @@
         .item-row:hover { background-color: #f8fafc; border-color: #3b82f6; }
         .selected-badge { background: #f1f5f9; color: #334155; padding: 4px 10px; border-radius: 6px; font-size: 12px; margin: 2px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid #e2e8f0; }
         
-        #screenshot-header, #screenshot-footer { display: none; }
-
         /* 截圖模式優化 */
+        #screenshot-header, #screenshot-footer { display: none; }
         .hide-price .price-tag { display: none !important; }
         #mainBody.screenshot-mode { background: #fff !important; padding: 40px !important; }
         .screenshot-mode .no-screenshot { display: none !important; }
         .screenshot-mode .max-w-7xl { max-width: 800px !important; margin: 0 auto !important; }
         .screenshot-mode .card { box-shadow: none !important; border: 2px solid #334155 !important; border-radius: 0 !important; padding: 2rem !important; }
         .screenshot-mode .item-row { border: none; border-bottom: 1px dashed #ccc; padding: 8px 0; }
-        
-        .screenshot-mode .item-row.empty-row { display: none !important; visibility: hidden !important; height: 0 !important; padding: 0 !important; margin: 0 !important; }
-        
-        .screenshot-mode .selected-badge { border: none; background: none; padding: 0; font-size: 14px; color: #000; }
+        .screenshot-mode .item-row.empty-row { display: none !important; }
         .screenshot-mode #screenshot-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #334155; padding-bottom: 10px; }
-        .screenshot-mode #screenshot-header .ss-title { width: 100%; text-align: center; font-size: 1.5rem; font-weight: 900; margin-bottom: 8px; }
-        .screenshot-mode #screenshot-header #ss-time { width: 100%; text-align: left; font-size: 0.875rem; color: #4b5563; }
         .screenshot-mode #screenshot-footer { display: block; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; }
+
+        /* 方案切換按鈕樣式 */
+        .plan-btn { background: #f1f5f9; color: #64748b; }
+        .plan-btn.active { background-color: #3b82f6 !important; color: white !important; }
 
         .pick-item { transition: all 0.2s; border: 1px solid #e5e7eb; cursor: pointer; }
         .pick-item.active { background-color: #eff6ff; border-color: #3b82f6; }
-
-        /* 方案切換按鈕樣式 */
-        .plan-btn.active { background-color: #3b82f6; color: white; }
 
         @media print { .no-print, button, #sellerBox, .no-screenshot { display: none !important; } }
     </style>
 </head>
 <body class="p-2 md:p-6" id="mainBody">
 
-<button onclick="location.reload()" class="no-screenshot fixed top-4 right-4 z-[60] bg-white/80 backdrop-blur shadow-md border border-gray-200 w-10 h-10 rounded-full flex items-center justify-center text-lg hover:bg-white active:scale-95 transition-all">🔄</button>
+<button onclick="location.reload(true)" class="no-screenshot fixed top-4 right-4 z-[9999] bg-orange-500 text-white shadow-lg w-12 h-12 rounded-full flex items-center justify-center text-xl active:scale-90 transition-all">🔄</button>
 
 <script>
-// Firebase 配置
 const firebaseConfig = {
   apiKey: "AIzaSyDeCI3yFPr1v9KxOmko-qim2a7EtllEHKM",
   authDomain: "magic-conch-gaming.firebaseapp.com",
@@ -87,9 +81,9 @@ const db = firebase.database();
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 no-screenshot gap-4">
                         <div class="flex items-center gap-3">
                             <h2 class="font-bold text-xl text-blue-600">電腦配置區</h2>
-                            <div class="flex bg-gray-100 rounded-lg p-1">
-                                <button onclick="switchPlan('A')" id="planBtnA" class="plan-btn active px-3 py-1 rounded-md text-xs font-bold transition-all">方案 A</button>
-                                <button onclick="switchPlan('B')" id="planBtnB" class="plan-btn px-3 py-1 rounded-md text-xs font-bold transition-all">方案 B</button>
+                            <div class="flex bg-gray-200 rounded-lg p-1 shadow-inner">
+                                <button onclick="switchPlan('A')" id="planBtnA" class="plan-btn active px-4 py-1.5 rounded-md text-xs font-black transition-all uppercase">方案 A</button>
+                                <button onclick="switchPlan('B')" id="planBtnB" class="plan-btn px-4 py-1.5 rounded-md text-xs font-black transition-all uppercase">方案 B</button>
                             </div>
                         </div>
                         <button onclick="toggleSellerMode()" id="sellerBtn" class="text-xs bg-blue-100 text-blue-600 px-4 py-2 rounded-full font-bold">管理員模式: ON</button>
@@ -207,10 +201,9 @@ const db = firebase.database();
 
 <script>
 let inv = {}; let catOrder = []; let records = []; 
-let currentSelections = {}; // 目前顯示的方案選取
-let plans = { A: {}, B: {} }; // 儲存 A、B 方案的選取
+let currentSelections = {}; 
+let plans = { A: {}, B: {} }; 
 let currentPlanId = 'A';
-
 let editingRecordId = null; let currentCat = ""; let isSellerMode = true; let currentStatus = 'draft';
 
 db.ref('inventory').on('value', s => { if(s.exists()) inv = s.val(); renderConfig(); });
@@ -220,21 +213,12 @@ db.ref('records').on('value', s => {
     renderRecords();
 });
 
-// 新增: 方案切換邏輯
 function switchPlan(pId) {
-    // 儲存當前選取到目前的方案
     plans[currentPlanId] = JSON.parse(JSON.stringify(currentSelections));
-    
-    // 切換 ID
     currentPlanId = pId;
-    
-    // 載入新方案選取
     currentSelections = JSON.parse(JSON.stringify(plans[pId]));
-    
-    // UI 更新
     document.querySelectorAll('.plan-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('planBtn' + pId).classList.add('active');
-    
     renderConfig();
 }
 
@@ -258,10 +242,8 @@ function calculate() {
     document.getElementById('ui-untaxed').innerText = `$${untaxed.toLocaleString()}`;
     document.getElementById('ui-totalSale').innerText = `$${finalSale.toLocaleString()}`;
     document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`;
-    
     const profit = noCard > 0 ? (noCard - subC) : (finalSale - subC);
     document.getElementById('ui-totalProfit').innerText = `$${profit.toLocaleString()}`;
-    
     document.getElementById('ss-time').innerText = `報價時間：${new Date().toLocaleString()}`;
     document.getElementById('ss-discount').innerText = disc > 0 ? `折扣：-$${disc.toLocaleString()}` : "折扣";
     document.getElementById('ss-untaxed').innerText = `未稅金額：$${untaxed.toLocaleString()}`;
@@ -293,9 +275,7 @@ function renderConfig() {
     calculate();
 }
 
-function updateSeller(id, name) {
-    db.ref(`records/${id}/seller`).set(name);
-}
+function updateSeller(id, name) { db.ref(`records/${id}/seller`).set(name); }
 
 function renderRecords() {
     const dList = document.getElementById('draftList'), oList = document.getElementById('orderList');
@@ -305,10 +285,8 @@ function renderRecords() {
         const sellerOptions = sellers.map(s => `<option value="${s}" ${r.seller === s ? 'selected' : ''}>${s}</option>`).join('');
         const hasNoCard = (r.noCard && Number(r.noCard) > 0);
         const priceDisplay = hasNoCard 
-            ? `<div class="text-gray-400 text-xs line-through">原計: ${r.total}</div>
-               <div class="text-orange-600 font-black">分期: $${Number(r.noCard).toLocaleString()}</div>`
+            ? `<div class="text-gray-400 text-xs line-through">原計: ${r.total}</div><div class="text-orange-600 font-black">分期: $${Number(r.noCard).toLocaleString()}</div>`
             : `<div class="text-blue-600 font-black">${r.total}</div>`;
-
         const div = `<div class="p-4 border rounded-xl bg-white flex flex-col gap-3 shadow-sm">
             <div class="flex justify-between items-start">
                 <div>
@@ -318,9 +296,7 @@ function renderRecords() {
                 </div>
                 <div class="flex flex-col items-end gap-1">
                     <span class="text-[10px] font-bold text-gray-400">販售人員</span>
-                    <select onchange="updateSeller(${r.id}, this.value)" class="text-xs p-1 bg-gray-50 border-gray-200 rounded">
-                        ${sellerOptions}
-                    </select>
+                    <select onchange="updateSeller(${r.id}, this.value)" class="text-xs p-1 bg-gray-50 border-gray-200 rounded">${sellerOptions}</select>
                 </div>
             </div>
             <div class="flex gap-2 border-t pt-2">
@@ -337,10 +313,7 @@ function renderRecords() {
 function filterModalList() {
     const term = document.getElementById('modalSearch').value.toLowerCase();
     const items = document.querySelectorAll('#modalList .pick-item');
-    items.forEach(item => {
-        const text = item.innerText.toLowerCase();
-        item.style.display = text.includes(term) ? 'flex' : 'none';
-    });
+    items.forEach(item => { item.style.display = item.innerText.toLowerCase().includes(term) ? 'flex' : 'none'; });
 }
 
 function renderModalList() {
@@ -365,10 +338,7 @@ function renderModalList() {
     });
     selections.filter(s => s.isTemp).forEach((temp, tIdx) => {
         list.innerHTML += `<div class="pick-item p-3 rounded-lg flex justify-between items-center active border-orange-200 bg-orange-50 mb-1">
-            <div class="flex-1">
-                <div class="font-bold text-sm text-orange-700">[臨時] ${temp.name}</div>
-                <div class="text-xs text-orange-500 font-bold">$${Number(temp.p).toLocaleString()}</div>
-            </div>
+            <div class="flex-1"><div class="font-bold text-sm text-orange-700">[臨時] ${temp.name}</div><div class="text-xs text-orange-500 font-bold">$${Number(temp.p).toLocaleString()}</div></div>
             <div class="flex items-center gap-3" onclick="event.stopPropagation()">
                 <div class="flex items-center border rounded bg-white shadow-sm">
                     <button class="px-3 py-1 bg-gray-50 text-xs font-bold" onclick="updateSubItem(null, 'qty', -1, true, ${tIdx})">-</button>
@@ -411,31 +381,19 @@ function removeTempItem(tIdx) {
     const all = currentSelections[currentCat], tempItems = all.filter(s => s.isTemp);
     all.splice(all.indexOf(tempItems[tIdx]), 1); renderConfig(); renderModalList();
 }
-
-function openSelection(cat) { 
-    currentCat = cat; 
-    document.getElementById('modalTitle').innerText = `選擇 ${cat}`; 
-    document.getElementById('modalSearch').value = '';
-    renderModalList(); 
-    document.getElementById('selectionModal').classList.remove('hidden'); 
-}
-
+function openSelection(cat) { currentCat = cat; document.getElementById('modalTitle').innerText = `選擇 ${cat}`; document.getElementById('modalSearch').value = ''; renderModalList(); document.getElementById('selectionModal').classList.remove('hidden'); }
 function saveRecord(targetStatus) {
     const id = editingRecordId || Date.now(), status = targetStatus === 'current' ? currentStatus : targetStatus;
-    // 儲存時以當前編輯中的方案選取為準
     const r = { id, time: new Date().toLocaleString(), name: document.getElementById('custName').value, source: document.getElementById('custSource').value, phone: document.getElementById('custPhone').value, addr: document.getElementById('custAddr').value, memo: document.getElementById('orderMemo').value, selections: currentSelections, noCard: document.getElementById('noCardTotal').value, total: document.getElementById('ui-totalSale').innerText, status, discount: document.getElementById('discountAmt').value };
     db.ref('records/' + id).update(r).then(() => { alert('儲存成功'); resetForm(); showTab('orders'); });
 }
 function editRecord(id) {
     const r = records.find(x => x.id === id); editingRecordId = id; currentStatus = r.status; 
     currentSelections = r.selections || {};
-    // 編輯時預設載入 A 方案
     plans.A = JSON.parse(JSON.stringify(currentSelections));
-    plans.B = {}; 
-    currentPlanId = 'A';
+    plans.B = {}; currentPlanId = 'A';
     document.querySelectorAll('.plan-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('planBtnA').classList.add('active');
-
     document.getElementById('custName').value = r.name || ''; document.getElementById('custPhone').value = r.phone || ''; document.getElementById('custAddr').value = r.addr || ''; document.getElementById('discountAmt').value = r.discount || 0; document.getElementById('noCardTotal').value = r.noCard || '';
     const cBtn = document.getElementById('btnConvertToOrder'); if(r.status === 'draft') cBtn.classList.remove('hidden'); else cBtn.classList.add('hidden');
     renderConfig(); showTab('calc');
@@ -466,19 +424,10 @@ function exitScreenshotMode() { document.getElementById('mainBody').classList.re
 function exitToOrdersWithoutSaving() { if(confirm("確定返回？")) { resetForm(); showTab('orders'); } }
 function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); if(t==='inventory') renderInventoryEditor(); }
 function toggleSellerMode() { isSellerMode = !isSellerMode; document.getElementById('sellerBox').classList.toggle('hidden'); renderConfig(); }
-function resetForm() { 
-    editingRecordId = null; 
-    currentSelections = {}; 
-    plans = { A: {}, B: {} }; 
-    currentPlanId = 'A';
-    document.querySelectorAll('.plan-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('planBtnA').classList.add('active');
-    
-    document.getElementById('custName').value = ""; document.getElementById('custPhone').value = ""; document.getElementById('custAddr').value = ""; document.getElementById('discountAmt').value = 0; document.getElementById('noCardTotal').value = ""; document.getElementById('btnConvertToOrder').classList.add('hidden'); 
-    calculate(); renderConfig(); 
-}
+function resetForm() { editingRecordId = null; currentSelections = {}; plans = { A: {}, B: {} }; currentPlanId = 'A'; document.querySelectorAll('.plan-btn').forEach(b => b.classList.remove('active')); document.getElementById('planBtnA').classList.add('active'); document.getElementById('custName').value = ""; document.getElementById('custPhone').value = ""; document.getElementById('custAddr').value = ""; document.getElementById('discountAmt').value = 0; document.getElementById('noCardTotal').value = ""; document.getElementById('btnConvertToOrder').classList.add('hidden'); calculate(); renderConfig(); }
 function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
 window.onload = () => { renderConfig(); };
 </script>
 </body>
 </html>
+
