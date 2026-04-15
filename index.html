@@ -32,7 +32,6 @@
         .screenshot-mode .card { box-shadow: none !important; border: 2px solid #334155 !important; border-radius: 0 !important; padding: 2rem !important; }
         .screenshot-mode .item-row { border: none; border-bottom: 1px dashed #ccc; padding: 8px 0; }
         
-        /* 核心修正：截圖模式強制隱藏未選取的品項行 */
         .screenshot-mode .item-row.empty-row { display: none !important; visibility: hidden !important; height: 0 !important; padding: 0 !important; margin: 0 !important; }
         
         .screenshot-mode .selected-badge { border: none; background: none; padding: 0; font-size: 14px; color: #000; }
@@ -41,13 +40,12 @@
         .screenshot-mode #screenshot-header #ss-time { width: 100%; text-align: left; font-size: 0.875rem; color: #4b5563; }
         .screenshot-mode #screenshot-footer { display: block; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; }
 
-        .pick-item { transition: all 0.2s; border: 1px solid #e5e7eb; cursor: pointer; }
-        .pick-item.active { background-color: #eff6ff; border-color: #3b82f6; }
+        /* 核心修正：選取時的框框與反藍視覺 */
+        .pick-item { transition: all 0.2s; border: 2px solid #e5e7eb; cursor: pointer; border-radius: 10px; }
+        .pick-item.active { background-color: #eff6ff; border-color: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.2); }
         
-        /* 缺貨樣式 */
         .is-out-of-stock { opacity: 0.4; background-color: #f1f5f9 !important; border-color: #cbd5e1 !important; color: #64748b !important; }
 
-        /* 進度標籤顏色 */
         .status-badge { font-weight: bold; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
         .status-待處理 { background: #fee2e2; color: #ef4444; }
         .status-組裝中 { background: #fef3c7; color: #d97706; }
@@ -63,7 +61,6 @@
 <button onclick="location.reload(true)" class="no-screenshot fixed right-4 bottom-24 z-[40] bg-orange-500 text-white shadow-lg w-10 h-10 rounded-full flex items-center justify-center text-lg active:scale-90 transition-all opacity-80">🔄</button>
 
 <script>
-// Firebase 配置
 const firebaseConfig = {
   apiKey: "AIzaSyDeCI3yFPr1v9KxOmko-qim2a7EtllEHKM",
   authDomain: "magic-conch-gaming.firebaseapp.com",
@@ -85,8 +82,8 @@ const db = firebase.database();
 
     <div class="flex border-b mb-6 no-screenshot overflow-x-auto bg-white sticky top-0 z-10">
         <button onclick="showTab('calc')" id="btn-calc" class="px-6 py-3 tab-active">🐚 報價配單</button>
-        <button onclick="showTab('orders')" id="btn-orders" class="px-6 py-3">📋 訂單/草稿管理</button>
-        <button onclick="showTab('inventory')" id="btn-inventory" class="px-6 py-3">⚙️ 品項庫管理</button>
+        <button onclick="showTab('orders')" id="btn-orders" class="px-6 py-3">📋 訂單管理</button>
+        <button onclick="showTab('inventory')" id="btn-inventory" class="px-6 py-3">⚙️ 庫存品項</button>
     </div>
 
     <div id="tab-calc" class="page-content">
@@ -148,15 +145,10 @@ const db = firebase.database();
     </div>
 
     <div id="tab-orders" class="page-content hidden">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="card p-6">
-                <h2 class="font-bold text-lg mb-4 text-orange-500 border-b pb-2">📂 雲端草稿 <span id="count-draft">0</span></h2>
-                <div id="draftList" class="space-y-4"></div>
-            </div>
-            <div class="card p-6">
-                <h2 class="font-bold text-lg mb-4 text-green-600 border-b pb-2">✅ 正式訂單 <span id="count-order">0</span></h2>
-                <div id="orderList" class="space-y-4"></div>
-            </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="card p-4"><h2 class="font-bold text-orange-500 border-b pb-2 mb-4">📂 雲端草稿 <span id="count-draft">0</span></h2><div id="draftList" class="space-y-4"></div></div>
+            <div class="card p-4"><h2 class="font-bold text-green-600 border-b pb-2 mb-4">✅ 正式訂單 <span id="count-order">0</span></h2><div id="orderList" class="space-y-4"></div></div>
+            <div class="card p-4 bg-gray-50"><h2 class="font-bold text-gray-500 border-b pb-2 mb-4">🏁 已結案 <span id="count-completed">0</span></h2><div id="completedList" class="space-y-4 opacity-75"></div></div>
         </div>
     </div>
 
@@ -269,45 +261,76 @@ function renderConfig() {
 function updateStatus(id, field, value) { db.ref(`records/${id}/${field}`).set(value); }
 
 function renderRecords() {
-    const dList = document.getElementById('draftList'), oList = document.getElementById('orderList');
-    dList.innerHTML = ''; oList.innerHTML = '';
+    const dList = document.getElementById('draftList'), oList = document.getElementById('orderList'), cList = document.getElementById('completedList');
+    dList.innerHTML = ''; oList.innerHTML = ''; cList.innerHTML = '';
+    
     records.sort((a,b)=>b.id-a.id).forEach(r => {
         const sellers = ["未選擇", "朱冠穎", "江鈞宇", "江苙翔"];
         const statuses = ["待處理", "組裝中", "測試中", "已完工", "已寄出"];
         const sOpts = sellers.map(s => `<option value="${s}" ${r.seller===s?'selected':''}>${s}</option>`).join('');
         const pOpts = statuses.map(s => `<option value="${s}" ${r.progress===s?'selected':''}>${s}</option>`).join('');
         
-        let missing = false;
-        if(r.status==='order' && r.deliveredItems) {
-            for(let key in r.deliveredItems) if(r.deliveredItems[key]===false) missing = true;
+        // 核心修正: 抓取具體的未出貨品項名稱
+        let missingNames = [];
+        if(r.deliveredItems) {
+            for(let key in r.deliveredItems) {
+                if(r.deliveredItems[key] === false) {
+                    const [cat, idx] = key.split('_');
+                    const sel = r.selections[cat][idx];
+                    let name = sel.isTemp ? sel.name : ((inv[cat] && inv[cat][sel.idx]) ? inv[cat][sel.idx].name : "未知");
+                    missingNames.push(name);
+                }
+            }
         }
 
         const priceDisplay = (r.noCard && Number(r.noCard)>0) 
             ? `<div class="text-gray-400 text-xs line-through">原計: ${r.total}</div><div class="text-orange-600 font-black">分期: $${Number(r.noCard).toLocaleString()}</div>`
             : `<div class="text-blue-600 font-black">${r.total}</div>`;
 
-        const div = `<div class="p-4 border-2 rounded-xl bg-white flex flex-col gap-3 shadow-sm relative ${missing?'border-red-400':'border-transparent'}">
+        const div = `<div class="p-4 border-2 rounded-xl bg-white flex flex-col gap-3 shadow-sm relative ${missingNames.length>0?'border-red-400':'border-transparent'}">
             <div class="absolute top-4 right-4 flex flex-col items-end gap-1">
                 <span class="status-badge status-${r.progress||'待處理'}">${r.progress||'待處理'}</span>
-                ${missing?'<span class="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded font-bold animate-pulse">有缺件</span>':''}
+                ${r.completedTime ? `<span class="text-[9px] text-gray-400 font-bold">結案: ${r.completedTime}</span>` : ''}
             </div>
             <div class="flex justify-between items-start">
-                <div class="flex-1"><div class="text-[10px] text-gray-400 font-bold">${r.time}</div><div class="text-sm font-bold text-gray-700">[${r.source||'無'}] ${r.name}</div>${priceDisplay}</div>
-                <div class="flex flex-col items-end gap-2 pr-12">
+                <div class="flex-1">
+                    <div class="text-[10px] text-gray-400 font-bold">${r.time}</div>
+                    <div class="text-sm font-bold text-gray-700">[${r.source||'無'}] ${r.name}</div>
+                    ${priceDisplay}
+                    ${missingNames.length > 0 ? `<div class="mt-2 text-[11px] font-bold text-red-600 bg-red-50 p-2 rounded">未出貨：${missingNames.join(', ')}</div>` : ''}
+                </div>
+                ${r.status !== 'completed' ? `<div class="flex flex-col items-end gap-2 pr-12">
                     <select onchange="updateStatus(${r.id}, 'seller', this.value)" class="text-xs p-1 bg-gray-50 border rounded w-24">${sOpts}</select>
                     <select onchange="updateStatus(${r.id}, 'progress', this.value)" class="text-xs p-1 bg-blue-50 border-blue-100 text-blue-700 rounded w-24 font-bold">${pOpts}</select>
-                </div>
+                </div>` : ''}
             </div>
             <div class="flex gap-2 border-t pt-2">
-                <button onclick="editRecord(${r.id})" class="flex-1 py-1 bg-blue-500 text-white text-xs rounded font-bold">編輯</button>
+                ${r.status === 'completed' ? `<button onclick="editRecord(${r.id})" class="flex-1 py-1 bg-gray-200 text-gray-600 text-xs rounded font-bold">檢視內容</button>` : `<button onclick="editRecord(${r.id})" class="flex-1 py-1 bg-blue-500 text-white text-xs rounded font-bold">編輯</button>`}
                 ${r.status==='order'?`<button onclick="openShippingManager(${r.id})" class="flex-1 py-1 bg-orange-500 text-white text-xs rounded font-bold">📦 出貨管理</button>`:''}
+                ${r.status==='order'?`<button onclick="completeOrder(${r.id})" class="flex-1 py-1 bg-green-600 text-white text-xs rounded font-bold">🏁 結案歸檔</button>`:''}
                 <button onclick="if(confirm('刪除？')) db.ref('records/'+${r.id}).remove()" class="px-3 py-1 bg-red-50 text-red-400 text-xs rounded font-bold">刪除</button>
             </div>
         </div>`;
-        if(r.status === 'draft') dList.innerHTML += div; else oList.innerHTML += div;
+        
+        if(r.status === 'draft') dList.innerHTML += div; 
+        else if(r.status === 'completed') cList.innerHTML += div;
+        else oList.innerHTML += div;
     });
     document.getElementById('count-draft').innerText = records.filter(r=>r.status==='draft').length;
     document.getElementById('count-order').innerText = records.filter(r=>r.status==='order').length;
+    document.getElementById('count-completed').innerText = records.filter(r=>r.status==='completed').length;
+}
+
+// 核心功能: 結案歸檔
+function completeOrder(id) {
+    if(confirm('確定結案？結案後將移至完成區。')) {
+        const now = new Date();
+        const timeStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${now.getMinutes()}`;
+        db.ref(`records/${id}`).update({
+            status: 'completed',
+            completedTime: timeStr
+        });
+    }
 }
 
 function openShippingManager(id) {
@@ -329,12 +352,17 @@ function openShippingManager(id) {
 
 function closeShippingModal() { document.getElementById('shippingModal').classList.add('hidden'); editingRecordId=null; }
 function filterModalList() { const term = document.getElementById('modalSearch').value.toLowerCase(); document.querySelectorAll('#modalList .pick-item').forEach(item => { item.style.display = item.innerText.toLowerCase().includes(term) ? 'flex' : 'none'; }); }
+
 function renderModalList() {
     const list = document.getElementById('modalList'); list.innerHTML = ''; const selections = currentSelections[currentCat] || [];
     (inv[currentCat] || []).forEach((item, idx) => {
+        // 核心修正: 檢查是否已經選取，給予 active class
         const sel = selections.find(s => !s.isTemp && s.idx === idx);
         list.innerHTML += `<div class="pick-item p-3 rounded-lg flex justify-between items-center mb-1 ${sel?'active':''} ${item.outOfStock?'is-out-of-stock':''}" onclick="togglePick(${idx}, false)">
-            <div class="flex-1"><div class="font-bold text-sm">${item.outOfStock?'(缺貨) ':''}${item.name}</div><div class="text-xs text-blue-500 font-bold">$${Number(item.p).toLocaleString()}</div></div>
+            <div class="flex-1">
+                <div class="font-bold text-sm">${item.outOfStock?'(缺貨) ':''}${item.name}</div>
+                <div class="text-xs text-blue-500 font-bold">$${Number(item.p).toLocaleString()}</div>
+            </div>
             <div class="flex items-center gap-3" onclick="event.stopPropagation()">
                 <label class="text-xs flex items-center gap-1"><input type="checkbox" ${sel?.isGift?'checked':''} onchange="updateSubItem(${idx}, 'gift', this.checked, false)"> 贈</label>
                 <div class="flex items-center border rounded bg-white overflow-hidden"><button class="px-2 py-1 bg-gray-50" onclick="updateSubItem(${idx}, 'qty', -1, false)">-</button><span class="px-2 text-xs font-bold">${sel?.qty||1}</span><button class="px-2 py-1 bg-gray-50" onclick="updateSubItem(${idx}, 'qty', 1, false)">+</button></div>
@@ -387,7 +415,7 @@ function saveRecord(targetStatus) {
 function editRecord(id) {
     const r = records.find(x => x.id === id); editingRecordId = id; currentStatus = r.status; currentSelections = r.selections || {};
     document.getElementById('custName').value = r.name||''; document.getElementById('custPhone').value = r.phone||''; document.getElementById('custAddr').value = r.addr||''; document.getElementById('discountAmt').value = r.discount||0; document.getElementById('noCardTotal').value = r.noCard||'';
-    if(r.status==='draft') document.getElementById('btnConvertToOrder').classList.remove('hidden');
+    if(r.status==='draft') document.getElementById('btnConvertToOrder').classList.remove('hidden'); else document.getElementById('btnConvertToOrder').classList.add('hidden');
     renderConfig(); showTab('calc');
 }
 function renderInventoryEditor() {
