@@ -14,8 +14,8 @@
             background-color: #f8fafc; 
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
             padding-top: 105px !important; 
-            /* 豬豬，這裡加了 padding-bottom 確保底部內容不會被按鈕擋住 */
-            padding-bottom: 150px !important; 
+            /* 豬豬，這裡底部空間直接給 200，讓內容一定會高過按鈕 */
+            padding-bottom: 200px !important; 
             font-size: 14px; 
             color: #334155; 
             line-height: 1.5;
@@ -67,15 +67,24 @@
         .stock-btn.oos { background: #ef4444; color: white; border-color: #ef4444; }
 
         button { font-size: 14px !important; }
+
+        /* 💾 豬豬，這裡單獨控制儲存鈕的位置，確保它在 🔄 上方 */
+        #floatingSaveBtn {
+            position: fixed;
+            right: 16px;
+            bottom: 230px; /* 拉高位置，確保在更新鍵上方 */
+            z-index: 100;
+        }
     </style>
 </head>
 <body class="p-2 md:p-4 hide-prices" id="mainBody">
 
-<div class="no-screenshot fixed right-4 bottom-6 z-[60] flex flex-col gap-3">
-    <button id="floatingSaveBtn" onclick="saveInventory()" style="display: none;" class="bg-green-600 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">💾</button>
+<div class="no-screenshot fixed right-4 bottom-10 z-[80] flex flex-col gap-3">
     <button onclick="location.reload(true)" class="bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔄</button>
     <button onclick="goBack()" class="bg-black text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔙</button>
 </div>
+
+<button id="floatingSaveBtn" onclick="saveInventory()" class="hidden bg-green-600 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl no-screenshot">💾</button>
 
 <div id="adminToggleContainer" class="no-screenshot">
     <label id="adminToggleLabel">
@@ -279,37 +288,19 @@ function renderRecords() {
     dList.innerHTML = ''; oList.innerHTML = ''; cList.innerHTML = '';
     records.sort((a,b)=>b.id-a.id).forEach(r => {
         const pOpts = ["待處理", "組裝中", "測試中", "已完工", "已寄出"].map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
-        const noCardInfo = r.noCard > 0 ? `<div class="text-orange-500 font-bold text-xs mt-1">無卡分期: $${Number(r.noCard).toLocaleString()}</div>` : '';
-        
-        let undelivered = [];
-        for (let cat in r.selections) {
-            r.selections[cat].forEach((sel, idx) => {
-                const k = `${cat}_${idx}`;
-                const isD = r.deliveredItems ? r.deliveredItems[k] !== false : true;
-                if (!isD) {
-                    let n = sel.isTemp ? sel.name : (inv[cat] && inv[cat][sel.idx] ? inv[cat][sel.idx].name : "未知品項");
-                    undelivered.push(n);
-                }
-            });
-        }
-        
-        const undeliveredHtml = (r.status !== 'draft' && undelivered.length > 0) ? `<div class="mt-2 p-2 bg-red-50 rounded text-[10px] text-red-600 font-bold"><div class="border-b border-red-100 mb-1">⚠️ 未出貨項目：</div>${undelivered.join('、')}</div>` : '';
-
         const div = `<div class="p-4 border-2 rounded-xl bg-white shadow-sm space-y-3">
             <div class="flex justify-between items-start">
                 <div class="flex-1">
                     <div class="text-[10px] text-gray-400 font-mono">${r.time}</div>
                     <div class="text-base font-black text-gray-800">${r.name || '無名客戶'}</div>
                     <div class="text-blue-600 font-black text-lg">${r.total}</div>
-                    ${noCardInfo}
-                    ${undeliveredHtml}
                 </div>
                 <div class="text-right ml-2"><span class="bg-blue-100 text-blue-600 text-[10px] font-bold px-2 py-1 rounded-full">${r.seller||'未指定'}</span><div class="mt-2"><select onchange="db.ref('records/'+${r.id}+'/progress').set(this.value)" class="text-[10px] font-bold border-2 border-gray-100 px-1 py-1 rounded-lg">${pOpts}</select></div></div>
             </div>
             <div class="flex gap-1 pt-3 border-t border-dashed">
                 <button onclick="editRecord(${r.id})" class="flex-1 py-2 bg-blue-600 text-white text-[10px] rounded-lg font-black">編輯</button>
                 ${r.status === 'draft' ? `<button onclick="if(confirm('確認轉為正式訂單？')) db.ref('records/'+${r.id}+'/status').set('order')" class="bg-green-600 text-white px-2 rounded-lg text-[10px] font-bold">轉正式</button>` : 
-                `<button onclick="openDeliveryFast(${r.id})" class="bg-orange-500 text-white px-2 rounded-lg text-[10px] font-bold">📦 未出貨</button>
+                `<button onclick="openDeliveryFast(${r.id})" class="bg-orange-500 text-white px-2 rounded-lg text-[10px] font-bold">📦 出貨</button>
                  <button onclick="if(confirm('確認結案？')) db.ref('records/'+${r.id}+'/status').set('completed')" class="bg-gray-600 text-white px-2 rounded-lg text-[10px] font-bold">結案</button>`}
                 <button onclick="if(confirm('確定刪除此紀錄？')) db.ref('records/'+${r.id}).remove()" class="text-red-300 text-xl px-1">✕</button>
             </div></div>`;
@@ -360,13 +351,15 @@ function showTab(t) {
     document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); 
     document.getElementById('btn-'+t).classList.add('tab-active'); 
     
-    // 豬豬，按鈕顯示邏輯強勢回歸
+    // 豬豬，這裡強勢控制儲存鈕
     const fsBtn = document.getElementById('floatingSaveBtn');
     if(t === 'inventory') {
         renderInventoryEditor();
-        fsBtn.style.setProperty('display', 'flex', 'important');
+        fsBtn.classList.remove('hidden');
+        fsBtn.style.display = 'flex';
     } else {
-        fsBtn.style.setProperty('display', 'none', 'important');
+        fsBtn.classList.add('hidden');
+        fsBtn.style.display = 'none';
     }
 }
 
@@ -465,7 +458,12 @@ function removeCat(idx) { if(confirm('確定要刪除整個大項嗎？此操作
 function renameCat(idx, newName) { const old = catOrder[idx]; inv[newName] = inv[old]; delete inv[old]; catOrder[idx] = newName; }
 function addCustomSeller() { const n = prompt("請輸入業務名稱："); if(n) { const s = document.getElementById('infoSeller'); const o = document.createElement('option'); o.value=n; o.text=n; o.selected=true; s.add(o); } }
 function closeDeliveryModal() { document.getElementById('deliveryModal').classList.add('hidden'); }
-window.onload = () => renderConfig();
+
+window.onload = () => {
+    renderConfig();
+    // 豬豬，一載入先強制隱藏儲存鈕，確保狀態正確
+    showTab('calc');
+};
 </script>
 </body>
 </html>
