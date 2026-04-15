@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.05 (修正版)</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.05 (位置修正版)</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        /* 1. 基礎字體加大與介面下移 (針對 iPhone 優化) */
+        /* 1. 介面與截圖模式全體下移 (修正點：增加 padding-top) */
         body { 
             background-color: #f8fafc; 
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
-            padding-top: 80px !important; /* 介面整體下移，避開瀏海 */
-            font-size: 18px; /* 字體加大 */
+            padding-top: 130px !important; /* 編輯模式下移，完全避開狀態欄 */
+            font-size: 18px; 
             color: #334155; 
             line-height: 1.6;
         }
@@ -23,7 +23,7 @@
         .card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
         .hidden { display: none !important; }
         
-        /* 輸入框加大 (字體加大) */
+        /* 輸入框加大 */
         input, select, textarea { border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 18px; outline: none; }
         
         /* 報價單項目加大 */
@@ -34,10 +34,10 @@
         /* 管理員隱藏單價 */
         .hide-prices .price-tag { display: none !important; }
 
-        /* 管理員框框改到左上方 (修正位置) */
+        /* 管理員框框位置下移 (避免重疊時間) */
         #adminToggleContainer {
             position: fixed;
-            top: 15px;
+            top: 55px;
             left: 15px;
             z-index: 50;
         }
@@ -53,7 +53,7 @@
             cursor: pointer;
         }
 
-        /* 截圖模式 CSS 強制修正 */
+        /* 截圖模式位置修正 */
         #screenshotNav { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 99999; display: none; }
         .screenshot-mode #screenshotNav { display: block !important; }
         #screenshotNav button { font-size: 18px; padding: 14px 28px; border-radius: 40px; background: #1e293b; color: white; box-shadow: 0 8px 20px rgba(0,0,0,0.3); font-weight: bold; }
@@ -61,7 +61,7 @@
         .screenshot-mode .no-screenshot, .screenshot-mode #adminToggleContainer { display: none !important; }
         .screenshot-mode #screenshot-header { display: block !important; }
         .screenshot-mode #screenshot-footer { display: flex !important; flex-direction: column; }
-        .screenshot-mode body { background: #fff !important; padding-top: 20px !important; }
+        .screenshot-mode body { background: #fff !important; padding-top: 100px !important; } /* 截圖模式標題下移 */
         .screenshot-mode .max-w-7xl { max-width: 700px !important; margin: 0 auto !important; }
         
         /* 品項管理頁面優化 */
