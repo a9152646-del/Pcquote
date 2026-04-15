@@ -10,56 +10,58 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        /* 1. 全體介面微型化 */
         body { background-color: #f8fafc; font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; padding-top: 5px !important; font-size: 12px; color: #334155; }
         .tab-active { border-bottom: 2px solid #3b82f6; color: #3b82f6; font-weight: bold; }
         .card { background: white; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
         .hidden { display: none !important; }
-        .invisible { visibility: hidden !important; }
         
         input, select, textarea { border: 1px solid #cbd5e1; border-radius: 3px; padding: 3px 6px; font-size: 12px; outline: none; }
-        input:focus { border-color: #3b82f6; ring: 1px; }
         
         .item-row { padding: 6px 10px !important; border-bottom: 1px solid #f1f5f9; }
         .selected-badge { color: #1e293b; font-size: 12px; margin-right: 6px; display: inline-flex; align-items: center; gap: 2px; font-weight: 600; }
         .price-tag { color: #94a3b8; font-weight: 400; font-size: 10px; margin-left: 2px; }
         
-        /* 2. 管理員隱藏單價邏輯 */
+        /* 管理員隱藏單價 */
         .hide-prices .price-tag { display: none !important; }
 
-        /* 截圖按鈕左下角 */
+        /* 截圖模式下的特殊處理 (修正點 2 & 3) */
         #screenshotNav { position: fixed; bottom: 20px; left: 20px; z-index: 99999; display: none; }
         .screenshot-mode #screenshotNav { display: block !important; }
-        #screenshotNav button { font-size: 11px; padding: 6px 14px; border-radius: 20px; background: #1e293b; color: white; opacity: 0.9; }
+        #screenshotNav button { font-size: 12px; padding: 8px 16px; border-radius: 20px; background: #1e293b; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
 
-        /* 截圖樣式 */
         .screenshot-mode .no-screenshot { display: none !important; }
+        .screenshot-mode #screenshot-header, 
+        .screenshot-mode #screenshot-footer { display: block !important; }
         .screenshot-mode body { background: #fff !important; }
         .screenshot-mode .max-w-7xl { max-width: 650px !important; margin: 0 auto !important; }
-        .screenshot-mode .card { border: 1px solid #eee !important; box-shadow: none !important; }
         
-        /* 3. 雲端管理防止溢出 */
-        .inv-item-row { display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 4px; border: 1px solid #f1f5f9; background: #fff; margin-bottom: 2px; width: 100%; box-sizing: border-box; }
+        /* 雲端管理品項與按鈕 (修正點 4) */
+        .inv-item-row { display: flex; align-items: center; gap: 4px; padding: 6px; border-radius: 4px; border: 1px solid #f1f5f9; background: #fff; margin-bottom: 2px; }
         .inv-out-of-stock { background-color: #fff1f2 !important; border-color: #fecdd3 !important; }
-        .stock-btn { font-size: 9px; padding: 1px 4px; border-radius: 3px; font-weight: bold; border: 1px solid #e2e8f0; }
+        .stock-btn { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; border: 1px solid #e2e8f0; cursor: pointer; min-width: 45px; text-align: center; }
         .stock-btn.active { background: #22c55e; color: white; border-color: #22c55e; }
         .stock-btn.oos { background: #ef4444; color: white; border-color: #ef4444; }
+
+        /* 修正點 1: 加大管理員按鈕點擊區域 */
+        #adminToggleLabel { cursor: pointer; user-select: none; transition: all 0.2s; }
+        #adminToggleLabel:active { opacity: 0.6; }
     </style>
 </head>
 <body class="p-1 md:p-3 hide-prices" id="mainBody">
 
 <button onclick="location.reload(true)" class="no-screenshot fixed right-4 bottom-24 z-[40] bg-orange-500 text-white shadow-lg w-10 h-10 rounded-full flex items-center justify-center text-lg">🔄</button>
-<div id="screenshotNav" class="no-print"><button onclick="exitScreenshotMode()">🔙 返回編輯模式</button></div>
+
+<div id="screenshotNav"><button onclick="exitScreenshotMode()">🔙 返回編輯模式</button></div>
 
 <div class="max-w-7xl mx-auto">
     <div class="no-screenshot mb-2 flex justify-end">
-        <label class="flex items-center gap-2 cursor-pointer bg-white px-2 py-1 rounded border border-gray-200 shadow-sm">
-            <span class="text-[10px] font-bold text-gray-500">管理員顯示金額</span>
-            <input type="checkbox" id="adminToggle" onchange="toggleAdminMode()" class="w-3 h-3">
+        <label id="adminToggleLabel" class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-gray-200 shadow-sm">
+            <span class="text-[11px] font-bold text-gray-500">管理員顯示金額</span>
+            <input type="checkbox" id="adminToggle" onchange="toggleAdminMode()" class="w-4 h-4 cursor-pointer">
         </label>
     </div>
 
-    <div id="screenshot-header" class="hidden screenshot-mode:block text-center border-b-2 border-blue-500 pb-2 mb-4">
+    <div id="screenshot-header" class="hidden text-center border-b-2 border-blue-500 pb-2 mb-4">
         <div class="text-xl font-black text-blue-900 tracking-widest">神奇海螺電競 報價單</div>
         <div id="ss-time" class="text-[10px] text-gray-400"></div>
     </div>
@@ -126,7 +128,7 @@
         </div>
     </div>
 
-    <div id="screenshot-footer" class="hidden screenshot-mode:block mt-6 border-t border-blue-200 pt-4 text-right">
+    <div id="screenshot-footer" class="hidden mt-6 border-t border-blue-200 pt-4 text-right">
         <div class="text-[10px] text-gray-400">折扣：<span id="ss-discount">-$0</span></div>
         <div id="ss-nocard-row" class="text-[10px] text-orange-500 hidden">無卡分期：<span id="ss-nocard-val">$0</span></div>
         <div class="text-lg font-black text-blue-600 mt-1">含稅應付總額：<span id="ss-total">$0</span></div>
@@ -171,7 +173,7 @@
 <script>
 let inv = {}; let catOrder = []; let records = []; let currentSelections = {}; let editingRecordId = null; let currentCat = ""; let currentStatus = 'draft';
 
-db.ref('inventory').on('value', s => { if(s.exists()) inv = s.val(); renderConfig(); });
+db.ref('inventory').on('value', s => { if(s.exists()) inv = s.val(); renderConfig(); if(document.getElementById('tab-inventory').classList.contains('hidden') === false) renderInventoryEditor(); });
 db.ref('catOrder').on('value', s => { if(s.exists()) catOrder = s.val(); renderConfig(); });
 db.ref('records').on('value', s => { records = []; if(s.exists()) { const data = s.val(); for(let id in data) records.push(data[id]); } renderRecords(); });
 
@@ -202,7 +204,6 @@ function calculate() {
     document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`;
     document.getElementById('ui-totalProfit').innerText = `$${(baseRev - subC).toLocaleString()}`;
     
-    // 截圖數值
     document.getElementById('ss-time').innerText = `時間：${new Date().toLocaleString()}`;
     document.getElementById('ss-discount').innerText = `-$${disc.toLocaleString()}`;
     document.getElementById('ss-total').innerText = `$${finalSale.toLocaleString()}`;
@@ -260,10 +261,15 @@ function renderInventoryEditor() {
         area.appendChild(sec);
         (inv[cat] || []).forEach((item, idx) => {
             const row = document.createElement('div'); row.className = `inv-item-row ${item.outOfStock ? 'inv-out-of-stock' : ''}`;
-            row.innerHTML = `<div class="flex flex-col text-[7px] text-gray-300 px-0.5"><button onclick="moveItem('${cat}', ${idx}, -1)">▲</button><button onclick="moveItem('${cat}', ${idx}, 1)">▼</button></div><input class="flex-grow min-w-[80px] text-[10px] font-bold bg-transparent border-none focus:ring-0" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value"><div class="flex items-center gap-1 ml-auto"><div class="flex items-center gap-1 border rounded bg-white px-1"><span class="text-[7px] text-gray-400">售</span><input type="number" class="w-10 text-[9px] font-bold text-blue-600 border-none p-0" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div><div class="flex items-center gap-1 border rounded bg-white px-1"><span class="text-[7px] text-gray-400">本</span><input type="number" class="w-10 text-[9px] font-bold text-red-400 border-none p-0" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div><button onclick="inv['${cat}'][${idx}].outOfStock=!inv['${cat}'][${idx}].outOfStock; renderInventoryEditor();" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button><button onclick="inv['${cat}'].splice(${idx}, 1); renderInventoryEditor();" class="text-red-200 text-base">×</button></div>`;
+            row.innerHTML = `<div class="flex flex-col text-[7px] text-gray-300 px-0.5"><button onclick="moveItem('${cat}', ${idx}, -1)">▲</button><button onclick="moveItem('${cat}', ${idx}, 1)">▼</button></div><input class="flex-grow min-w-[80px] text-[10px] font-bold bg-transparent border-none focus:ring-0" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value"><div class="flex items-center gap-1 ml-auto"><div class="flex items-center gap-1 border rounded bg-white px-1"><span class="text-[7px] text-gray-400">售</span><input type="number" class="w-10 text-[9px] font-bold text-blue-600 border-none p-0" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div><div class="flex items-center gap-1 border rounded bg-white px-1"><span class="text-[7px] text-gray-400">本</span><input type="number" class="w-10 text-[9px] font-bold text-red-400 border-none p-0" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div><button onclick="toggleStockStatus('${cat}', ${idx})" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button><button onclick="inv['${cat}'].splice(${idx}, 1); renderInventoryEditor();" class="text-red-200 text-base">×</button></div>`;
             document.getElementById(`edit-${cat}`).appendChild(row);
         });
     });
+}
+
+function toggleStockStatus(cat, idx) {
+    inv[cat][idx].outOfStock = !inv[cat][idx].outOfStock;
+    renderInventoryEditor();
 }
 
 function toggleAdminMode() {
