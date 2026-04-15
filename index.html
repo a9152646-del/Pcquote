@@ -24,22 +24,26 @@
         .hidden { display: none !important; }
         input, select, textarea { border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 14px; }
         .seller-bg { background-color: #eff6ff; }
-        .item-row:hover { background-color: #f8fafc; border-color: #3b82f6; }
-        .selected-badge { background: #f1f5f9; color: #334155; padding: 4px 10px; border-radius: 6px; font-size: 12px; margin: 2px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid #e2e8f0; }
+        .item-row:hover { background-color: #f8fafc; }
+        .selected-badge { color: #000; font-size: 14px; margin-right: 8px; display: inline-flex; align-items: center; gap: 4px; }
         
-        /* 截圖模式 */
+        /* 截圖模式核心設定 */
         #screenshot-header, #screenshot-footer { display: none; }
-        .hide-price .price-tag { display: none !important; }
-        #mainBody.screenshot-mode { background: #fff !important; padding: 40px !important; padding-top: 40px !important; }
+        #mainBody.screenshot-mode { background: #fff !important; padding: 40px !important; }
         .screenshot-mode .no-screenshot { display: none !important; }
         .screenshot-mode .max-w-7xl { max-width: 800px !important; margin: 0 auto !important; }
-        .screenshot-mode .card { box-shadow: none !important; border: 2px solid #334155 !important; border-radius: 0 !important; padding: 2rem !important; }
-        .screenshot-mode .item-row { border: none; border-bottom: 1px dashed #ccc; padding: 8px 0; }
+        .screenshot-mode .card { box-shadow: none !important; border: 2px solid #000 !important; border-radius: 0 !important; padding: 2rem !important; }
+        .screenshot-mode .item-row { border: none; border-bottom: 1px dashed #000; padding: 8px 0; }
+        /* 隱藏沒選品項的類別 */
+        .screenshot-mode .empty-row { display: none !important; }
         
-        .screenshot-mode #screenshot-header { display: flex !important; flex-direction: column; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #334155; padding-bottom: 10px; }
+        .screenshot-mode #screenshot-header { display: flex !important; flex-direction: column; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
         .screenshot-mode #screenshot-header .ss-title { width: 100%; text-align: center; font-size: 1.5rem; font-weight: 900; margin-bottom: 8px; color: #000; }
-        .screenshot-mode #screenshot-header #ss-time { width: 100%; text-align: left; font-size: 0.875rem; color: #4b5563; }
-        .screenshot-mode #screenshot-footer { display: block !important; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; }
+        .screenshot-mode #screenshot-header #ss-time { width: 100%; text-align: left; font-size: 0.875rem; color: #000; }
+        
+        /* 補回截圖模式底部的金額資訊 */
+        .screenshot-mode #screenshot-footer { display: block !important; margin-top: 20px; border-top: 2px solid #000; padding-top: 15px; }
+        .screenshot-mode .ss-amount-row { display: flex; justify-content: flex-end; gap: 20px; font-weight: bold; color: #000; font-size: 1.1rem; margin-top: 5px; }
 
         .pick-item { transition: all 0.2s; border: 2px solid #e5e7eb; cursor: pointer; border-radius: 10px; }
         .pick-item.active { background-color: #eff6ff; border-color: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.2); }
@@ -92,7 +96,7 @@ const db = firebase.database();
                         <h2 class="font-bold text-xl text-blue-600">電腦配置區</h2>
                         <button onclick="toggleSellerMode()" id="sellerBtn" class="text-xs bg-blue-100 text-blue-600 px-4 py-2 rounded-full font-bold">管理員模式: ON</button>
                     </div>
-                    <div id="configRows" class="grid grid-cols-1 md:grid-cols-1 gap-1"></div>
+                    <div id="configRows" class="grid grid-cols-1 md:grid-cols-1"></div>
                 </div>
                 <div class="card p-6 no-screenshot">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -131,6 +135,14 @@ const db = firebase.database();
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div id="screenshot-footer">
+        <div class="ss-amount-row"><span>折扣：</span><span id="ss-discount">-$0</span></div>
+        <div class="ss-amount-row"><span>未稅總計：</span><span id="ss-untaxed">$0</span></div>
+        <div class="ss-amount-row" style="font-size: 1.5rem; border-top: 1px solid #000; padding-top: 5px; margin-top: 10px;">
+            <span>含稅總額：</span><span id="ss-total">$0</span>
         </div>
     </div>
 
@@ -222,12 +234,19 @@ function calculate() {
     });
     const finalSale = subP - disc;
     const untaxed = Math.round(finalSale / 1.05);
+    
+    // UI 更新
     document.getElementById('ui-untaxed').innerText = `$${untaxed.toLocaleString()}`;
     document.getElementById('ui-totalSale').innerText = `$${finalSale.toLocaleString()}`;
     document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`;
     const profit = noCard > 0 ? (noCard - subC) : (finalSale - subC);
     document.getElementById('ui-totalProfit').innerText = `$${profit.toLocaleString()}`;
+    
+    // 截圖文字更新
     document.getElementById('ss-time').innerText = `報價時間：${new Date().toLocaleString()}`;
+    document.getElementById('ss-discount').innerText = `-$${disc.toLocaleString()}`;
+    document.getElementById('ss-untaxed').innerText = `$${untaxed.toLocaleString()}`;
+    document.getElementById('ss-total').innerText = `$${finalSale.toLocaleString()}`;
 }
 
 function renderConfig() {
@@ -239,11 +258,14 @@ function renderConfig() {
             let name = "", p = 0;
             if(sel.isTemp) { name = sel.name; p = sel.p; } 
             else { const target = (inv[cat] || [])[sel.idx]; if(!target) return ''; name = target.name; p = target.p; }
-            return `<div class="selected-badge">${sel.isGift?'[贈]':''}${name}${sel.qty>1?` x${sel.qty}`:''} <span class="price-tag text-blue-500 ml-1">($${Number(p).toLocaleString()})</span></div>`;
+            // 改為全黑文字
+            return `<div class="selected-badge">${sel.isGift?'[贈]':''}${name}${sel.qty>1?` x${sel.qty}`:''} <span class="price-tag text-black font-bold ml-1">($${Number(p).toLocaleString()})</span></div>`;
         }).join('');
-        container.innerHTML += `<div class="p-3 border-b item-row cursor-pointer ${!isSellerMode?'hide-price':''} ${items.length===0?'empty-row':''}" onclick="openSelection('${cat}')">
-            <div class="text-[10px] font-black text-blue-500 uppercase">${cat}</div>
-            <div class="mt-1 flex flex-wrap gap-1">${badges || '<span class="text-gray-300 italic text-xs">尚未選擇</span>'}</div>
+        
+        // 報價單模式：去除外框、背景，使用純黑文字
+        container.innerHTML += `<div class="p-2 item-row cursor-pointer ${items.length===0?'empty-row':''}" onclick="openSelection('${cat}')">
+            <div class="text-xs font-black text-black uppercase tracking-wider border-l-4 border-black pl-2">${cat}</div>
+            <div class="mt-1 flex flex-wrap gap-1">${badges || '<span class="text-gray-300 italic text-xs no-screenshot">尚未選擇</span>'}</div>
         </div>`;
     });
     calculate();
@@ -435,19 +457,14 @@ function renderInventoryEditor() {
         area.appendChild(sec);
         (inv[cat] || []).forEach((item, idx) => {
             const row = document.createElement('div'); 
-            // 零件外殼增加內距
             row.className = "bg-gray-50 p-3 rounded-lg relative border space-y-2 mb-2";
             row.innerHTML = `
                 <input type="text" class="text-sm font-black w-full bg-white border shadow-sm" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value">
-                
                 <div class="flex gap-2">
                     <input type="number" class="w-1/3 text-xs" value="${item.p}" placeholder="售價" onchange="inv['${cat}'][${idx}].p=this.value">
-                    
                     <input type="number" class="w-1/3 text-xs text-red-600 font-bold bg-white" value="${item.c||0}" placeholder="成本" onchange="inv['${cat}'][${idx}].c=this.value">
-                    
                     <button onclick="inv['${cat}'][${idx}].outOfStock=!inv['${cat}'][${idx}].outOfStock; renderInventoryEditor();" class="w-1/3 text-[10px] font-bold rounded shadow-sm ${item.outOfStock?'bg-red-500 text-white':'bg-white text-gray-400 border'}">缺貨</button>
                 </div>
-                
                 <div class="flex justify-end pt-1 border-t border-gray-100 mt-2">
                     <button onclick="deleteInvItem('${cat}', ${idx})" class="text-[10px] bg-red-50 text-red-500 px-4 py-1.5 rounded-full font-black border border-red-200 active:scale-95 transition-all">
                         刪除品項 ×
