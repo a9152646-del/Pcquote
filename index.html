@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.10</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.11</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -13,7 +13,7 @@
         body { 
             background-color: #f8fafc; 
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
-            padding-top: 110px !important; /* 頁面稍微往上移動一點點 */
+            padding-top: 105px !important; /* 整個頁面稍微往上移動 */
             font-size: 14px; 
             color: #334155; 
             line-height: 1.5;
@@ -30,7 +30,7 @@
         
         .hide-prices .price-tag { display: none !important; }
 
-        /* 左下角金額按鈕 */
+        /* 左下角金額顯示開關 */
         #adminToggleContainer {
             position: fixed;
             bottom: 25px;
@@ -49,7 +49,7 @@
             cursor: pointer;
         }
 
-        /* 截圖模式設置 */
+        /* 截圖模式樣式 */
         #screenshotNav { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 99999; display: none; }
         .screenshot-mode #screenshotNav { display: block !important; }
         #screenshotNav button { font-size: 14px; padding: 10px 20px; border-radius: 30px; background: #1e293b; color: white; box-shadow: 0 8px 20px rgba(0,0,0,0.3); font-weight: bold; }
@@ -60,10 +60,10 @@
         .screenshot-mode body { background: #fff !important; padding-top: 80px !important; }
         .screenshot-mode .max-w-7xl { max-width: 700px !important; margin: 0 auto !important; }
         
-        /* 雲端項目優化：名稱額外一排 */
+        /* 雲端項目排版優化：名稱額外一排 */
         .inv-item-row { display: flex; flex-direction: column; padding: 10px 12px; border-radius: 8px; border: 1px solid #f1f5f9; background: #fff; margin-bottom: 8px; }
         .inv-item-name-row { display: flex; align-items: center; gap: 8px; width: 100%; padding-bottom: 6px; border-bottom: 1px dashed #f1f5f9; }
-        .inv-item-name-row input[type="text"] { border: none !important; background: transparent !important; padding: 0 !important; flex: 1; font-weight: bold; font-size: 13px; }
+        .inv-item-name-row input[type="text"] { border: none !important; background: transparent !important; padding: 0 !important; flex: 1; font-weight: bold; font-size: 13px; min-width: 0; }
         .inv-item-ctrl-row { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding-top: 6px; }
         
         .inv-out-of-stock { background-color: #fff1f2 !important; border-color: #fecdd3 !important; }
@@ -281,7 +281,7 @@ function renderRecords() {
         for (let cat in r.selections) {
             r.selections[cat].forEach((sel, idx) => {
                 const k = `${cat}_${idx}`;
-                // 預設為出貨：只有明確定為 false 才算未出貨
+                // 預設出貨邏輯：若不存在或不為 false 則視為已出貨
                 const isD = r.deliveredItems ? r.deliveredItems[k] !== false : true;
                 if (!isD) {
                     let n = sel.isTemp ? sel.name : (inv[cat] && inv[cat][sel.idx] ? inv[cat][sel.idx].name : "未知品項");
@@ -290,7 +290,7 @@ function renderRecords() {
             });
         }
         
-        // 草稿不顯示未出貨內容
+        // 僅正式/結案訂單顯示未出貨清單
         const undeliveredHtml = (r.status !== 'draft' && undelivered.length > 0) ? `<div class="mt-2 p-2 bg-red-50 rounded text-[10px] text-red-600 font-bold"><div class="border-b border-red-100 mb-1">⚠️ 未出貨項目：</div>${undelivered.join('、')}</div>` : '';
 
         const div = `<div class="p-4 border-2 rounded-xl bg-white shadow-sm space-y-3">
@@ -331,7 +331,7 @@ function renderInventoryEditor() {
                 <div class="inv-item-ctrl-row">
                     <div class="flex items-center gap-1 border-2 rounded-lg bg-white px-2 flex-shrink-0"><span class="text-[10px] text-gray-400">售</span><input type="number" class="w-12 text-xs font-black text-blue-600 border-none p-0" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div>
                     <div class="flex items-center gap-1 border-2 rounded-lg bg-white px-2 flex-shrink-0"><span class="text-[10px] text-gray-400">本</span><input type="number" class="w-12 text-xs font-black text-red-400 border-none p-0" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div>
-                    <button onclick="toggleStockStatus('${cat}', ${idx})" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button>
+                    <button onclick="toggleStockStatus('${cat}', idx)" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button>
                     <button onclick="inv['${cat}'].splice(${idx}, 1); renderInventoryEditor();" class="text-red-200 text-xl px-1">×</button>
                 </div>`;
             document.getElementById(`edit-${cat}`).appendChild(row);
@@ -410,8 +410,7 @@ function openDeliveryFast(id) {
     for (let cat in r.selections) {
         r.selections[cat].forEach((sel, idx) => {
             const k = `${cat}_${idx}`; 
-            // 預設打勾：只有明確設定為 false 的才不打勾
-            const isD = tempDeliv[k] !== false;
+            const isD = tempDeliv[k] !== false; // 預設為 true (已出貨)
             let n = sel.isTemp ? sel.name : (inv[cat] && inv[cat][sel.idx] ? inv[cat][sel.idx].name : "未知品項");
             list.innerHTML += `<div class="flex justify-between items-center p-3 border-2 rounded-xl bg-white"><div>${n}</div><input type="checkbox" class="w-5 h-5" ${isD?'checked':''} onchange="db.ref('records/'+${id}+'/deliveredItems/${k}').set(this.checked)"></div>`;
         });
