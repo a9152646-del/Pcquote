@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v8.82</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v8.83</title>
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -13,24 +13,17 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        body { 
-            background-color: #f4f9fc; 
-            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
-            padding-top: 60px !important; 
-        }
-        
+        body { background-color: #f4f9fc; font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; padding-top: 60px !important; }
         .tab-active { border-bottom: 4px solid #3b82f6; color: #3b82f6; font-weight: bold; }
         .card { background: white; border-radius: 12px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); }
         .hidden { display: none !important; }
         input, select, textarea { border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 14px; }
         .seller-bg { background-color: #eff6ff; }
         .item-row:hover { background-color: #f8fafc; }
-        
-        /* 報價文字樣式：全黑 */
         .selected-badge { color: #000; font-size: 14px; margin-right: 12px; display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
         .price-tag { color: #000; font-weight: 900; }
         
-        /* 截圖模式硬設定 */
+        /* 截圖模式核心設定 */
         #screenshot-header, #screenshot-footer { display: none; }
         #mainBody.screenshot-mode { background: #fff !important; padding: 40px !important; }
         .screenshot-mode .no-screenshot { display: none !important; }
@@ -38,53 +31,32 @@
         .screenshot-mode .card { box-shadow: none !important; border: 3px solid #000 !important; border-radius: 0 !important; padding: 2rem !important; }
         .screenshot-mode .item-row { border: none; border-bottom: 1px dashed #000; padding: 12px 0; }
         .screenshot-mode .item-row.is-empty { display: none !important; }
-        
         .screenshot-mode #screenshot-header { display: flex !important; flex-direction: column; align-items: center; margin-bottom: 20px; border-bottom: 3px solid #000; padding-bottom: 10px; }
         .screenshot-mode #screenshot-header .ss-title { width: 100%; text-align: center; font-size: 2rem; font-weight: 900; color: #000; }
         .screenshot-mode #screenshot-header #ss-time { width: 100%; text-align: left; font-size: 0.9rem; color: #000; font-weight: bold; margin-top: 10px; }
-        
         .screenshot-mode #screenshot-footer { display: block !important; margin-top: 30px; border-top: 2px solid #000; padding-top: 15px; text-align: right; }
         .ss-amount-row { font-size: 1.2rem; font-weight: 800; color: #000; margin-bottom: 5px; }
         .ss-total-row { font-size: 1.8rem; font-weight: 900; color: #000; border-top: 2px solid #000; margin-top: 10px; padding-top: 5px; display: inline-block; min-width: 250px; }
-
         #screenshotNav { position: fixed; top: 40px; right: 20px; z-index: 999999; display: none; }
         #mainBody.screenshot-mode #screenshotNav { display: block; }
-
         .pick-item { transition: all 0.2s; border: 2px solid #e5e7eb; cursor: pointer; border-radius: 10px; }
         .pick-item.active { background-color: #eff6ff; border-color: #3b82f6; }
-        .is-out-of-stock { opacity: 0.4; background-color: #f1f5f9 !important; border-color: #cbd5e1 !important; color: #64748b !important; }
-
         @media print { .no-print, button, #sellerBox, .no-screenshot { display: none !important; } }
     </style>
 </head>
 <body class="p-2 md:p-6" id="mainBody">
 
-<button onclick="location.reload(true)" class="no-screenshot fixed right-4 bottom-24 z-[40] bg-orange-500 text-white shadow-lg w-10 h-10 rounded-full flex items-center justify-center text-lg active:scale-90 transition-all opacity-80">🔄</button>
-
-<div id="screenshotNav" class="no-screenshot">
-    <button onclick="exitScreenshotMode()" class="bg-blue-600 text-white px-10 py-4 rounded-full font-black shadow-2xl border-4 border-white active:scale-90 transition-all">← 返回編輯模式</button>
-</div>
+<button onclick="location.reload(true)" class="no-screenshot fixed right-4 bottom-24 z-[40] bg-orange-500 text-white shadow-lg w-10 h-10 rounded-full flex items-center justify-center text-lg opacity-80">🔄</button>
+<div id="screenshotNav" class="no-screenshot"><button onclick="exitScreenshotMode()" class="bg-blue-600 text-white px-10 py-4 rounded-full font-black shadow-2xl border-4 border-white">← 返回編輯模式</button></div>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyDeCI3yFPr1v9KxOmko-qim2a7EtllEHKM",
-  authDomain: "magic-conch-gaming.firebaseapp.com",
-  databaseURL: "https://magic-conch-gaming-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "magic-conch-gaming",
-  storageBucket: "magic-conch-gaming.firebasestorage.app",
-  messagingSenderId: "105735978925",
-  appId: "1:105735978925:web:3ec77acbfd344475322b24"
-};
+const firebaseConfig = { apiKey: "AIzaSyDeCI3yFPr1v9KxOmko-qim2a7EtllEHKM", authDomain: "magic-conch-gaming.firebaseapp.com", databaseURL: "https://magic-conch-gaming-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "magic-conch-gaming", storageBucket: "magic-conch-gaming.firebasestorage.app", messagingSenderId: "105735978925", appId: "1:105735978925:web:3ec77acbfd344475322b24" };
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 </script>
 
 <div class="max-w-7xl mx-auto">
-    <div id="screenshot-header">
-        <div class="ss-title">《報價單》</div>
-        <div id="ss-time"></div>
-    </div>
-
+    <div id="screenshot-header"><div class="ss-title">《報價單》</div><div id="ss-time"></div></div>
     <div class="flex border-b mb-6 no-screenshot overflow-x-auto bg-white sticky top-0 z-10 p-1">
         <button onclick="showTab('calc')" id="btn-calc" class="px-5 py-4 tab-active whitespace-nowrap">🐚 報價配單</button>
         <button onclick="showTab('drafts')" id="btn-drafts" class="px-5 py-4 whitespace-nowrap">📂 訂單草稿</button>
@@ -97,22 +69,14 @@ const db = firebase.database();
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <div class="lg:col-span-3 space-y-4">
                 <div class="card p-6">
-                    <div class="flex justify-between items-center mb-6 no-screenshot">
-                        <h2 class="font-bold text-xl text-blue-600">電腦配置區</h2>
-                        <button onclick="toggleSellerMode()" id="sellerBtn" class="text-xs bg-blue-100 text-blue-600 px-4 py-2 rounded-full font-bold">管理員模式: ON</button>
-                    </div>
+                    <div class="flex justify-between items-center mb-6 no-screenshot"><h2 class="font-bold text-xl text-blue-600">電腦配置區</h2><button onclick="toggleSellerMode()" id="sellerBtn" class="text-xs bg-blue-100 text-blue-600 px-4 py-2 rounded-full font-bold">管理員模式: ON</button></div>
                     <div id="configRows" class="grid grid-cols-1 md:grid-cols-1 gap-1"></div>
                 </div>
                 <div class="card p-6 no-screenshot">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <input type="text" id="custName" placeholder="客戶名稱">
                         <input type="text" id="custPhone" placeholder="電話">
-                        <select id="custSource">
-                            <option value="FB">Facebook</option>
-                            <option value="IG">Instagram</option>
-                            <option value="Line">Line</option>
-                            <option value="其他">其他</option>
-                        </select>
+                        <select id="custSource"><option value="FB">Facebook</option><option value="IG">Instagram</option><option value="Line">Line</option><option value="其他">其他</option></select>
                         <input type="text" id="custAddr" placeholder="配送地址" class="md:col-span-4">
                         <textarea id="orderMemo" placeholder="內部備註" class="md:col-span-4 h-24 w-full"></textarea>
                     </div>
@@ -135,7 +99,6 @@ const db = firebase.database();
                         <button onclick="saveRecord('current')" class="w-full bg-blue-500 text-white py-3 rounded-xl font-bold">儲存/更新</button>
                         <button id="btnConvertToOrder" onclick="saveRecord('order')" class="hidden w-full bg-green-600 text-white py-3 rounded-xl font-bold">✅ 轉為正式訂單</button>
                         <button onclick="enterScreenshotMode()" class="w-full bg-orange-500 text-white py-3 rounded-xl font-bold">📸 進入截圖模式</button>
-                        <button onclick="exitToOrdersWithoutSaving()" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold">❌ 不儲存並返回</button>
                         <button onclick="resetForm()" class="w-full text-gray-400 text-xs mt-2 underline font-bold">清空重填</button>
                     </div>
                 </div>
@@ -172,47 +135,32 @@ const db = firebase.database();
 
 <div id="selectionModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[500]">
     <div class="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
-        <div class="p-4 border-b flex justify-between items-center bg-gray-50">
-            <h3 id="modalTitle" class="font-bold text-blue-600">選擇品項</h3>
-            <button onclick="closeModal()" class="text-gray-400 text-3xl font-bold">×</button>
-        </div>
-        <div class="p-3 border-b bg-white">
-            <input type="text" id="modalSearch" class="w-full" placeholder="🔍 搜尋零件名稱..." oninput="filterModalList()">
-        </div>
+        <div class="p-4 border-b flex justify-between items-center bg-gray-50"><h3 id="modalTitle" class="font-bold text-blue-600">選擇品項</h3><button onclick="closeModal()" class="text-gray-400 text-3xl font-bold">×</button></div>
+        <div class="p-3 border-b bg-white"><input type="text" id="modalSearch" class="w-full" placeholder="🔍 搜尋零件名稱..." oninput="filterModalList()"></div>
         <div id="modalList" class="overflow-y-auto flex-1 p-4 space-y-2"></div>
         <div class="p-4 border-t bg-gray-50 space-y-2">
-            <div class="flex gap-2">
-                <input type="text" id="tempName" class="flex-1" placeholder="名稱">
-                <input type="number" id="tempPrice" class="w-20" placeholder="售價">
-                <input type="number" id="tempCost" class="w-20" placeholder="成本">
-                <button onclick="addTempItem()" class="bg-orange-500 text-white px-4 py-1 rounded text-sm font-bold">新增</button>
-            </div>
+            <div class="flex gap-2"><input type="text" id="tempName" class="flex-1" placeholder="名稱"><input type="number" id="tempPrice" class="w-20" placeholder="售價"><input type="number" id="tempCost" class="w-20" placeholder="成本"><button onclick="addTempItem()" class="bg-orange-500 text-white px-4 py-1 rounded text-sm font-bold">新增</button></div>
         </div>
         <div class="p-4 border-t"><button onclick="closeModal()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">確認完成</button></div>
     </div>
 </div>
 
-<div id="recycleBinModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[10000]">
+<div id="deliveryModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[600]">
     <div class="bg-white rounded-2xl max-w-xl w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl">
-        <div class="p-4 border-b flex justify-between items-center bg-gray-800 text-white">
-            <h3 class="font-bold">🗑️ 品項刪除紀錄</h3>
-            <button onclick="closeRecycleBin()" class="text-3xl font-bold">×</button>
-        </div>
-        <div id="recycleList" class="overflow-y-auto flex-1 p-4 space-y-2 bg-gray-50"></div>
+        <div class="p-4 border-b flex justify-between items-center bg-orange-500 text-white"><h3 class="font-bold">📦 出貨勾選</h3><button onclick="closeDeliveryModal()" class="text-3xl font-bold">×</button></div>
+        <div id="deliveryList" class="overflow-y-auto flex-1 p-4 space-y-2 bg-gray-50"></div>
+        <div class="p-4 border-t"><button onclick="saveDeliveryStatus()" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold">更新狀態</button></div>
     </div>
 </div>
 
+<div id="recycleBinModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[10000]"><div class="bg-white rounded-2xl max-w-xl w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl"><div class="p-4 border-b flex justify-between items-center bg-gray-800 text-white"><h3 class="font-bold">🗑️ 品項刪除紀錄</h3><button onclick="closeRecycleBin()" class="text-3xl font-bold">×</button></div><div id="recycleList" class="overflow-y-auto flex-1 p-4 space-y-2 bg-gray-50"></div></div></div>
+
 <script>
-let inv = {}; let catOrder = []; let records = []; let currentSelections = {}; 
-let editingRecordId = null; let currentCat = ""; let isSellerMode = true; let currentStatus = 'draft';
-let recycleBin = [];
+let inv = {}; let catOrder = []; let records = []; let currentSelections = {}; let editingRecordId = null; let currentCat = ""; let isSellerMode = true; let currentStatus = 'draft'; let recycleBin = [];
 
 db.ref('inventory').on('value', s => { if(s.exists()) inv = s.val(); renderConfig(); });
 db.ref('catOrder').on('value', s => { if(s.exists()) catOrder = s.val(); renderConfig(); });
-db.ref('records').on('value', s => {
-    records = []; if(s.exists()) { const data = s.val(); for(let id in data) { records.push(data[id]); } }
-    renderRecords();
-});
+db.ref('records').on('value', s => { records = []; if(s.exists()) { const data = s.val(); for(let id in data) records.push(data[id]); } renderRecords(); });
 
 function calculate() {
     let subP = 0, subC = 0, disc = parseFloat(document.getElementById('discountAmt')?.value || 0);
@@ -263,24 +211,31 @@ function renderRecords() {
     const dList = document.getElementById('draftList'), oList = document.getElementById('orderList'), cList = document.getElementById('completedList');
     dList.innerHTML = ''; oList.innerHTML = ''; cList.innerHTML = '';
     records.sort((a,b)=>b.id-a.id).forEach(r => {
-        // 下拉銷售人員
-        const sellers = ["未選擇", "朱冠穎", "江苙翔"];
+        const sellers = ["朱冠穎", "江苙翔"];
+        const progressList = ["待處理", "組裝中", "測試中", "已完工", "已寄出"];
         const sOpts = sellers.map(s => `<option value="${s}" ${r.seller===s?'selected':''}>${s}</option>`).join('');
-        const div = `<div class="p-4 border-2 rounded-xl bg-white shadow-sm mb-2">
-            <div class="flex justify-between items-start">
+        const pOpts = progressList.map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
+        
+        const cardHtml = `<div class="p-4 card bg-white mb-2 relative">
+            <div class="flex justify-between items-start mb-4">
                 <div class="flex-1">
-                    <div class="text-[10px] text-gray-400 font-bold">${r.time}</div>
+                    <div class="text-[10px] text-gray-400 font-bold mb-1">${r.time}</div>
                     <div class="text-sm font-bold text-gray-700">${r.name || '[無名]'}</div>
-                    <div class="text-blue-600 font-black">${r.total}</div>
+                    <div class="text-blue-600 font-black text-xl">${r.total}</div>
                 </div>
-                <select onchange="db.ref('records/'+${r.id}+'/seller').set(this.value)" class="text-xs p-1 border rounded">${sOpts}</select>
+                <div class="flex flex-col gap-1 items-end">
+                    <div class="flex gap-1"><span class="bg-gray-100 text-[10px] px-2 py-0.5 rounded font-bold">${r.seller||'未選'}</span><span class="bg-red-100 text-red-500 text-[10px] px-2 py-0.5 rounded font-bold">${r.progress||'待處理'}</span></div>
+                    <select onchange="db.ref('records/'+${r.id}+'/progress').set(this.value)" class="text-xs p-1 bg-blue-50 border-blue-100 text-blue-600 rounded font-bold w-28 mt-1">${pOpts}</select>
+                </div>
             </div>
-            <div class="flex gap-2 border-t mt-2 pt-2">
-                <button onclick="editRecord(${r.id})" class="flex-1 py-1 bg-blue-500 text-white text-xs rounded font-bold">編輯</button>
-                <button onclick="if(confirm('刪除？')) db.ref('records/'+${r.id}).remove()" class="px-3 py-1 bg-red-50 text-red-400 text-xs rounded">刪除</button>
+            <div class="flex flex-wrap gap-2 border-t pt-3">
+                <button onclick="editRecord(${r.id})" class="bg-blue-500 text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm">編輯</button>
+                <button onclick="openDeliveryFast(${r.id})" class="bg-orange-500 text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm">📦 出貨管理</button>
+                <button onclick="if(confirm('完成此訂單？')) db.ref('records/'+${r.id}+'/status').set('completed')" class="bg-green-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm">🏁 結案歸檔</button>
+                <button onclick="if(confirm('刪除？')) db.ref('records/'+${r.id}).remove()" class="bg-red-50 text-red-400 px-3 py-1.5 rounded-lg text-xs font-bold">刪除</button>
             </div>
         </div>`;
-        if(r.status === 'draft') dList.innerHTML += div; else oList.innerHTML += div;
+        if(r.status === 'draft') dList.innerHTML += cardHtml; else if(r.status === 'order') oList.innerHTML += cardHtml; else cList.innerHTML += cardHtml;
     });
 }
 
@@ -290,19 +245,10 @@ function renderModalList() {
     (inv[currentCat] || []).forEach((item, idx) => {
         const sel = selections.find(s => !s.isTemp && s.idx === idx);
         list.innerHTML += `<div class="pick-item p-3 flex justify-between items-center rounded-lg mb-1 ${sel?'active':''}" onclick="togglePick(${idx})">
-            <div class="flex-1">
-                <div class="font-bold text-sm">${item.name}</div>
-                <div class="text-xs text-blue-500 font-bold">$${Number(item.p).toLocaleString()}</div>
-            </div>
+            <div class="flex-1"><div class="font-bold text-sm">${item.name}</div><div class="text-xs text-blue-500 font-bold">$${Number(item.p).toLocaleString()}</div></div>
             <div class="flex items-center gap-3" onclick="event.stopPropagation()">
-                <label class="text-xs flex items-center gap-1 cursor-pointer">
-                    <input type="checkbox" ${sel?.isGift?'checked':''} onchange="updateSubItem(${idx}, 'gift', this.checked)"> 贈
-                </label>
-                <div class="flex items-center border rounded bg-white overflow-hidden">
-                    <button class="px-2 py-1 bg-gray-50 text-xs font-bold" onclick="updateSubItem(${idx}, 'qty', -1)">-</button>
-                    <span class="px-2 text-xs font-bold min-w-[20px] text-center">${sel?.qty || 1}</span>
-                    <button class="px-2 py-1 bg-gray-50 text-xs font-bold" onclick="updateSubItem(${idx}, 'qty', 1)">+</button>
-                </div>
+                <label class="text-xs flex items-center gap-1 cursor-pointer font-bold"><input type="checkbox" ${sel?.isGift?'checked':''} onchange="updateSubItem(${idx}, 'gift', this.checked)"> 贈</label>
+                <div class="flex items-center border rounded bg-white"><button class="px-2 py-1 bg-gray-50 text-xs font-bold" onclick="updateSubItem(${idx}, 'qty', -1)">-</button><span class="px-2 text-xs font-bold min-w-[20px] text-center">${sel?.qty || 1}</span><button class="px-2 py-1 bg-gray-50 text-xs font-bold" onclick="updateSubItem(${idx}, 'qty', 1)">+</button></div>
             </div>
         </div>`;
     });
@@ -320,15 +266,14 @@ function updateSubItem(idx, type, val) {
 function renderInventoryEditor() {
     const area = document.getElementById('inventoryEditor'); area.innerHTML = '';
     catOrder.forEach((cat, cIdx) => {
-        const sec = document.createElement('div'); sec.className = "bg-white p-4 rounded-xl border relative shadow-sm mb-4";
+        const sec = document.createElement('div'); sec.className = "bg-white p-4 card border relative mb-4";
         sec.innerHTML = `<div class="flex justify-between items-center mb-2"><input class="font-bold text-blue-600 w-2/3" value="${cat}" onchange="renameCat(${cIdx}, this.value)"><button onclick="removeCat(${cIdx})" class="text-red-300 text-3xl font-bold">×</button></div><div id="edit-${cat}" class="space-y-3"></div><button onclick="addInvItem('${cat}')" class="w-full text-xs border-dashed border-2 mt-4 py-2 rounded-lg font-bold text-gray-400">+ 新增零件</button>`;
         area.appendChild(sec);
         (inv[cat] || []).forEach((item, idx) => {
             const row = document.createElement('div'); row.className = "bg-gray-50 p-3 rounded-lg border space-y-2 mb-2";
-            row.innerHTML = `<input type="text" class="text-sm font-black w-full bg-white border p-2 rounded" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value">
+            row.innerHTML = `<input type="text" class="text-sm font-black w-full bg-white border p-2 rounded shadow-sm" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value">
                 <div class="flex gap-2">
-                    <input type="number" class="w-1/3 text-xs p-1" value="${item.p}" placeholder="售價" onchange="inv['${cat}'][${idx}].p=this.value">
-                    <input type="number" class="w-1/3 text-xs text-red-600 font-bold p-1 bg-white" value="${item.c||0}" placeholder="成本" onchange="inv['${cat}'][${idx}].c=this.value">
+                    <input type="number" class="w-1/3 text-xs p-1" value="${item.p}" placeholder="售價" onchange="inv['${cat}'][${idx}].p=this.value"><input type="number" class="w-1/3 text-xs text-red-600 font-bold p-1 bg-white" value="${item.c||0}" placeholder="成本" onchange="inv['${cat}'][${idx}].c=this.value">
                     <button onclick="inv['${cat}'][${idx}].outOfStock=!inv['${cat}'][${idx}].outOfStock; renderInventoryEditor();" class="w-1/3 text-[10px] font-bold rounded ${item.outOfStock?'bg-red-500 text-white':'bg-white text-gray-400 border'}">缺貨</button>
                 </div><div class="flex justify-end pt-1"><button onclick="deleteInvItem('${cat}', ${idx})" class="text-[10px] bg-red-50 text-red-500 px-4 py-1.5 rounded-full font-black border border-red-200">刪除品項 ×</button></div>`;
             document.getElementById(`edit-${cat}`).appendChild(row);
@@ -339,13 +284,26 @@ function renderInventoryEditor() {
 function editRecord(id) {
     const r = records.find(x => x.id === id); if(!r) return;
     editingRecordId = id; currentStatus = r.status; currentSelections = r.selections || {};
-    document.getElementById('custName').value = r.name || ''; 
-    document.getElementById('discountAmt').value = r.discount || 0; 
-    // 轉單按鈕判斷邏輯
-    if(r.status === 'draft') document.getElementById('btnConvertToOrder').classList.remove('hidden'); 
-    else document.getElementById('btnConvertToOrder').classList.add('hidden');
+    document.getElementById('custName').value = r.name || ''; document.getElementById('discountAmt').value = r.discount || 0; 
+    if(r.status === 'draft') document.getElementById('btnConvertToOrder').classList.remove('hidden'); else document.getElementById('btnConvertToOrder').classList.add('hidden');
     renderConfig(); showTab('calc');
 }
+
+let deliveryId = null; let tempDeliv = {};
+function openDeliveryFast(id) {
+    deliveryId = id; const r = records.find(x => x.id === id); tempDeliv = r.deliveredItems || {};
+    const list = document.getElementById('deliveryList'); list.innerHTML = '';
+    for (let cat in r.selections) {
+        r.selections[cat].forEach((sel, idx) => {
+            const k = `${cat}_${idx}`; const isD = tempDeliv[k] !== false;
+            let n = sel.isTemp ? sel.name : (inv[cat] && inv[cat][sel.idx] ? inv[cat][sel.idx].name : "未知");
+            list.innerHTML += `<div class="flex justify-between p-3 border rounded-lg bg-white"><div class="text-sm font-bold">${n}</div><input type="checkbox" ${isD?'checked':''} onchange="tempDeliv['${k}']=this.checked"></div>`;
+        });
+    }
+    document.getElementById('deliveryModal').classList.remove('hidden');
+}
+function saveDeliveryStatus() { db.ref('records/'+deliveryId+'/deliveredItems').set(tempDeliv).then(() => document.getElementById('deliveryModal').classList.add('hidden')); }
+function closeDeliveryModal() { document.getElementById('deliveryModal').classList.add('hidden'); }
 
 function enterScreenshotMode() { document.getElementById('mainBody').classList.add('screenshot-mode'); renderConfig(); }
 function exitScreenshotMode() { document.getElementById('mainBody').classList.remove('screenshot-mode'); renderConfig(); }
@@ -364,21 +322,15 @@ function togglePick(idx) {
 }
 function addInvItem(c) { if(!inv[c]) inv[c]=[]; inv[c].push({name:"", p:0, c:0, outOfStock: false}); renderInventoryEditor(); }
 function deleteInvItem(cat, idx) { const item = inv[cat][idx]; recycleBin.push({ type: 'item', name: item.name, cat: cat, data: item }); inv[cat].splice(idx, 1); renderInventoryEditor(); }
-function removeCat(i) { const name = catOrder[i]; recycleBin.push({ type: 'cat', name: name, data: inv[name] }); delete inv[name]; catOrder.splice(i,1); renderInventoryEditor(); }
 function showRecycleBin() {
     const list = document.getElementById('recycleList'); list.innerHTML = recycleBin.length ? '' : '<div class="text-center py-10 text-gray-400 font-bold">目前沒有刪除紀錄</div>';
     recycleBin.forEach((item, idx) => {
-        list.innerHTML += `<div class="flex items-center justify-between p-3 bg-white border rounded shadow-sm">
-            <span class="font-bold text-sm">(${item.type==='cat'?'類別':'零件'}) ${item.name}</span>
-            <button onclick="restoreFromBin(${idx})" class="text-xs bg-blue-500 text-white px-3 py-1 rounded font-bold">復原</button>
-        </div>`;
+        list.innerHTML += `<div class="flex items-center justify-between p-3 bg-white border rounded shadow-sm"><span class="font-bold text-sm">(${item.type==='cat'?'類別':'零件'}) ${item.name}</span><button onclick="restoreFromBin(${idx})" class="text-xs bg-blue-500 text-white px-3 py-1 rounded font-bold">復原</button></div>`;
     });
     document.getElementById('recycleBinModal').classList.remove('hidden');
 }
 function restoreFromBin(idx) {
-    const itm = recycleBin[idx];
-    if (itm.type === 'cat') { catOrder.push(itm.name); inv[itm.name] = itm.data; } 
-    else { if (!inv[itm.cat]) inv[itm.cat] = []; inv[itm.cat].push(itm.data); }
+    const itm = recycleBin[idx]; if (itm.type === 'cat') { catOrder.push(itm.name); inv[itm.name] = itm.data; } else { if (!inv[itm.cat]) inv[itm.cat] = []; inv[itm.cat].push(itm.data); }
     recycleBin.splice(idx, 1); renderInventoryEditor(); showRecycleBin();
 }
 function closeRecycleBin() { document.getElementById('recycleBinModal').classList.add('hidden'); }
