@@ -142,10 +142,10 @@
                     <div class="space-y-3">
                         <div><label class="text-xs text-gray-400 font-bold">DISCOUNT 折扣</label><input type="number" id="discountAmt" class="w-full mt-1 text-red-500 font-black text-lg" value="0" oninput="calculate()"></div>
                         
-                        <div><label class="text-xs text-blue-400 font-bold">EDIT TOTAL 手動含稅</label><input type="number" id="manualTotal" class="w-full mt-1 border-blue-200 font-black text-lg text-blue-600" placeholder="可修改總額..." oninput="calculate()"></div>
+                        <div><label class="text-xs text-blue-400 font-bold">EDIT TOTAL 手動修改含稅金額</label><input type="number" id="manualTotal" class="w-full mt-1 border-blue-200 font-black text-lg text-blue-600" placeholder="點此修改總額..." oninput="calculate()"></div>
 
                         <div class="pt-2 border-t border-dashed"><div class="text-xs text-gray-400 font-bold">PRE-TAX 未稅</div><div id="ui-untaxed" class="text-sm font-bold text-gray-500">$0</div></div>
-                        <div class="pt-1"><div class="text-xs text-blue-400 font-bold">TOTAL 含稅</div><div id="ui-totalSale" class="text-3xl font-black text-blue-600">$0</div></div>
+                        <div class="pt-1"><div class="text-xs text-blue-400 font-bold">TOTAL 含稅 ✏️</div><div id="ui-totalSale" class="text-3xl font-black text-blue-600">$0</div></div>
                         
                         <div id="ui-noCardShow" class="p-2 bg-orange-50 rounded hidden border-2 border-orange-200">
                             <div class="text-[10px] text-orange-400 font-bold uppercase">無卡分期</div>
@@ -229,7 +229,7 @@ function goBack() {
     if (activeTab !== 'tab-calc') showTab('calc'); else window.history.back();
 }
 
-// 💾 豬豬，這裡修正含稅金額邏輯！
+// 💾 豬豬，這是修正後的利潤與顯示邏輯！
 function calculate() {
     let subP = 0, subC = 0, disc = parseFloat(document.getElementById('discountAmt')?.value || 0);
     let noCard = parseFloat(document.getElementById('noCardTotal').value) || 0;
@@ -247,10 +247,14 @@ function calculate() {
     const autoTotal = subP - disc; // 自動算出的零件總和
     const manualVal = parseFloat(document.getElementById('manualTotal').value);
     
-    // 💾 如果有手動輸入，就用手動的；沒有就用自動算的。這就是我們的「原本含稅金額」
+    // 💾 這是我們的「原本含稅金額」，手動優先於自動
     const baseTaxedTotal = !isNaN(manualVal) ? manualVal : autoTotal;
 
-    // 豬豬算法修正：(無卡金額 - 含稅總金額) + 原本利潤 = 最新利潤
+    // 💾 豬豬修正邏輯：輸入無卡時 TOTAL 含稅不要變！
+    // 直接顯示 baseTaxedTotal
+    document.getElementById('ui-totalSale').innerText = `$${baseTaxedTotal.toLocaleString()}`;
+
+    // 利潤邏輯：原本利潤 + (無卡金額 - 原本含稅金額)
     const originalProfit = baseTaxedTotal - subC;
     let profit = originalProfit;
     if (noCard > 0) {
@@ -259,9 +263,6 @@ function calculate() {
 
     const untaxed = Math.round(baseTaxedTotal / 1.05);
     document.getElementById('ui-untaxed').innerText = `$${untaxed.toLocaleString()}`;
-    
-    // 💾 這裡顯示「含稅總金額」，不會再變 0 了
-    document.getElementById('ui-totalSale').innerText = `$${baseTaxedTotal.toLocaleString()}`;
     
     if(noCard > 0) {
         document.getElementById('ui-noCardVal').innerText = `$${noCard.toLocaleString()}`;
@@ -294,7 +295,6 @@ function renderRecords() {
     dList.innerHTML = ''; oList.innerHTML = ''; cList.innerHTML = '';
     records.sort((a,b)=>b.id-a.id).forEach(r => {
         
-        // 抓未出貨項目
         let undeliveredHtml = "";
         if(r.status !== 'draft') {
             let undeliveredNames = [];
@@ -318,7 +318,7 @@ function renderRecords() {
                 <div class="flex-1">
                     <div class="text-[10px] text-gray-400 font-mono">${r.time}</div>
                     <div class="text-base font-black text-gray-800">${r.name || '無名客戶'}</div>
-                    <div class="text-blue-600 font-black text-lg">含稅：${r.total}</div>
+                    <div class="text-blue-600 font-black text-lg">原本含稅：${r.total}</div>
                     ${r.noCard > 0 ? `<div class="text-[10px] text-orange-500 font-bold">💳 無卡分期：$${Number(r.noCard).toLocaleString()}</div>` : ''}
                     ${undeliveredHtml}
                 </div>
