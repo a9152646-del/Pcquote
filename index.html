@@ -13,11 +13,10 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        /* 避開動態島修正：強制增加頂部間距 */
         body { 
             background-color: #f4f9fc; 
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
-            padding-top: 60px !important; /* 強制推開動態島距離 */
+            padding-top: 60px !important; 
         }
         
         .tab-active { border-bottom: 4px solid #3b82f6; color: #3b82f6; font-weight: bold; }
@@ -36,6 +35,7 @@
         .screenshot-mode .max-w-7xl { max-width: 800px !important; margin: 0 auto !important; }
         .screenshot-mode .card { box-shadow: none !important; border: 2px solid #334155 !important; border-radius: 0 !important; padding: 2rem !important; }
         .screenshot-mode .item-row { border: none; border-bottom: 1px dashed #ccc; padding: 8px 0; }
+        .screenshot-mode .empty-row { display: none !important; }
         
         .screenshot-mode #screenshot-header { display: flex !important; flex-direction: column; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #334155; padding-bottom: 10px; }
         .screenshot-mode #screenshot-header .ss-title { width: 100%; text-align: center; font-size: 1.5rem; font-weight: 900; margin-bottom: 8px; color: #000; }
@@ -82,7 +82,7 @@ const db = firebase.database();
         <button onclick="showTab('drafts')" id="btn-drafts" class="px-5 py-4 whitespace-nowrap">📂 訂單草稿</button>
         <button onclick="showTab('orders')" id="btn-orders" class="px-5 py-4 whitespace-nowrap">✅ 正式訂單</button>
         <button onclick="showTab('completed')" id="btn-completed" class="px-5 py-4 whitespace-nowrap">🏁 已結案</button>
-        <button onclick="showTab('inventory')" id="btn-inventory" class="px-5 py-4 whitespace-nowrap">⚙️ 庫存品項</button>
+        <button onclick="showTab('inventory')" id="btn-inventory" class="px-5 py-4 whitespace-nowrap">⚙️ 庫存管理</button>
     </div>
 
     <div id="tab-calc" class="page-content">
@@ -144,6 +144,7 @@ const db = firebase.database();
             <div class="flex justify-between items-center mb-6">
                 <h2 class="font-bold text-2xl text-gray-800">⚙️ 雲端品項管理</h2>
                 <div class="flex gap-2">
+                    <button onclick="showRecycleBin()" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg text-sm font-bold">🗑️ 刪除紀錄</button>
                     <button onclick="addNewCategory()" class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-bold">+ 新增大項</button>
                     <button onclick="saveInventory()" class="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-bold">儲存並同步</button>
                 </div>
@@ -153,7 +154,7 @@ const db = firebase.database();
     </div>
 </div>
 
-<div id="selectionModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+<div id="selectionModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[100]">
     <div class="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         <div class="p-4 border-b flex justify-between items-center bg-gray-50">
             <h3 id="modalTitle" class="font-bold text-blue-600">選擇品項</h3>
@@ -174,9 +175,34 @@ const db = firebase.database();
     </div>
 </div>
 
+<div id="deliveryModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[101]">
+    <div class="bg-white rounded-2xl max-w-xl w-full max-h-[80vh] overflow-hidden flex flex-col">
+        <div class="p-4 border-b flex justify-between items-center bg-blue-600 text-white">
+            <h3 class="font-bold">📦 快速出貨勾選</h3>
+            <button onclick="closeDeliveryModal()" class="text-2xl">×</button>
+        </div>
+        <div id="deliveryList" class="overflow-y-auto flex-1 p-4 space-y-3"></div>
+        <div class="p-4 border-t bg-gray-50">
+            <button onclick="saveDeliveryStatus()" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold shadow-lg">更新出貨狀態</button>
+        </div>
+    </div>
+</div>
+
+<div id="recycleBinModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[101]">
+    <div class="bg-white rounded-2xl max-w-xl w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl">
+        <div class="p-4 border-b flex justify-between items-center bg-gray-800 text-white">
+            <h3 class="font-bold">🗑️ 刪除紀錄 (暫存)</h3>
+            <button onclick="closeRecycleBin()" class="text-2xl">×</button>
+        </div>
+        <div id="recycleList" class="overflow-y-auto flex-1 p-4 space-y-2 bg-gray-50"></div>
+        <div class="p-2 text-center text-[10px] text-gray-400 font-bold italic">重整頁面後暫存會清空，請及時復原</div>
+    </div>
+</div>
+
 <script>
 let inv = {}; let catOrder = []; let records = []; let currentSelections = {}; 
 let editingRecordId = null; let currentCat = ""; let isSellerMode = true; let currentStatus = 'draft';
+let recycleBin = []; // 暫存刪除紀錄
 
 db.ref('inventory').on('value', s => { if(s.exists()) inv = s.val(); renderConfig(); });
 db.ref('catOrder').on('value', s => { if(s.exists()) catOrder = s.val(); renderConfig(); });
@@ -185,6 +211,88 @@ db.ref('records').on('value', s => {
     renderRecords();
 });
 
+// --- 出貨管理快捷邏輯 ---
+let deliveryRecordId = null;
+let tempDeliveryStatus = {};
+
+function openDeliveryFast(id) {
+    deliveryRecordId = id;
+    const r = records.find(x => x.id === id);
+    tempDeliveryStatus = r.deliveredItems || {}; 
+    const list = document.getElementById('deliveryList');
+    list.innerHTML = '';
+
+    for (let cat in r.selections) {
+        r.selections[cat].forEach((sel, idx) => {
+            const key = `${cat}_${idx}`;
+            const isDelivered = tempDeliveryStatus[key] !== false; 
+            let name = sel.isTemp ? sel.name : (inv[cat] && inv[cat][sel.idx] ? inv[cat][sel.idx].name : "未知品項");
+            
+            list.innerHTML += `
+                <div class="flex items-center justify-between p-3 border rounded-lg ${isDelivered ? 'bg-white opacity-60' : 'bg-red-50 border-red-200'}">
+                    <div class="flex-1">
+                        <div class="text-[10px] text-blue-500 font-bold">${cat}</div>
+                        <div class="text-sm font-bold">${name}</div>
+                    </div>
+                    <label class="flex items-center gap-2 cursor-pointer bg-white px-3 py-1 rounded-full shadow-sm border">
+                        <input type="checkbox" class="w-5 h-5" ${isDelivered ? 'checked' : ''} onchange="toggleDeliveryStatus('${key}', this.checked)">
+                        <span class="text-xs font-bold">${isDelivered ? '已出貨' : '未出貨'}</span>
+                    </label>
+                </div>`;
+        });
+    }
+    document.getElementById('deliveryModal').classList.remove('hidden');
+}
+
+function toggleDeliveryStatus(key, checked) {
+    tempDeliveryStatus[key] = checked;
+}
+
+function saveDeliveryStatus() {
+    db.ref(`records/${deliveryRecordId}/deliveredItems`).set(tempDeliveryStatus).then(() => {
+        closeDeliveryModal();
+    });
+}
+
+function closeDeliveryModal() { document.getElementById('deliveryModal').classList.add('hidden'); }
+
+// --- 資源回收桶邏輯 ---
+function showRecycleBin() {
+    const list = document.getElementById('recycleList');
+    list.innerHTML = '';
+    if (recycleBin.length === 0) {
+        list.innerHTML = '<div class="text-center py-10 text-gray-400">目前沒有刪除紀錄</div>';
+    }
+    recycleBin.forEach((item, idx) => {
+        list.innerHTML += `
+            <div class="flex items-center justify-between p-3 bg-white border rounded shadow-sm">
+                <div>
+                    <span class="text-[10px] bg-gray-100 px-2 py-0.5 rounded mr-2 font-bold">${item.type === 'cat' ? '大項' : '零件'}</span>
+                    <span class="font-bold text-sm">${item.name}</span>
+                </div>
+                <button onclick="restoreFromBin(${idx})" class="text-xs bg-blue-500 text-white px-3 py-1 rounded font-bold">復原</button>
+            </div>`;
+    });
+    document.getElementById('recycleBinModal').classList.remove('hidden');
+}
+
+function restoreFromBin(idx) {
+    const item = recycleBin[idx];
+    if (item.type === 'cat') {
+        catOrder.push(item.name);
+        inv[item.name] = item.data;
+    } else {
+        if (!inv[item.cat]) inv[item.cat] = [];
+        inv[item.cat].push(item.data);
+    }
+    recycleBin.splice(idx, 1);
+    renderInventoryEditor();
+    showRecycleBin();
+}
+
+function closeRecycleBin() { document.getElementById('recycleBinModal').classList.add('hidden'); }
+
+// --- 基礎邏輯 ---
 function filterModalList() {
     const term = document.getElementById('modalSearch').value.toLowerCase();
     document.querySelectorAll('#modalList .pick-item').forEach(item => {
@@ -210,11 +318,7 @@ function calculate() {
     document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`;
     const profit = noCard > 0 ? (noCard - subC) : (finalSale - subC);
     document.getElementById('ui-totalProfit').innerText = `$${profit.toLocaleString()}`;
-    
     document.getElementById('ss-time').innerText = `報價時間：${new Date().toLocaleString()}`;
-    document.getElementById('ss-discount').innerText = disc > 0 ? `折扣：-$${disc.toLocaleString()}` : "";
-    document.getElementById('ss-untaxed').innerText = `未稅總計：$${untaxed.toLocaleString()}`;
-    document.getElementById('ss-total').innerText = `含稅總計：$${finalSale.toLocaleString()}`;
 }
 
 function renderConfig() {
@@ -252,9 +356,11 @@ function renderRecords() {
             for(let key in r.deliveredItems) {
                 if(r.deliveredItems[key] === false) {
                     const [cat, idx] = key.split('_');
-                    const sel = r.selections[cat][idx];
-                    let n = sel.isTemp ? sel.name : (inv[cat] && inv[cat][sel.idx] ? inv[cat][sel.idx].name : "未知");
-                    missingItems.push(n);
+                    const sel = (r.selections[cat] || [])[idx];
+                    if (sel) {
+                        let n = sel.isTemp ? sel.name : (inv[cat] && inv[cat][sel.idx] ? inv[cat][sel.idx].name : "未知");
+                        missingItems.push(n);
+                    }
                 }
             }
         }
@@ -266,7 +372,6 @@ function renderRecords() {
                     <div class="text-sm font-bold text-gray-700">${r.name || '[無名]'}</div>
                     <div class="text-blue-600 font-black">${r.total}</div>
                     ${missingItems.length > 0 ? `<div class="text-[11px] text-red-600 font-black">⚠️ 未出貨：${missingItems.join(', ')}</div>` : ''}
-                    ${r.completedTime ? `<div class="text-[10px] text-red-600 font-black bg-red-50 px-2 py-1 rounded inline-block">🏁 已結案：${r.completedTime}</div>` : ''}
                 </div>
                 <div class="flex flex-col items-end gap-2 pr-2">
                     <select onchange="updateField(${r.id}, 'seller', this.value)" class="text-xs p-1 bg-gray-50 border rounded w-24">${sOpts}</select>
@@ -275,7 +380,8 @@ function renderRecords() {
             </div>
             <div class="flex gap-2 border-t pt-2">
                 <button onclick="editRecord(${r.id})" class="flex-1 py-1 bg-blue-500 text-white text-xs rounded font-bold">編輯</button>
-                <button onclick="if(confirm('確定刪除？')) db.ref('records/'+${r.id}).remove()" class="px-3 py-1 bg-red-50 text-red-400 text-xs rounded font-bold">刪除</button>
+                <button onclick="openDeliveryFast(${r.id})" class="flex-1 py-1 bg-orange-500 text-white text-xs rounded font-bold">📦 出貨管理</button>
+                <button onclick="if(confirm('確定刪除？')) db.ref('records/'+${r.id}).remove()" class="px-3 py-1 bg-red-50 text-red-400 text-xs rounded font-bold text-[10px]">刪除</button>
             </div>
         </div>`;
         
@@ -346,19 +452,31 @@ function editRecord(id) {
 function renderInventoryEditor() {
     const area = document.getElementById('inventoryEditor'); area.innerHTML = '';
     catOrder.forEach((cat, cIdx) => {
-        const sec = document.createElement('div'); sec.className = "bg-white p-4 rounded-xl border relative";
-        sec.innerHTML = `<div class="flex justify-between items-center mb-2"><input class="font-bold text-blue-600 w-2/3" value="${cat}" onchange="renameCat(${cIdx}, this.value)"><div class="flex gap-1"><button onclick="moveCat(${cIdx},-1)" class="text-xs bg-gray-100 p-1 rounded font-bold">↑</button><button onclick="moveCat(${cIdx},1)" class="text-xs bg-gray-100 p-1 rounded font-bold">↓</button><button onclick="removeCat(${cIdx})" class="text-red-300 ml-1">×</button></div></div><div id="edit-${cat}" class="space-y-2"></div><button onclick="addInvItem('${cat}')" class="w-full text-xs border-dashed border-2 mt-2 py-1">+ 新增零件</button>`;
+        const sec = document.createElement('div'); sec.className = "bg-white p-4 rounded-xl border relative shadow-sm";
+        sec.innerHTML = `<div class="flex justify-between items-center mb-2"><input class="font-bold text-blue-600 w-2/3" value="${cat}" onchange="renameCat(${cIdx}, this.value)"><div class="flex gap-1"><button onclick="moveCat(${cIdx},-1)" class="text-xs bg-gray-100 p-1 rounded font-bold">↑</button><button onclick="moveCat(${cIdx},1)" class="text-xs bg-gray-100 p-1 rounded font-bold">↓</button><button onclick="removeCat(${cIdx})" class="text-red-300 ml-1 text-lg">×</button></div></div><div id="edit-${cat}" class="space-y-2"></div><button onclick="addInvItem('${cat}')" class="w-full text-xs border-dashed border-2 mt-2 py-1 rounded-lg text-gray-400 font-bold">+ 新增零件</button>`;
         area.appendChild(sec);
         (inv[cat] || []).forEach((item, idx) => {
-            const row = document.createElement('div'); row.className = "bg-gray-50 p-2 rounded relative border";
-            row.innerHTML = `<input type="text" class="text-xs font-bold w-full" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value"><div class="flex gap-1 mt-1"><input type="number" class="w-1/2 text-xs" value="${item.p}" onchange="inv['${cat}'][${idx}].p=this.value"></div><div class="flex gap-2 mt-1 items-center"><button onclick="moveItem('${cat}', ${idx}, -1)" class="text-[9px] bg-white px-2 border font-bold">上移</button><button onclick="moveItem('${cat}', ${idx}, 1)" class="text-[9px] bg-white px-2 border font-bold">下移</button><button onclick="inv['${cat}'].splice(${idx},1); renderInventoryEditor();" class="absolute top-1 right-1 text-gray-300">×</button></div>`;
+            const row = document.createElement('div'); row.className = "bg-gray-50 p-2 rounded relative border group";
+            row.innerHTML = `<input type="text" class="text-xs font-bold w-full bg-transparent border-none" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value"><div class="flex gap-1 mt-1"><input type="number" class="w-1/2 text-xs border-gray-100" value="${item.p}" onchange="inv['${cat}'][${idx}].p=this.value"></div><div class="flex gap-2 mt-1 items-center"><button onclick="moveItem('${cat}', ${idx}, -1)" class="text-[9px] bg-white px-2 border font-bold rounded">上移</button><button onclick="moveItem('${cat}', ${idx}, 1)" class="text-[9px] bg-white px-2 border font-bold rounded">下移</button><button onclick="deleteInvItem('${cat}', ${idx})" class="absolute top-1 right-1 text-gray-300 hover:text-red-500">×</button></div>`;
             document.getElementById(`edit-${cat}`).appendChild(row);
         });
     });
 }
 
 function addNewCategory() { const name = prompt("名稱"); if(name) { catOrder.push(name); inv[name]=[]; renderInventoryEditor(); } }
-function removeCat(i) { if(confirm("確定刪除？")) { delete inv[catOrder[i]]; catOrder.splice(i,1); renderInventoryEditor(); } }
+function removeCat(i) { 
+    if(confirm("確定刪除此類別？")) { 
+        const name = catOrder[i];
+        recycleBin.push({ type: 'cat', name: name, data: inv[name] });
+        delete inv[name]; catOrder.splice(i,1); renderInventoryEditor(); 
+    } 
+}
+function deleteInvItem(cat, idx) {
+    const item = inv[cat][idx];
+    recycleBin.push({ type: 'item', name: item.name, cat: cat, data: item });
+    inv[cat].splice(idx, 1);
+    renderInventoryEditor();
+}
 function renameCat(i, n) { const o = catOrder[i]; inv[n]=inv[o]; delete inv[o]; catOrder[i]=n; renderInventoryEditor(); }
 function addInvItem(c) { if(!inv[c]) inv[c]=[]; inv[c].push({name:"", p:0}); renderInventoryEditor(); }
 function saveInventory() { db.ref('inventory').set(inv); db.ref('catOrder').set(catOrder).then(()=>alert('同步成功')); }
