@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.16</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.17</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -56,7 +56,7 @@
         .screenshot-mode body { background: #fff !important; padding-top: 80px !important; }
         .screenshot-mode .max-w-7xl { max-width: 700px !important; margin: 0 auto !important; }
         
-        /* 雲端項目排版：名稱與控制項分兩排 */
+        /* 雲端項目排版 */
         .inv-item-row { display: flex; flex-direction: column; padding: 10px 12px; border-radius: 8px; border: 1px solid #f1f5f9; background: #fff; margin-bottom: 8px; }
         .inv-item-name-row { display: flex; align-items: center; gap: 8px; width: 100%; padding-bottom: 6px; border-bottom: 1px dashed #f1f5f9; }
         .inv-item-name-row input[type="text"] { border: none !important; background: transparent !important; padding: 0 !important; flex: 1; font-weight: bold; font-size: 13px; min-width: 0; }
@@ -154,13 +154,6 @@
         </div>
     </div>
 
-    <div id="screenshot-footer" class="hidden mt-8 border-t-2 border-gray-100 pt-6 text-right">
-        <div class="text-sm text-gray-500">優惠折抵：<span id="ss-discount" class="font-bold text-red-500">-$0</span></div>
-        <div id="ss-nocard-row" class="text-sm text-orange-500 hidden font-bold">無卡分期總額：<span id="ss-nocard-val">$0</span></div>
-        <div class="text-2xl font-black text-blue-600 mt-2">含稅應付總額：<span id="ss-total">$0</span></div>
-        <div class="text-[10px] text-gray-300 mt-8">感謝您的支持，祝您使用愉快！</div>
-    </div>
-
     <div id="tab-drafts" class="page-content hidden"><div id="draftList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
     <div id="tab-orders" class="page-content hidden"><div id="orderList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
     <div id="tab-completed" class="page-content hidden"><div id="completedList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 opacity-80"></div></div>
@@ -211,23 +204,25 @@ db.ref('inventory').on('value', s => { if(s.exists()) inv = s.val(); renderConfi
 db.ref('catOrder').on('value', s => { if(s.exists()) catOrder = s.val(); renderConfig(); });
 db.ref('records').on('value', s => { records = []; if(s.exists()) { const data = s.val(); for(let id in data) records.push(data[id]); } renderRecords(); });
 
-// 智慧返回邏輯
+// 修正後的智慧返回邏輯
 function goBack() {
-    // 1. 如果正在「編輯現有訂單」，按返回則退出編輯模式並回到對應清單
+    // 優先檢查是否正在編輯模式
     if (editingRecordId !== null) {
         const r = records.find(x => x.id === editingRecordId);
-        const targetTab = r ? (r.status === 'draft' ? 'drafts' : (r.status === 'completed' ? 'completed' : 'orders')) : 'drafts';
-        resetForm(); // 這會清空編輯 ID 與欄位
-        showTab(targetTab);
-        return;
+        // 判斷原始分類決定回哪裡
+        let target = 'drafts';
+        if (r && r.status === 'order') target = 'orders';
+        if (r && r.status === 'completed') target = 'completed';
+        
+        resetForm(); // 強制清空編輯狀態
+        showTab(target); // 強制跳轉回清單
+        return; // 終止後續 history.back 邏輯
     }
 
-    // 2. 如果在其他分頁，按返回優先跳回報價主頁
     const activeTab = document.querySelector('.page-content:not(.hidden)').id;
     if (activeTab !== 'tab-calc') {
         showTab('calc');
     } else {
-        // 3. 已經在報價主頁且非編輯中，執行瀏覽器後退
         window.history.back();
     }
 }
@@ -258,16 +253,6 @@ function calculate() {
     const baseRev = noCard > 0 ? noCard : finalSale;
     document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`;
     document.getElementById('ui-totalProfit').innerText = `$${(baseRev - subC).toLocaleString()}`;
-    
-    document.getElementById('ss-time').innerText = `開單時間：${new Date().toLocaleString()}`;
-    document.getElementById('ss-discount').innerText = `-$${disc.toLocaleString()}`;
-    document.getElementById('ss-total').innerText = `$${finalSale.toLocaleString()}`;
-    if(noCard > 0) {
-        document.getElementById('ss-nocard-val').innerText = `$${noCard.toLocaleString()}`;
-        document.getElementById('ss-nocard-row').classList.remove('hidden');
-    } else {
-        document.getElementById('ss-nocard-row').classList.add('hidden');
-    }
 }
 
 function renderConfig() {
