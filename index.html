@@ -13,7 +13,16 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        body { background-color: #f4f9fc; font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; padding-top: env(safe-area-inset-top); }
+        /* 避開動態島修正：增加上方安全距離 */
+        :root {
+            --sat: env(safe-area-inset-top);
+        }
+        body { 
+            background-color: #f4f9fc; 
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
+            padding-top: calc(var(--sat) + 20px); /* 確保按鈕完全避開動態島 */
+        }
+        
         .tab-active { border-bottom: 4px solid #3b82f6; color: #3b82f6; font-weight: bold; }
         .card { background: white; border-radius: 12px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); }
         .hidden { display: none !important; }
@@ -22,7 +31,7 @@
         .item-row:hover { background-color: #f8fafc; border-color: #3b82f6; }
         .selected-badge { background: #f1f5f9; color: #334155; padding: 4px 10px; border-radius: 6px; font-size: 12px; margin: 2px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid #e2e8f0; }
         
-        /* 截圖模式修正 */
+        /* 截圖模式樣式 */
         #screenshot-header, #screenshot-footer { display: none; }
         .hide-price .price-tag { display: none !important; }
         #mainBody.screenshot-mode { background: #fff !important; padding: 40px !important; }
@@ -30,15 +39,13 @@
         .screenshot-mode .max-w-7xl { max-width: 800px !important; margin: 0 auto !important; }
         .screenshot-mode .card { box-shadow: none !important; border: 2px solid #334155 !important; border-radius: 0 !important; padding: 2rem !important; }
         .screenshot-mode .item-row { border: none; border-bottom: 1px dashed #ccc; padding: 8px 0; }
-        .screenshot-mode .item-row.empty-row { display: none !important; visibility: hidden !important; height: 0 !important; padding: 0 !important; margin: 0 !important; }
+        .screenshot-mode .item-row.empty-row { display: none !important; visibility: hidden !important; height: 0 !important; }
         
-        .screenshot-mode .selected-badge { border: none; background: none; padding: 0; font-size: 14px; color: #000; }
         .screenshot-mode #screenshot-header { display: flex !important; flex-direction: column; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #334155; padding-bottom: 10px; }
         .screenshot-mode #screenshot-header .ss-title { width: 100%; text-align: center; font-size: 1.5rem; font-weight: 900; margin-bottom: 8px; color: #000; }
         .screenshot-mode #screenshot-header #ss-time { width: 100%; text-align: left; font-size: 0.875rem; color: #4b5563; }
         .screenshot-mode #screenshot-footer { display: block !important; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; }
 
-        /* 品項視覺反饋 */
         .pick-item { transition: all 0.2s; border: 2px solid #e5e7eb; cursor: pointer; border-radius: 10px; }
         .pick-item.active { background-color: #eff6ff; border-color: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.2); }
         .is-out-of-stock { opacity: 0.4; background-color: #f1f5f9 !important; border-color: #cbd5e1 !important; color: #64748b !important; }
@@ -74,7 +81,7 @@ const db = firebase.database();
         <div id="ss-time"></div>
     </div>
 
-    <div class="flex border-b mb-6 no-screenshot overflow-x-auto bg-white sticky top-0 z-10">
+    <div class="flex border-b mb-6 no-screenshot overflow-x-auto bg-white sticky top-0 z-10 p-1">
         <button onclick="showTab('calc')" id="btn-calc" class="px-5 py-4 tab-active whitespace-nowrap">🐚 報價配單</button>
         <button onclick="showTab('drafts')" id="btn-drafts" class="px-5 py-4 whitespace-nowrap">📂 訂單草稿</button>
         <button onclick="showTab('orders')" id="btn-orders" class="px-5 py-4 whitespace-nowrap">✅ 正式訂單</button>
@@ -134,12 +141,6 @@ const db = firebase.database();
         </div>
     </div>
 
-    <div id="screenshot-footer" class="text-right space-y-1">
-        <div id="ss-discount" class="text-sm text-red-500 font-bold"></div>
-        <div id="ss-untaxed" class="text-sm text-gray-600"></div>
-        <div id="ss-total" class="text-2xl font-bold text-blue-700"></div>
-    </div>
-
     <div id="tab-drafts" class="page-content hidden"><div class="card p-6"><h2 class="font-bold text-orange-500 border-b pb-2 mb-4">📂 訂單草稿 <span id="count-draft">0</span></h2><div id="draftList" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div></div></div>
     <div id="tab-orders" class="page-content hidden"><div class="card p-6"><h2 class="font-bold text-green-600 border-b pb-2 mb-4">✅ 正式訂單 <span id="count-order">0</span></h2><div id="orderList" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div></div></div>
     <div id="tab-completed" class="page-content hidden"><div class="card p-6"><h2 class="font-bold text-gray-500 border-b pb-2 mb-4">🏁 已結案訂單 <span id="count-completed">0</span></h2><div id="completedList" class="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-90"></div></div></div>
@@ -164,11 +165,22 @@ const db = firebase.database();
 
 <div id="selectionModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        <div class="p-4 border-b flex justify-between items-center bg-gray-50"><h3 id="modalTitle" class="font-bold text-blue-600">選擇品項</h3><button onclick="closeModal()" class="text-gray-400 text-xl font-bold">×</button></div>
+        <div class="p-4 border-b flex justify-between items-center bg-gray-50">
+            <h3 id="modalTitle" class="font-bold text-blue-600">選擇品項</h3>
+            <button onclick="closeModal()" class="text-gray-400 text-xl font-bold">×</button>
+        </div>
+        <div class="p-2 border-b bg-white">
+            <input type="text" id="modalSearch" class="w-full" placeholder="🔍 搜尋零件名稱..." oninput="filterModalList()">
+        </div>
         <div id="modalList" class="overflow-y-auto flex-1 p-4 space-y-2"></div>
         <div class="p-4 border-t bg-gray-50 space-y-2">
             <div class="text-xs font-bold text-gray-500 uppercase tracking-wider">🛠️ 臨時新增品項</div>
-            <div class="flex gap-2"><input type="text" id="tempName" class="flex-1" placeholder="名稱"><input type="number" id="tempPrice" class="w-20" placeholder="售價"><input type="number" id="tempCost" class="w-20" placeholder="成本"><button onclick="addTempItem()" class="bg-orange-500 text-white px-4 py-1 rounded text-sm font-bold">新增</button></div>
+            <div class="flex gap-2">
+                <input type="text" id="tempName" class="flex-1" placeholder="名稱">
+                <input type="number" id="tempPrice" class="w-20" placeholder="售價">
+                <input type="number" id="tempCost" class="w-20" placeholder="成本">
+                <button onclick="addTempItem()" class="bg-orange-500 text-white px-4 py-1 rounded text-sm font-bold">新增</button>
+            </div>
         </div>
         <div class="p-4 border-t"><button onclick="closeModal()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">確認完成</button></div>
     </div>
@@ -265,7 +277,7 @@ function renderRecords() {
             ? `<div class="text-gray-400 text-xs line-through">原計: ${r.total}</div><div class="text-orange-600 font-black">分期: $${Number(r.noCard).toLocaleString()}</div>`
             : `<div class="text-blue-600 font-black">${r.total}</div>`;
 
-        // 核心修正: 彻底删除 HTML 中的 status-badge 標籤
+        // 核心修正: 完全移除重複出現的文字標籤
         const div = `<div class="p-4 border-2 rounded-xl bg-white flex flex-col gap-3 shadow-sm relative ${missingNames.length>0?'border-red-400':'border-transparent'}">
             <div class="flex justify-between items-start">
                 <div class="flex-1 space-y-1">
@@ -324,6 +336,14 @@ function openShippingManager(id) {
 
 function closeShippingModal() { document.getElementById('shippingModal').classList.add('hidden'); editingRecordId=null; }
 
+// 搜尋過濾功能
+function filterModalList() {
+    const term = document.getElementById('modalSearch').value.toLowerCase();
+    document.querySelectorAll('#modalList .pick-item').forEach(item => {
+        item.style.display = item.innerText.toLowerCase().includes(term) ? 'flex' : 'none';
+    });
+}
+
 function renderModalList() {
     const list = document.getElementById('modalList'); list.innerHTML = ''; const selections = currentSelections[currentCat] || [];
     (inv[currentCat] || []).forEach((item, idx) => {
@@ -340,6 +360,14 @@ function renderModalList() {
             </div>
         </div>`;
     });
+    // 渲染臨時項目時也支援搜尋
+    selections.filter(s => s.isTemp).forEach((temp, tIdx) => {
+        list.innerHTML += `<div class="pick-item p-3 rounded-lg flex justify-between items-center active border-orange-200 bg-orange-50 mb-1">
+            <div class="flex-1"><div class="font-bold text-sm text-orange-700">[臨時] ${temp.name}</div></div>
+            <button onclick="removeTempItem(${tIdx})" class="text-red-400 text-lg ml-2 font-bold">×</button>
+        </div>`;
+    });
+    filterModalList();
 }
 
 function togglePick(idx, isTemp) {
@@ -363,7 +391,8 @@ function addTempItem() {
     document.getElementById('tempName').value = ""; document.getElementById('tempPrice').value = ""; renderConfig(); renderModalList();
 }
 function removeTempItem(tIdx) { const all = currentSelections[currentCat], temps = all.filter(s=>s.isTemp); all.splice(all.indexOf(temps[tIdx]), 1); renderConfig(); renderModalList(); }
-function openSelection(cat) { currentCat = cat; document.getElementById('modalTitle').innerText = `選擇 ${cat}`; renderModalList(); document.getElementById('selectionModal').classList.remove('hidden'); }
+function openSelection(cat) { currentCat = cat; document.getElementById('modalTitle').innerText = `選擇 ${cat}`; document.getElementById('modalSearch').value = ''; renderModalList(); document.getElementById('selectionModal').classList.remove('hidden'); }
+
 function saveRecord(targetStatus) {
     const id = editingRecordId || Date.now(), status = targetStatus === 'current' ? currentStatus : targetStatus;
     const r = { id, time: new Date().toLocaleString(), name: document.getElementById('custName').value, source: document.getElementById('custSource').value, phone: document.getElementById('custPhone').value, addr: document.getElementById('custAddr').value, memo: document.getElementById('orderMemo').value, selections: currentSelections, noCard: document.getElementById('noCardTotal').value, total: document.getElementById('ui-totalSale').innerText, status, discount: document.getElementById('discountAmt').value };
