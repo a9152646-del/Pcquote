@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.14</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.15</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -13,7 +13,7 @@
         body { 
             background-color: #f8fafc; 
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
-            padding-top: 105px !important; /* 維持介面上移 */
+            padding-top: 105px !important; 
             font-size: 14px; 
             color: #334155; 
             line-height: 1.5;
@@ -43,9 +43,7 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.15);
             border: 2px solid #e2e8f0;
             display: flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
+            align-items: center; gap: 6px; cursor: pointer;
         }
 
         #screenshotNav { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 99999; display: none; }
@@ -58,7 +56,6 @@
         .screenshot-mode body { background: #fff !important; padding-top: 80px !important; }
         .screenshot-mode .max-w-7xl { max-width: 700px !important; margin: 0 auto !important; }
         
-        /* 雲端項目排版：名稱獨立一排 */
         .inv-item-row { display: flex; flex-direction: column; padding: 10px 12px; border-radius: 8px; border: 1px solid #f1f5f9; background: #fff; margin-bottom: 8px; }
         .inv-item-name-row { display: flex; align-items: center; gap: 8px; width: 100%; padding-bottom: 6px; border-bottom: 1px dashed #f1f5f9; }
         .inv-item-name-row input[type="text"] { border: none !important; background: transparent !important; padding: 0 !important; flex: 1; font-weight: bold; font-size: 13px; min-width: 0; }
@@ -76,7 +73,7 @@
 
 <div class="no-screenshot fixed right-4 bottom-6 z-[40] flex flex-col gap-3">
     <button onclick="location.reload(true)" class="bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔄</button>
-    <button onclick="history.back()" class="bg-slate-900 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔙</button>
+    <button onclick="goBack()" class="bg-black text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔙</button>
 </div>
 
 <div id="adminToggleContainer" class="no-screenshot">
@@ -212,6 +209,17 @@ let inv = {}; let catOrder = []; let records = []; let currentSelections = {}; l
 db.ref('inventory').on('value', s => { if(s.exists()) inv = s.val(); renderConfig(); if(!document.getElementById('tab-inventory').classList.contains('hidden')) renderInventoryEditor(); });
 db.ref('catOrder').on('value', s => { if(s.exists()) catOrder = s.val(); renderConfig(); });
 db.ref('records').on('value', s => { records = []; if(s.exists()) { const data = s.val(); for(let id in data) records.push(data[id]); } renderRecords(); });
+
+function goBack() {
+    const activeTab = document.querySelector('.page-content:not(.hidden)').id;
+    // 如果不在報價頁面，返回鍵的作用就是跳回報價頁面
+    if (activeTab !== 'tab-calc') {
+        showTab('calc');
+    } else {
+        // 如果已經在報價頁面，才執行瀏覽器的後退
+        window.history.back();
+    }
+}
 
 function calculate() {
     let subP = 0, subC = 0, disc = parseFloat(document.getElementById('discountAmt')?.value || 0);
