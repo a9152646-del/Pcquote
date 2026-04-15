@@ -3,19 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.05 (尺寸優化版)</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.06</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        /* 1. 維持下移距離，縮小字體與介面尺寸 */
         body { 
             background-color: #f8fafc; 
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
             padding-top: 130px !important; 
-            font-size: 14px; /* 字體調小 */
+            font-size: 14px; 
             color: #334155; 
             line-height: 1.5;
         }
@@ -23,18 +22,14 @@
         .card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
         .hidden { display: none !important; }
         
-        /* 輸入框尺寸縮小 */
         input, select, textarea { border: 1px solid #cbd5e1; border-radius: 5px; padding: 6px 10px; font-size: 14px; outline: none; }
         
-        /* 報價單項目尺寸縮小 */
         .item-row { padding: 10px 15px !important; border-bottom: 1px solid #f1f5f9; }
         .selected-badge { color: #1e293b; font-size: 14px; margin-right: 8px; display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
         .price-tag { color: #94a3b8; font-weight: 400; font-size: 12px; margin-left: 4px; }
         
-        /* 管理員隱藏單價 */
         .hide-prices .price-tag { display: none !important; }
 
-        /* 金額按鈕位置：左下角 */
         #adminToggleContainer {
             position: fixed;
             bottom: 25px;
@@ -53,7 +48,6 @@
             cursor: pointer;
         }
 
-        /* 截圖模式位置與尺寸 */
         #screenshotNav { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 99999; display: none; }
         .screenshot-mode #screenshotNav { display: block !important; }
         #screenshotNav button { font-size: 14px; padding: 10px 20px; border-radius: 30px; background: #1e293b; color: white; box-shadow: 0 8px 20px rgba(0,0,0,0.3); font-weight: bold; }
@@ -64,14 +58,13 @@
         .screenshot-mode body { background: #fff !important; padding-top: 100px !important; }
         .screenshot-mode .max-w-7xl { max-width: 700px !important; margin: 0 auto !important; }
         
-        /* 品項管理頁面與缺貨按鈕樣式 */
-        .inv-item-row { display: flex; align-items: center; gap: 6px; padding: 8px; border-radius: 6px; border: 1px solid #f1f5f9; background: #fff; margin-bottom: 4px; }
+        /* 品項管理修正：防止按鈕突出，保持對稱 */
+        .inv-item-row { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; border: 1px solid #f1f5f9; background: #fff; margin-bottom: 6px; }
         .inv-out-of-stock { background-color: #fff1f2 !important; border-color: #fecdd3 !important; }
-        .stock-btn { font-size: 12px; padding: 4px 8px; border-radius: 6px; font-weight: bold; border: 1px solid #e2e8f0; cursor: pointer; min-width: 60px; text-align: center; }
+        .stock-btn { font-size: 11px; padding: 4px 6px; border-radius: 6px; font-weight: bold; border: 1px solid #e2e8f0; cursor: pointer; min-width: 55px; text-align: center; }
         .stock-btn.active { background: #22c55e; color: white; border-color: #22c55e; }
         .stock-btn.oos { background: #ef4444; color: white; border-color: #ef4444; }
 
-        /* 按鈕尺寸縮小 */
         button { font-size: 14px !important; }
     </style>
 </head>
@@ -172,8 +165,8 @@
             <div class="flex justify-between items-center mb-4">
                 <h2 class="font-black text-lg text-gray-700">⚙️ 雲端品項管理</h2>
                 <div class="flex gap-2">
-                    <button onclick="addNewCategory()" class="bg-blue-500 text-white px-3 py-2 rounded-lg text-xs">+ 大項</button>
-                    <button onclick="saveInventory()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-xs shadow-md font-bold">💾 同步雲端</button>
+                    <button onclick="addNewCategory()" class="bg-blue-500 text-white px-3 py-2 rounded-lg text-[10px]">+ 大項</button>
+                    <button onclick="saveInventory()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-[10px] shadow-md font-bold">💾 同步雲端</button>
                 </div>
             </div>
             <div id="inventoryEditor" class="space-y-4"></div>
@@ -274,20 +267,36 @@ function renderRecords() {
     records.sort((a,b)=>b.id-a.id).forEach(r => {
         const pOpts = ["待處理", "組裝中", "測試中", "已完工", "已寄出"].map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
         const noCardInfo = r.noCard > 0 ? `<div class="text-orange-500 font-bold text-xs mt-1">無卡分期: $${Number(r.noCard).toLocaleString()}</div>` : '';
+        
+        // 未出貨項目邏輯
+        let undelivered = [];
+        for (let cat in r.selections) {
+            r.selections[cat].forEach((sel, idx) => {
+                const k = `${cat}_${idx}`;
+                const isD = r.deliveredItems && r.deliveredItems[k] === true;
+                if (!isD) {
+                    let n = sel.isTemp ? sel.name : (inv[cat] && inv[cat][sel.idx] ? inv[cat][sel.idx].name : "未知品項");
+                    undelivered.push(n);
+                }
+            });
+        }
+        const undeliveredHtml = undelivered.length > 0 ? `<div class="mt-2 p-2 bg-red-50 rounded text-[10px] text-red-600 font-bold"><div class="border-b border-red-100 mb-1">⚠️ 未出貨：</div>${undelivered.join('、')}</div>` : '';
+
         const div = `<div class="p-4 border-2 rounded-xl bg-white shadow-sm space-y-3">
             <div class="flex justify-between items-start">
-                <div>
+                <div class="flex-1">
                     <div class="text-[10px] text-gray-400 font-mono">${r.time}</div>
                     <div class="text-base font-black text-gray-800">${r.name || '無名客戶'}</div>
                     <div class="text-blue-600 font-black text-lg">${r.total}</div>
                     ${noCardInfo}
+                    ${undeliveredHtml}
                 </div>
-                <div class="text-right"><span class="bg-blue-100 text-blue-600 text-[10px] font-bold px-2 py-1 rounded-full">${r.seller||'未指定'}</span><div class="mt-2"><select onchange="db.ref('records/'+${r.id}+'/progress').set(this.value)" class="text-[10px] font-bold border-2 border-gray-100 px-1 py-1 rounded-lg">${pOpts}</select></div></div>
+                <div class="text-right ml-2"><span class="bg-blue-100 text-blue-600 text-[10px] font-bold px-2 py-1 rounded-full">${r.seller||'未指定'}</span><div class="mt-2"><select onchange="db.ref('records/'+${r.id}+'/progress').set(this.value)" class="text-[10px] font-bold border-2 border-gray-100 px-1 py-1 rounded-lg">${pOpts}</select></div></div>
             </div>
             <div class="flex gap-1 pt-3 border-t border-dashed">
                 <button onclick="editRecord(${r.id})" class="flex-1 py-2 bg-blue-600 text-white text-[10px] rounded-lg font-black">編輯</button>
                 ${r.status === 'draft' ? `<button onclick="if(confirm('確認轉為正式訂單？')) db.ref('records/'+${r.id}+'/status').set('order')" class="bg-green-600 text-white px-2 rounded-lg text-[10px] font-bold">轉正式</button>` : 
-                `<button onclick="openDeliveryFast(${r.id})" class="bg-orange-500 text-white px-2 rounded-lg text-[10px] font-bold">出貨</button>
+                `<button onclick="openDeliveryFast(${r.id})" class="bg-orange-500 text-white px-2 rounded-lg text-[10px] font-bold">📦 未出貨</button>
                  <button onclick="if(confirm('確認結案？')) db.ref('records/'+${r.id}+'/status').set('completed')" class="bg-gray-600 text-white px-2 rounded-lg text-[10px] font-bold">結案</button>`}
                 <button onclick="if(confirm('確定刪除此紀錄？')) db.ref('records/'+${r.id}).remove()" class="text-red-300 text-xl px-1">✕</button>
             </div></div>`;
@@ -303,7 +312,16 @@ function renderInventoryEditor() {
         area.appendChild(sec);
         (inv[cat] || []).forEach((item, idx) => {
             const row = document.createElement('div'); row.className = `inv-item-row ${item.outOfStock ? 'inv-out-of-stock' : ''}`;
-            row.innerHTML = `<div class="flex flex-col text-[10px] text-gray-300 px-1"><button onclick="moveItem('${cat}', ${idx}, -1)">▲</button><button onclick="moveItem('${cat}', ${idx}, 1)">▼</button></div><input class="flex-grow text-xs font-bold bg-transparent border-none focus:ring-0" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value"><div class="flex items-center gap-2 ml-auto"><div class="flex items-center gap-1 border-2 rounded-lg bg-white px-2"><span class="text-[10px] text-gray-400">售</span><input type="number" class="w-14 text-xs font-black text-blue-600 border-none p-0" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div><div class="flex items-center gap-1 border-2 rounded-lg bg-white px-2"><span class="text-[10px] text-gray-400">本</span><input type="number" class="w-14 text-xs font-black text-red-400 border-none p-0" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div><button onclick="toggleStockStatus('${cat}', ${idx})" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button><button onclick="inv['${cat}'].splice(${idx}, 1); renderInventoryEditor();" class="text-red-200 text-xl px-1">×</button></div>`;
+            // 修正佈局：使用 flex 分配空間，確保按鈕整齊
+            row.innerHTML = `
+                <div class="flex flex-col text-[10px] text-gray-300 px-1"><button onclick="moveItem('${cat}', ${idx}, -1)">▲</button><button onclick="moveItem('${cat}', ${idx}, 1)">▼</button></div>
+                <input class="flex-1 text-xs font-bold bg-transparent border-none focus:ring-0 min-w-0" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value">
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    <div class="flex items-center gap-1 border-2 rounded-lg bg-white px-2"><span class="text-[10px] text-gray-400">售</span><input type="number" class="w-12 text-xs font-black text-blue-600 border-none p-0" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div>
+                    <div class="flex items-center gap-1 border-2 rounded-lg bg-white px-2"><span class="text-[10px] text-gray-400">本</span><input type="number" class="w-12 text-xs font-black text-red-400 border-none p-0" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div>
+                    <button onclick="toggleStockStatus('${cat}', ${idx})" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button>
+                    <button onclick="inv['${cat}'].splice(${idx}, 1); renderInventoryEditor();" class="text-red-200 text-xl px-1">×</button>
+                </div>`;
             document.getElementById(`edit-${cat}`).appendChild(row);
         });
     });
@@ -379,7 +397,7 @@ function openDeliveryFast(id) {
     const list = document.getElementById('deliveryList'); list.innerHTML = '';
     for (let cat in r.selections) {
         r.selections[cat].forEach((sel, idx) => {
-            const k = `${cat}_${idx}`; const isD = tempDeliv[k] !== false;
+            const k = `${cat}_${idx}`; const isD = tempDeliv[k] === true;
             let n = sel.isTemp ? sel.name : (inv[cat] && inv[cat][sel.idx] ? inv[cat][sel.idx].name : "未知品項");
             list.innerHTML += `<div class="flex justify-between items-center p-3 border-2 rounded-xl bg-white"><div>${n}</div><input type="checkbox" class="w-5 h-5" ${isD?'checked':''} onchange="db.ref('records/'+${id}+'/deliveredItems/${k}').set(this.checked)"></div>`;
         });
