@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.12</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.13</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -13,7 +13,7 @@
         body { 
             background-color: #f8fafc; 
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
-            padding-top: 105px !important; 
+            padding-top: 105px !important; /* 介面維持上移位置 */
             font-size: 14px; 
             color: #334155; 
             line-height: 1.5;
@@ -58,6 +58,7 @@
         .screenshot-mode body { background: #fff !important; padding-top: 80px !important; }
         .screenshot-mode .max-w-7xl { max-width: 700px !important; margin: 0 auto !important; }
         
+        /* 雲端項目排版：名稱獨立一排 */
         .inv-item-row { display: flex; flex-direction: column; padding: 10px 12px; border-radius: 8px; border: 1px solid #f1f5f9; background: #fff; margin-bottom: 8px; }
         .inv-item-name-row { display: flex; align-items: center; gap: 8px; width: 100%; padding-bottom: 6px; border-bottom: 1px dashed #f1f5f9; }
         .inv-item-name-row input[type="text"] { border: none !important; background: transparent !important; padding: 0 !important; flex: 1; font-weight: bold; font-size: 13px; min-width: 0; }
@@ -75,7 +76,7 @@
 
 <div class="no-screenshot fixed right-4 bottom-6 z-[40] flex flex-col gap-3">
     <button onclick="location.reload(true)" class="bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔄</button>
-    <button onclick="history.back()" class="bg-indigo-600 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔙</button>
+    <button onclick="history.back()" class="bg-blue-600 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔙</button>
 </div>
 
 <div id="adminToggleContainer" class="no-screenshot">
