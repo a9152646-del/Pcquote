@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v8.92</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v8.93</title>
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -39,7 +39,7 @@
         .ss-total-row { font-size: 1.8rem; font-weight: 900; color: #000; border-top: 2px solid #000; margin-top: 10px; padding-top: 5px; display: inline-block; min-width: 250px; }
         
         /* 返回按鈕設定 */
-        #screenshotNav { position: fixed; top: 40px; right: 20px; z-index: 9999999; }
+        #screenshotNav { position: fixed; top: 20px; right: 20px; z-index: 9999999 !important; }
         .pick-item { transition: all 0.2s; border: 2px solid #e5e7eb; cursor: pointer; border-radius: 10px; }
         .pick-item.active { background-color: #eff6ff; border-color: #3b82f6; }
         @media print { .no-print, button, #sellerBox, .no-screenshot { display: none !important; } }
@@ -48,7 +48,7 @@
 <body class="p-2 md:p-6" id="mainBody">
 
 <button onclick="location.reload(true)" class="no-screenshot fixed right-4 bottom-24 z-[40] bg-orange-500 text-white shadow-lg w-10 h-10 rounded-full flex items-center justify-center text-lg opacity-80 active:scale-90 transition-all">🔄</button>
-<div id="screenshotNav" class="hidden no-screenshot"><button onclick="exitScreenshotMode()" class="bg-blue-600 text-white px-10 py-4 rounded-full font-black shadow-2xl border-4 border-white active:scale-95 transition-all">← 返回編輯模式</button></div>
+<div id="screenshotNav" class="hidden"><button onclick="exitScreenshotMode()" class="bg-blue-600 text-white px-8 py-3 rounded-full font-black shadow-2xl border-4 border-white active:scale-95 transition-all">← 返回編輯模式</button></div>
 
 <script>
 const firebaseConfig = { apiKey: "AIzaSyDeCI3yFPr1v9KxOmko-qim2a7EtllEHKM", authDomain: "magic-conch-gaming.firebaseapp.com", databaseURL: "https://magic-conch-gaming-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "magic-conch-gaming", storageBucket: "magic-conch-gaming.firebasestorage.app", messagingSenderId: "105735978925", appId: "1:105735978925:web:3ec77acbfd344475322b24" };
@@ -59,7 +59,7 @@ const db = firebase.database();
 <div class="max-w-7xl mx-auto">
     <div id="screenshot-header"><div class="ss-title">《報價單》</div><div id="ss-time"></div></div>
     <div class="flex border-b mb-6 no-screenshot overflow-x-auto bg-white sticky top-0 z-10 p-1">
-        <button onclick="showTab('calc')" id="btn-calc" class="px-5 py-4 tab-active whitespace-nowrap">🐚 報價配單</button>
+        <button onclick="showTab('calc')" id="btn-calc" class="px-5 py-4 tab-active whitespace-nowrap">殼 報價配單</button>
         <button onclick="showTab('drafts')" id="btn-drafts" class="px-5 py-4 whitespace-nowrap">📂 訂單草稿</button>
         <button onclick="showTab('orders')" id="btn-orders" class="px-5 py-4 whitespace-nowrap">✅ 正式訂單</button>
         <button onclick="showTab('completed')" id="btn-completed" class="px-5 py-4 whitespace-nowrap">🏁 已結案</button>
@@ -225,7 +225,7 @@ function renderRecords() {
         const pOpts = progressList.map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
         
         let missingItems = [];
-        if(r.deliveredItems) {
+        if(r.deliveredItems && r.status !== 'draft') {
             for(let key in r.deliveredItems) {
                 if(r.deliveredItems[key] === false) {
                     const [cat, idx] = key.split('_');
@@ -376,6 +376,63 @@ function deleteInvItem(cat, idx) { const item = inv[cat][idx]; recycleBin.push({
 function resetForm() { editingRecordId=null; currentSelections={}; document.querySelectorAll('input:not([type="checkbox"])').forEach(i=>i.value=""); renderConfig(); }
 function resetFormOnly() { document.querySelectorAll('input:not([type="checkbox"])').forEach(i=>i.value=""); renderConfig(); }
 window.onload = () => renderConfig();
+
+function openSelection(cat) {
+    currentCat = cat;
+    document.getElementById('modalTitle').innerText = '選擇 ' + cat;
+    document.getElementById('selectionModal').classList.remove('hidden');
+    document.getElementById('modalSearch').value = '';
+    renderModalList();
+}
+function filterModalList() {
+    const q = document.getElementById('modalSearch').value.toLowerCase();
+    document.querySelectorAll('.pick-item').forEach(el => {
+        const text = el.innerText.toLowerCase();
+        el.style.display = text.includes(q) ? 'flex' : 'none';
+    });
+}
+function addTempItem() {
+    const n = document.getElementById('tempName').value;
+    const p = document.getElementById('tempPrice').value;
+    const c = document.getElementById('tempCost').value;
+    if(!n) return;
+    if(!currentSelections[currentCat]) currentSelections[currentCat] = [];
+    currentSelections[currentCat].push({name:n, p, c, isGift:false, qty:1, isTemp: true});
+    document.getElementById('tempName').value=''; document.getElementById('tempPrice').value=''; document.getElementById('tempCost').value='';
+    renderConfig(); renderModalList();
+}
+function saveInventory() {
+    db.ref('inventory').set(inv).then(() => alert('雲端庫存已同步'));
+}
+function renameCat(idx, newName) {
+    const oldName = catOrder[idx];
+    if(oldName === newName) return;
+    inv[newName] = inv[oldName];
+    delete inv[oldName];
+    catOrder[idx] = newName;
+    db.ref('catOrder').set(catOrder);
+    db.ref('inventory').set(inv);
+}
+function removeCat(idx) {
+    if(confirm('確定刪除整個分類？')) {
+        const name = catOrder[idx];
+        delete inv[name];
+        catOrder.splice(idx,1);
+        db.ref('catOrder').set(catOrder);
+        db.ref('inventory').set(inv);
+        renderInventoryEditor();
+    }
+}
+function addNewCategory() {
+    const n = prompt("請輸入新分類名稱：");
+    if(n) {
+        catOrder.push(n);
+        inv[n] = [];
+        db.ref('catOrder').set(catOrder);
+        db.ref('inventory').set(inv);
+        renderInventoryEditor();
+    }
+}
 </script>
 </body>
 </html>
