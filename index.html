@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v8.90</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v8.92</title>
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -38,15 +38,16 @@
         .ss-amount-row { font-size: 1.2rem; font-weight: 800; color: #000; margin-bottom: 5px; }
         .ss-total-row { font-size: 1.8rem; font-weight: 900; color: #000; border-top: 2px solid #000; margin-top: 10px; padding-top: 5px; display: inline-block; min-width: 250px; }
         
-        /* 截圖模式返回按鈕 */
+        /* 返回按鈕設定 */
         #screenshotNav { position: fixed; top: 40px; right: 20px; z-index: 9999999; }
         .pick-item { transition: all 0.2s; border: 2px solid #e5e7eb; cursor: pointer; border-radius: 10px; }
         .pick-item.active { background-color: #eff6ff; border-color: #3b82f6; }
+        @media print { .no-print, button, #sellerBox, .no-screenshot { display: none !important; } }
     </style>
 </head>
 <body class="p-2 md:p-6" id="mainBody">
 
-<button onclick="location.reload(true)" class="no-screenshot fixed right-4 bottom-24 z-[40] bg-orange-500 text-white shadow-lg w-10 h-10 rounded-full flex items-center justify-center text-lg opacity-80">🔄</button>
+<button onclick="location.reload(true)" class="no-screenshot fixed right-4 bottom-24 z-[40] bg-orange-500 text-white shadow-lg w-10 h-10 rounded-full flex items-center justify-center text-lg opacity-80 active:scale-90 transition-all">🔄</button>
 <div id="screenshotNav" class="hidden no-screenshot"><button onclick="exitScreenshotMode()" class="bg-blue-600 text-white px-10 py-4 rounded-full font-black shadow-2xl border-4 border-white active:scale-95 transition-all">← 返回編輯模式</button></div>
 
 <script>
@@ -77,11 +78,10 @@ const db = firebase.database();
                         <input type="text" id="custName" placeholder="客戶名稱">
                         <input type="text" id="custPhone" placeholder="電話">
                         <select id="custSource"><option value="FB">Facebook</option><option value="IG">Instagram</option><option value="Line">Line</option><option value="其他">其他</option></select>
-                        <select id="infoSeller">
-                            <option value="朱冠穎">朱冠穎</option>
-                            <option value="江苙翔">江苙翔</option>
-                            <option value="江鈞宇">江鈞宇</option>
-                        </select>
+                        <div class="flex gap-1">
+                            <select id="infoSeller" class="flex-1"><option value="朱冠穎">朱冠穎</option><option value="江苙翔">江苙翔</option><option value="江鈞宇">江鈞宇</option></select>
+                            <button onclick="addCustomSeller()" class="bg-gray-100 px-2 rounded text-xs font-bold border">新增</button>
+                        </div>
                         <input type="text" id="custAddr" placeholder="配送地址" class="md:col-span-4">
                         <textarea id="orderMemo" placeholder="內部備註" class="md:col-span-4 h-24 w-full"></textarea>
                     </div>
@@ -105,7 +105,7 @@ const db = firebase.database();
                         <button onclick="saveRecord('current')" class="w-full bg-blue-500 text-white py-3 rounded-xl font-bold shadow">儲存/更新</button>
                         <button id="btnConvertToOrder" onclick="saveRecord('order')" class="hidden w-full bg-green-600 text-white py-3 rounded-xl font-bold shadow">✅ 轉為正式訂單</button>
                         <button onclick="enterScreenshotMode()" class="w-full bg-orange-500 text-white py-3 rounded-xl font-bold shadow">📸 進入截圖模式</button>
-                        <button onclick="resetForm()" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold shadow">❌ 不儲存並返回</button>
+                        <button onclick="exitToOrdersWithoutSaving()" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold shadow">❌ 不儲存並返回</button>
                         <button onclick="resetFormOnly()" class="w-full text-gray-400 text-xs mt-2 underline font-bold">清空重填</button>
                     </div>
                 </div>
@@ -160,6 +160,8 @@ const db = firebase.database();
         <div class="p-4 border-t"><button onclick="saveDeliveryStatus()" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold">更新狀態</button></div>
     </div>
 </div>
+
+<div id="recycleBinModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[10000]"><div class="bg-white rounded-2xl max-w-xl w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl"><div class="p-4 border-b flex justify-between items-center bg-gray-800 text-white"><h3 class="font-bold">🗑️ 品項刪除紀錄</h3><button onclick="closeRecycleBin()" class="text-3xl font-bold">×</button></div><div id="recycleList" class="overflow-y-auto flex-1 p-4 space-y-2 bg-gray-50"></div></div></div>
 
 <script>
 let inv = {}; let catOrder = []; let records = []; let currentSelections = {}; let editingRecordId = null; let currentCat = ""; let isSellerMode = true; let currentStatus = 'draft'; let recycleBin = [];
@@ -256,7 +258,7 @@ function renderRecords() {
                 <button onclick="editRecord(${r.id})" class="flex-1 py-1 bg-blue-500 text-white text-xs rounded font-bold">編輯</button>
                 ${r.status === 'draft' ? `<button onclick="if(confirm('轉為正式訂單？')) db.ref('records/'+${r.id}+'/status').set('order')" class="bg-green-600 text-white px-3 py-1 rounded text-xs font-bold">✅ 轉正式</button>` : ''}
                 
-                ${r.status === 'order' ? `<button onclick="openDeliveryFast(${r.id})" class="flex-1 py-1 bg-orange-500 text-white text-xs rounded font-bold">📦 出貨管理</button>` : ''}
+                ${r.status !== 'draft' ? `<button onclick="openDeliveryFast(${r.id})" class="flex-1 py-1 bg-orange-500 text-white text-xs rounded font-bold">📦 出貨管理</button>` : ''}
                 
                 ${r.status === 'order' ? `<button onclick="if(confirm('完成結案？')) db.ref('records/'+${r.id}+'/status').set('completed')" class="bg-gray-700 text-white px-3 py-1 rounded text-xs font-bold">🏁 結案</button>` : ''}
                 <button onclick="if(confirm('刪除？')) db.ref('records/'+${r.id}).remove()" class="px-3 py-1 bg-red-50 text-red-400 text-xs rounded">刪除</button>
@@ -359,6 +361,8 @@ function openDeliveryFast(id) {
 }
 function saveDeliveryStatus() { db.ref('records/'+deliveryId+'/deliveredItems').set(tempDeliv).then(() => document.getElementById('deliveryModal').classList.add('hidden')); }
 function closeDeliveryModal() { document.getElementById('deliveryModal').classList.add('hidden'); }
+function exitToOrdersWithoutSaving() { if(confirm('確定不儲存並返回？')) { resetForm(); showTab('drafts'); } }
+function addCustomSeller() { const name = prompt("請輸入新的人員姓名："); if (name) { const select = document.getElementById('infoSeller'); const opt = document.createElement('option'); opt.value = name; opt.text = name; opt.selected = true; select.add(opt); } }
 function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
 function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); if(t==='inventory') renderInventoryEditor(); }
 function togglePick(idx) {
@@ -371,7 +375,6 @@ function addInvItem(c) { if(!inv[c]) inv[c]=[]; inv[c].push({name:"", p:0, c:0, 
 function deleteInvItem(cat, idx) { const item = inv[cat][idx]; recycleBin.push({ type: 'item', name: item.name, cat: cat, data: item }); inv[cat].splice(idx, 1); renderInventoryEditor(); }
 function resetForm() { editingRecordId=null; currentSelections={}; document.querySelectorAll('input:not([type="checkbox"])').forEach(i=>i.value=""); renderConfig(); }
 function resetFormOnly() { document.querySelectorAll('input:not([type="checkbox"])').forEach(i=>i.value=""); renderConfig(); }
-function addCustomSeller() { const name = prompt("請輸入新的人員姓名："); if (name) { const select = document.getElementById('infoSeller'); const opt = document.createElement('option'); opt.value = name; opt.text = name; opt.selected = true; select.add(opt); } }
 window.onload = () => renderConfig();
 </script>
 </body>
