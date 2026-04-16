@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.17</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.19</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -76,7 +76,7 @@
 <body class="p-2 md:p-4 hide-prices" id="mainBody">
 
 <div class="no-screenshot fixed right-4 bottom-10 z-[80] flex flex-col gap-3">
-    <button onclick="if(confirm('豬豬，確定要重整網頁嗎？未儲存的資料會消失喔！')) { window.location.reload(); }" class="bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔄</button>
+    <button onclick="if(confirm('確定要重整網頁嗎？未儲存的資料會消失喔！')) { window.location.reload(); }" class="bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔄</button>
     <button onclick="goBack()" class="bg-black text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔙</button>
 </div>
 
@@ -118,7 +118,6 @@
                     <div id="configRows" class="divide-y divide-gray-100"></div>
                     <div id="screenshot-footer" style="display: none;" class="text-right p-6 pt-4 border-t-2 border-gray-100 space-y-1">
                         <div class="text-xs text-gray-500 font-bold">折扣：<span id="ss-val-disc" class="text-red-500"></span></div>
-                        <div class="text-xs text-gray-500 font-bold">未稅：<span id="ss-val-untaxed"></span></div>
                         <div class="text-xl font-black text-blue-600">總計 (含稅)：<span id="ss-val-total"></span></div>
                     </div>
                 </div>
@@ -144,7 +143,6 @@
                         
                         <div><label class="text-xs text-blue-400 font-bold">EDIT TOTAL 手動修改含稅金額</label><input type="number" id="manualTotal" class="w-full mt-1 border-blue-200 font-black text-lg text-blue-600" placeholder="點此修改總額..." oninput="calculate()"></div>
 
-                        <div class="pt-2 border-t border-dashed"><div class="text-xs text-gray-400 font-bold">PRE-TAX 未稅</div><div id="ui-untaxed" class="text-sm font-bold text-gray-500">$0</div></div>
                         <div class="pt-1"><div class="text-xs text-blue-400 font-bold">TOTAL 含稅 ✏️</div><div id="ui-totalSale" class="text-3xl font-black text-blue-600">$0</div></div>
                         
                         <div id="ui-noCardShow" class="p-2 bg-orange-50 rounded hidden border-2 border-orange-200">
@@ -172,7 +170,6 @@
     <div id="tab-drafts" class="page-content hidden"><div id="draftList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
     <div id="tab-orders" class="page-content hidden"><div id="orderList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
     <div id="tab-completed" class="page-content hidden"><div id="completedList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 opacity-80"></div></div>
-
     <div id="tab-inventory" class="page-content hidden">
         <div class="card p-4">
             <div class="flex justify-between items-center mb-4">
@@ -229,7 +226,7 @@ function goBack() {
     if (activeTab !== 'tab-calc') showTab('calc'); else window.history.back();
 }
 
-// 💾 豬豬修正邏輯：計算時 TOTAL 不隨無卡金額變動
+// 💾 豬豬修正邏輯：計算時 TOTAL 不隨無卡金額變動，隱藏未稅
 function calculate() {
     let subP = 0, subC = 0, disc = parseFloat(document.getElementById('discountAmt')?.value || 0);
     let noCard = parseFloat(document.getElementById('noCardTotal').value) || 0;
@@ -246,22 +243,15 @@ function calculate() {
 
     const autoTotal = subP - disc; 
     const manualVal = parseFloat(document.getElementById('manualTotal').value);
-    
-    // 💾 決定原本含稅金額 (編輯過的優先)
     const baseTaxedTotal = !isNaN(manualVal) ? manualVal : autoTotal;
 
-    // 💾 這裡是關鍵！TOTAL 只顯示含稅總額，不管無卡金額輸入多少，這裡都不會扣除
     document.getElementById('ui-totalSale').innerText = `$${baseTaxedTotal.toLocaleString()}`;
 
-    // 💾 利潤邏輯：原本利潤 + (無卡金額 - 原本含稅金額)
     const originalProfit = baseTaxedTotal - subC;
     let profit = originalProfit;
     if (noCard > 0) {
         profit = (noCard - baseTaxedTotal) + originalProfit;
     }
-
-    const untaxed = Math.round(baseTaxedTotal / 1.05);
-    document.getElementById('ui-untaxed').innerText = `$${untaxed.toLocaleString()}`;
     
     if(noCard > 0) {
         document.getElementById('ui-noCardVal').innerText = `$${noCard.toLocaleString()}`;
@@ -293,7 +283,6 @@ function renderRecords() {
     const dList = document.getElementById('draftList'), oList = document.getElementById('orderList'), cList = document.getElementById('completedList');
     dList.innerHTML = ''; oList.innerHTML = ''; cList.innerHTML = '';
     records.sort((a,b)=>b.id-a.id).forEach(r => {
-        
         let undeliveredHtml = "";
         if(r.status !== 'draft') {
             let undeliveredNames = [];
@@ -333,6 +322,7 @@ function renderRecords() {
     });
 }
 
+// 其餘函數部分
 function renderInventoryEditor() {
     const area = document.getElementById('inventoryEditor'); area.innerHTML = '';
     catOrder.forEach((cat, cIdx) => {
@@ -353,8 +343,37 @@ function toggleSupplier(cat, idx, label) { if(!inv[cat][idx].suppliers) inv[cat]
 function toggleStockStatus(cat, idx) { inv[cat][idx].outOfStock = !inv[cat][idx].outOfStock; renderInventoryEditor(); }
 function toggleAdminMode() { const isChecked = document.getElementById('adminToggle').checked; const body = document.getElementById('mainBody'); const box = document.getElementById('sellerBox'); if(isChecked) { body.classList.remove('hide-prices'); box.classList.remove('invisible'); box.classList.remove('hidden'); } else { body.classList.add('hide-prices'); box.classList.add('invisible'); } }
 function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); const fsBtn = document.getElementById('floatingSaveBtn'); if(t === 'inventory') { renderInventoryEditor(); fsBtn.classList.remove('hidden'); fsBtn.style.display = 'flex'; } else { fsBtn.classList.add('hidden'); fsBtn.style.display = 'none'; } }
-function enterScreenshotMode() { const now = new Date(); const timeStr = now.getFullYear() + '/' + (now.getMonth() + 1).toString().padStart(2, '0') + '/' + now.getDate().toString().padStart(2, '0') + ' ' + now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0'); document.getElementById('ss-time').innerText = '報價日期：' + timeStr; calculate(); document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value || 0).toLocaleString(); document.getElementById('ss-val-untaxed').innerText = document.getElementById('ui-untaxed').innerText; document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText; document.getElementById('mainBody').classList.add('screenshot-mode'); document.getElementById('screenshot-header').style.display = 'block'; document.getElementById('screenshot-footer').style.display = 'block'; renderConfig(); }
-function exitScreenshotMode() { document.getElementById('mainBody').classList.remove('screenshot-mode'); document.getElementById('screenshot-header').style.display = 'none'; document.getElementById('screenshot-footer').style.display = 'none'; renderConfig(); }
+
+// 📸 豬豬優化邏輯：左下角金額取消勾選時，隱藏報價單底部統計
+function enterScreenshotMode() {
+    const now = new Date();
+    const timeStr = now.getFullYear() + '/' + (now.getMonth() + 1).toString().padStart(2, '0') + '/' + now.getDate().toString().padStart(2, '0') + ' ' + now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    document.getElementById('ss-time').innerText = '報價日期：' + timeStr;
+    calculate();
+
+    const isAdmin = document.getElementById('adminToggle').checked;
+    const footer = document.getElementById('screenshot-footer');
+    
+    if (isAdmin) {
+        footer.style.display = 'block';
+        document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value || 0).toLocaleString();
+        document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText;
+    } else {
+        footer.style.display = 'none';
+    }
+
+    document.getElementById('mainBody').classList.add('screenshot-mode');
+    document.getElementById('screenshot-header').style.display = 'block';
+    renderConfig();
+}
+
+function exitScreenshotMode() { 
+    document.getElementById('mainBody').classList.remove('screenshot-mode'); 
+    document.getElementById('screenshot-header').style.display = 'none'; 
+    document.getElementById('screenshot-footer').style.display = 'none'; 
+    renderConfig(); 
+}
+
 function openSelection(cat) { currentCat = cat; document.getElementById('modalTitle').innerText = '🔍 ' + cat; document.getElementById('selectionModal').classList.remove('hidden'); document.getElementById('modalSearch').value = ''; renderModalList(); }
 function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
 function filterModalList() { const q = document.getElementById('modalSearch').value.toLowerCase(); document.querySelectorAll('.pick-item').forEach(el => { el.style.display = el.innerText.toLowerCase().includes(q) ? 'flex' : 'none'; }); }
