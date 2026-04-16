@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.19</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.20</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -170,6 +170,7 @@
     <div id="tab-drafts" class="page-content hidden"><div id="draftList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
     <div id="tab-orders" class="page-content hidden"><div id="orderList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
     <div id="tab-completed" class="page-content hidden"><div id="completedList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 opacity-80"></div></div>
+
     <div id="tab-inventory" class="page-content hidden">
         <div class="card p-4">
             <div class="flex justify-between items-center mb-4">
@@ -226,7 +227,6 @@ function goBack() {
     if (activeTab !== 'tab-calc') showTab('calc'); else window.history.back();
 }
 
-// 💾 豬豬修正邏輯：計算時 TOTAL 不隨無卡金額變動，隱藏未稅
 function calculate() {
     let subP = 0, subC = 0, disc = parseFloat(document.getElementById('discountAmt')?.value || 0);
     let noCard = parseFloat(document.getElementById('noCardTotal').value) || 0;
@@ -297,9 +297,7 @@ function renderRecords() {
             }
             if(undeliveredNames.length > 0) undeliveredHtml = `<div class="text-[10px] text-red-500 mt-2 pt-1 border-t border-dashed line-clamp-1 font-bold">未出貨：${undeliveredNames.join(' ')}</div>`;
         }
-
         const pOpts = ["待處理", "組裝中", "測試中", "已完工", "已寄出"].map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
-        
         const div = `<div class="p-4 border-2 rounded-xl bg-white shadow-sm space-y-3">
             <div class="flex justify-between items-start">
                 <div class="flex-1">
@@ -322,7 +320,6 @@ function renderRecords() {
     });
 }
 
-// 其餘函數部分
 function renderInventoryEditor() {
     const area = document.getElementById('inventoryEditor'); area.innerHTML = '';
     catOrder.forEach((cat, cIdx) => {
@@ -341,38 +338,49 @@ function renderInventoryEditor() {
 
 function toggleSupplier(cat, idx, label) { if(!inv[cat][idx].suppliers) inv[cat][idx].suppliers = []; const list = inv[cat][idx].suppliers; const pos = list.indexOf(label); if(pos > -1) list.splice(pos, 1); else list.push(label); renderInventoryEditor(); }
 function toggleStockStatus(cat, idx) { inv[cat][idx].outOfStock = !inv[cat][idx].outOfStock; renderInventoryEditor(); }
-function toggleAdminMode() { const isChecked = document.getElementById('adminToggle').checked; const body = document.getElementById('mainBody'); const box = document.getElementById('sellerBox'); if(isChecked) { body.classList.remove('hide-prices'); box.classList.remove('invisible'); box.classList.remove('hidden'); } else { body.classList.add('hide-prices'); box.classList.add('invisible'); } }
+
+// 💾 豬豬修改：控制金額顯示與隱藏
+function toggleAdminMode() { 
+    const isChecked = document.getElementById('adminToggle').checked; 
+    const body = document.getElementById('mainBody'); 
+    const box = document.getElementById('sellerBox'); 
+    if(isChecked) { 
+        body.classList.remove('hide-prices'); 
+        box.classList.remove('invisible'); 
+    } else { 
+        body.classList.add('hide-prices'); 
+        box.classList.add('invisible'); 
+    } 
+}
+
 function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); const fsBtn = document.getElementById('floatingSaveBtn'); if(t === 'inventory') { renderInventoryEditor(); fsBtn.classList.remove('hidden'); fsBtn.style.display = 'flex'; } else { fsBtn.classList.add('hidden'); fsBtn.style.display = 'none'; } }
 
-// 📸 豬豬優化邏輯：左下角金額取消勾選時，隱藏報價單底部統計
-function enterScreenshotMode() {
-    const now = new Date();
-    const timeStr = now.getFullYear() + '/' + (now.getMonth() + 1).toString().padStart(2, '0') + '/' + now.getDate().toString().padStart(2, '0') + ' ' + now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-    document.getElementById('ss-time').innerText = '報價日期：' + timeStr;
-    calculate();
+// 📸 豬豬修改：截圖模式下，如果左下角「金額」沒勾選，隱藏折扣與含稅總計
+function enterScreenshotMode() { 
+    const now = new Date(); 
+    const timeStr = now.getFullYear() + '/' + (now.getMonth() + 1).toString().padStart(2, '0') + '/' + now.getDate().toString().padStart(2, '0') + ' ' + now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0'); 
+    document.getElementById('ss-time').innerText = '報價日期：' + timeStr; 
+    calculate(); 
 
-    const isAdmin = document.getElementById('adminToggle').checked;
+    // 檢查管理員開關
+    const isMoneyChecked = document.getElementById('adminToggle').checked;
     const footer = document.getElementById('screenshot-footer');
-    
-    if (isAdmin) {
+
+    if (isMoneyChecked) {
         footer.style.display = 'block';
-        document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value || 0).toLocaleString();
-        document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText;
+        document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value || 0).toLocaleString(); 
+        document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText; 
     } else {
+        // 如果金額勾選取消，直接不顯示統計欄位
         footer.style.display = 'none';
     }
 
-    document.getElementById('mainBody').classList.add('screenshot-mode');
-    document.getElementById('screenshot-header').style.display = 'block';
-    renderConfig();
-}
-
-function exitScreenshotMode() { 
-    document.getElementById('mainBody').classList.remove('screenshot-mode'); 
-    document.getElementById('screenshot-header').style.display = 'none'; 
-    document.getElementById('screenshot-footer').style.display = 'none'; 
+    document.getElementById('mainBody').classList.add('screenshot-mode'); 
+    document.getElementById('screenshot-header').style.display = 'block'; 
     renderConfig(); 
 }
+
+function exitScreenshotMode() { document.getElementById('mainBody').classList.remove('screenshot-mode'); document.getElementById('screenshot-header').style.display = 'none'; document.getElementById('screenshot-footer').style.display = 'none'; renderConfig(); }
 
 function openSelection(cat) { currentCat = cat; document.getElementById('modalTitle').innerText = '🔍 ' + cat; document.getElementById('selectionModal').classList.remove('hidden'); document.getElementById('modalSearch').value = ''; renderModalList(); }
 function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
