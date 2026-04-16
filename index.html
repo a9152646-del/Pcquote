@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.20</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.21</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -29,15 +29,20 @@
         .selected-badge { color: #1e293b; font-size: 14px; margin-right: 8px; display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
         .price-tag { color: #94a3b8; font-weight: 400; font-size: 12px; margin-left: 4px; }
         
+        /* 隱藏金額邏輯 */
         .hide-prices .price-tag { display: none !important; }
+        .ss-hide-item-prices .price-tag { display: none !important; }
 
         #adminToggleContainer {
             position: fixed;
             bottom: 25px;
             left: 15px;
             z-index: 50;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
-        #adminToggleLabel {
+        #adminToggleLabel, #ssPriceToggleLabel {
             background: #fff;
             padding: 8px 12px;
             border-radius: 50px;
@@ -86,6 +91,10 @@
     <label id="adminToggleLabel">
         <span class="text-xs font-black text-gray-700">💰 金額</span>
         <input type="checkbox" id="adminToggle" onchange="toggleAdminMode()" class="w-5 h-5 cursor-pointer">
+    </label>
+    <label id="ssPriceToggleLabel">
+        <span class="text-[10px] font-black text-gray-700">📸 顯示單價</span>
+        <input type="checkbox" id="ssPriceToggle" checked class="w-4 h-4 cursor-pointer">
     </label>
 </div>
 
@@ -339,7 +348,6 @@ function renderInventoryEditor() {
 function toggleSupplier(cat, idx, label) { if(!inv[cat][idx].suppliers) inv[cat][idx].suppliers = []; const list = inv[cat][idx].suppliers; const pos = list.indexOf(label); if(pos > -1) list.splice(pos, 1); else list.push(label); renderInventoryEditor(); }
 function toggleStockStatus(cat, idx) { inv[cat][idx].outOfStock = !inv[cat][idx].outOfStock; renderInventoryEditor(); }
 
-// 💾 豬豬修改：控制金額顯示與隱藏
 function toggleAdminMode() { 
     const isChecked = document.getElementById('adminToggle').checked; 
     const body = document.getElementById('mainBody'); 
@@ -355,32 +363,47 @@ function toggleAdminMode() {
 
 function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); const fsBtn = document.getElementById('floatingSaveBtn'); if(t === 'inventory') { renderInventoryEditor(); fsBtn.classList.remove('hidden'); fsBtn.style.display = 'flex'; } else { fsBtn.classList.add('hidden'); fsBtn.style.display = 'none'; } }
 
-// 📸 豬豬修改：截圖模式下，如果左下角「金額」沒勾選，隱藏折扣與含稅總計
+// 📸 豬豬修改：控制截圖模式底部的顯示與品項單價的顯示
 function enterScreenshotMode() { 
     const now = new Date(); 
     const timeStr = now.getFullYear() + '/' + (now.getMonth() + 1).toString().padStart(2, '0') + '/' + now.getDate().toString().padStart(2, '0') + ' ' + now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0'); 
     document.getElementById('ss-time').innerText = '報價日期：' + timeStr; 
     calculate(); 
 
-    // 檢查管理員開關
     const isMoneyChecked = document.getElementById('adminToggle').checked;
+    const isSSPriceChecked = document.getElementById('ssPriceToggle').checked;
     const footer = document.getElementById('screenshot-footer');
+    const body = document.getElementById('mainBody');
 
+    // 控制底部折扣/總額
     if (isMoneyChecked) {
         footer.style.display = 'block';
         document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value || 0).toLocaleString(); 
         document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText; 
     } else {
-        // 如果金額勾選取消，直接不顯示統計欄位
         footer.style.display = 'none';
     }
 
-    document.getElementById('mainBody').classList.add('screenshot-mode'); 
+    // 控制品項後面的 ($單價) 是否顯示
+    if (!isSSPriceChecked) {
+        body.classList.add('ss-hide-item-prices');
+    } else {
+        body.classList.remove('ss-hide-item-prices');
+    }
+
+    body.classList.add('screenshot-mode'); 
     document.getElementById('screenshot-header').style.display = 'block'; 
     renderConfig(); 
 }
 
-function exitScreenshotMode() { document.getElementById('mainBody').classList.remove('screenshot-mode'); document.getElementById('screenshot-header').style.display = 'none'; document.getElementById('screenshot-footer').style.display = 'none'; renderConfig(); }
+function exitScreenshotMode() { 
+    const body = document.getElementById('mainBody');
+    body.classList.remove('screenshot-mode'); 
+    body.classList.remove('ss-hide-item-prices');
+    document.getElementById('screenshot-header').style.display = 'none'; 
+    document.getElementById('screenshot-footer').style.display = 'none'; 
+    renderConfig(); 
+}
 
 function openSelection(cat) { currentCat = cat; document.getElementById('modalTitle').innerText = '🔍 ' + cat; document.getElementById('selectionModal').classList.remove('hidden'); document.getElementById('modalSearch').value = ''; renderModalList(); }
 function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
