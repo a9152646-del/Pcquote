@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.27</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.28</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -80,7 +80,7 @@
 <body class="p-2 md:p-4 hide-prices" id="mainBody">
 
 <div class="no-screenshot fixed right-4 bottom-10 z-[80] flex flex-col gap-3">
-    <button onclick="if(confirm('確定要重整網頁嗎？')) { window.location.reload(); }" class="bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔄</button>
+    <button onclick="if(confirm('確定要重新整理網頁嗎？')) { window.location.reload(); }" class="bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔄</button>
     <button onclick="goBack()" class="bg-black text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔙</button>
 </div>
 
@@ -177,34 +177,19 @@
 
     <div id="tab-stats" class="page-content hidden">
         <div class="card p-6 text-center space-y-6">
-            <h2 class="text-xl font-black text-gray-700">神奇海螺電競 | 業績結算報表</h2>
-            
+            <h2 class="text-xl font-black text-gray-700">業績結算報表</h2>
             <div class="bg-gray-50 p-4 rounded-xl space-y-3">
-                <span class="text-xs font-bold text-gray-400">📅 選擇歷史對帳月份</span>
+                <span class="text-xs font-bold text-gray-400">📅 選擇對帳月份</span>
                 <select id="statsMonthSelect" onchange="renderStats()" class="w-full bg-white border-2 border-blue-200 px-4 py-3 rounded-lg font-bold text-blue-600 outline-none"></select>
             </div>
-
             <div id="statsContent" class="hidden space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="p-4 bg-blue-50 rounded-xl border-2 border-blue-100 text-center">
-                        <div class="text-[10px] text-blue-400 font-bold">已成交訂單</div>
-                        <div id="stat-count" class="text-2xl font-black text-blue-600">0</div>
-                    </div>
-                    <div class="p-4 bg-green-50 rounded-xl border-2 border-green-100 text-center">
-                        <div class="text-[10px] text-green-400 font-bold">本月總營收</div>
-                        <div id="stat-revenue" class="text-2xl font-black text-green-600">$0</div>
-                    </div>
-                    <div class="p-4 bg-orange-50 rounded-xl border-2 border-orange-100 text-center">
-                        <div class="text-[10px] text-orange-400 font-bold">預估總利潤</div>
-                        <div id="stat-profit" class="text-3xl font-black text-orange-600">$0</div>
-                    </div>
-                </div>
-                <div class="p-3 bg-gray-100 rounded-lg">
-                    <p class="text-[11px] text-gray-500 font-bold">歷史紀錄說明</p>
-                    <p class="text-[10px] text-gray-400">系統將永久保留所有「正式」與「結案」訂單，您可透過上方下拉選單切換月份查看紀錄。</p>
+                    <div class="p-4 bg-blue-50 rounded-xl border-2 border-blue-100 text-center"><div class="text-[10px] text-blue-400 font-bold">訂單數</div><div id="stat-count" class="text-2xl font-black text-blue-600">0</div></div>
+                    <div class="p-4 bg-green-50 rounded-xl border-2 border-green-100 text-center"><div class="text-[10px] text-green-400 font-bold">總營收</div><div id="stat-revenue" class="text-2xl font-black text-green-600">$0</div></div>
+                    <div class="p-4 bg-orange-50 rounded-xl border-2 border-orange-100 text-center"><div class="text-[10px] text-orange-400 font-bold">總利潤</div><div id="stat-profit" class="text-3xl font-black text-orange-600">$0</div></div>
                 </div>
             </div>
-            <button id="btnShowStats" onclick="toggleStats()" class="w-full bg-gray-800 text-white py-4 rounded-xl font-bold shadow-lg active:scale-95 transition">📊 顯示結算數據</button>
+            <button id="btnShowStats" onclick="toggleStats()" class="w-full bg-gray-800 text-white py-4 rounded-xl font-bold">📊 顯示數據</button>
         </div>
     </div>
 
@@ -222,40 +207,15 @@
     </div>
 </div>
 
-<div id="selectionModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[500] backdrop-blur-md">
-    <div class="bg-white rounded-xl max-w-lg w-full max-h-[85vh] overflow-hidden flex flex-col shadow-2xl">
-        <div class="p-4 border-b flex justify-between items-center bg-gray-50"><h3 id="modalTitle" class="font-black text-blue-600 text-lg">選擇品項</h3><button onclick="closeModal()" class="text-gray-400 text-3xl">×</button></div>
-        <div class="p-3 border-b"><input type="text" id="modalSearch" class="w-full bg-gray-100 border-none py-3 px-4 rounded-lg text-sm" placeholder="🔍 快速搜尋零件..." oninput="filterModalList()"></div>
-        <div id="modalList" class="overflow-y-auto flex-1 p-3 space-y-2"></div>
-        <div class="p-3 border-t bg-gray-50">
-            <div class="flex gap-2 mb-2">
-                <input type="text" id="tempName" class="flex-1 text-sm" placeholder="臨時名稱">
-                <input type="number" id="tempPrice" class="w-20 text-sm" placeholder="售價">
-                <input type="number" id="tempCost" class="w-20 text-sm" placeholder="成本">
-            </div>
-            <button onclick="addTempItem()" class="w-full bg-orange-500 text-white py-2 rounded-lg text-sm font-bold">➕ 新增臨時項目</button>
-        </div>
-        <div class="p-3 border-t"><button onclick="closeModal()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black">確定選擇</button></div>
-    </div>
-</div>
-
-<div id="deliveryModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[1000]">
-    <div class="bg-white rounded-xl max-w-md w-full max-h-[75vh] overflow-hidden flex flex-col shadow-2xl">
-        <div class="p-4 border-b flex justify-between items-center bg-green-600 text-white"><h3 class="font-bold">📦 出貨品項勾選</h3><button onclick="closeDeliveryModal()" class="text-2xl">×</button></div>
-        <div id="deliveryList" class="overflow-y-auto flex-1 p-4 space-y-3 bg-gray-50 text-sm"></div>
-        <div class="p-4 border-t"><button onclick="closeDeliveryModal()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold">確認關閉</button></div>
-    </div>
-</div>
-
 <script>
 let inv = {}; let catOrder = []; let records = []; let currentSelections = {}; let editingRecordId = null; let currentCat = ""; let currentStatus = 'draft';
 
+// 🚀 核心監聽
 db.ref('inventory').on('value', s => { if(s.exists()) inv = s.val(); renderConfig(); if(!document.getElementById('tab-inventory').classList.contains('hidden')) renderInventoryEditor(); });
 db.ref('catOrder').on('value', s => { if(s.exists()) catOrder = s.val(); renderConfig(); });
 db.ref('records').on('value', s => { 
-    records = []; 
-    if(s.exists()) { const data = s.val(); for(let id in data) records.push(data[id]); } 
-    updateMonthSelector(); 
+    records = []; if(s.exists()) { const data = s.val(); for(let id in data) records.push(data[id]); } 
+    try { updateMonthSelector(); } catch(e) {}
     renderRecords(); 
 });
 
@@ -354,20 +314,25 @@ function renderRecords() {
     });
 }
 
+// 📈 報表邏輯：強效解析日期與保存月份
 function updateMonthSelector() {
     const select = document.getElementById('statsMonthSelect');
     if (!select) return;
     const months = new Set();
     records.forEach(r => {
-        if(r.status === 'draft') return;
-        const parts = r.time.split('/');
-        if (parts.length >= 2) months.add(`${parts[0]}/${parts[1]}`);
+        if(r.status === 'draft' || !r.time) return;
+        // 兼容多種日期格式 YYYY/M/D 或 D/M/YYYY
+        const parts = r.time.split(/[/, :]/);
+        let y, m;
+        if (parts[0].length === 4) { y = parts[0]; m = parts[1]; } 
+        else if (parts[2] && parts[2].length === 4) { y = parts[2]; m = parts[1]; }
+        if (y && m) months.add(`${y}/${parseInt(m)}`);
     });
     const now = new Date();
     const currentStr = `${now.getFullYear()}/${now.getMonth() + 1}`;
     months.add(currentStr);
     const sorted = Array.from(months).sort((a,b) => {
-        const pa = a.split('/'), pb = b.split('/');
+        const pa = a.split('/').map(Number), pb = b.split('/').map(Number);
         return pb[0] - pa[0] || pb[1] - pa[1];
     });
     const oldVal = select.value;
@@ -390,27 +355,29 @@ function toggleStats() {
 
 function renderStats() {
     const select = document.getElementById('statsMonthSelect');
-    if (!select.value) return;
+    if (!select || !select.value) return;
     const [year, month] = select.value.split('/').map(Number);
     let totalRev = 0, totalProfit = 0, count = 0;
     records.forEach(r => {
-        if (r.status === 'draft') return;
-        const parts = r.time.split('/');
-        if (parseInt(parts[0]) === year && parseInt(parts[1]) === month) {
+        if (r.status === 'draft' || !r.time) return;
+        const parts = r.time.split(/[/, :]/);
+        let ry, rm;
+        if (parts[0].length === 4) { ry = parts[0]; rm = parts[1]; } 
+        else if (parts[2] && parts[2].length === 4) { ry = parts[2]; rm = parts[1]; }
+        
+        if (parseInt(ry) === year && parseInt(rm) === month) {
             count++;
             let revStr = (r.noCard > 0 ? String(r.noCard) : r.total).replace(/[$,]/g, "");
             let rev = parseFloat(revStr) || 0;
             totalRev += rev;
             let cost = 0;
-            for(let cat in r.selections) {
-                if (r.selections[cat]) {
-                    r.selections[cat].forEach(sel => {
-                        let c = 0;
-                        if(sel.isTemp) c = Number(sel.c || 0);
-                        else if(inv[cat] && inv[cat][sel.idx]) c = Number(inv[cat][sel.idx].c || 0);
-                        cost += (c * (sel.qty || 1));
-                    });
-                }
+            for(let cat in (r.selections || {})) {
+                r.selections[cat].forEach(sel => {
+                    let c = 0;
+                    if(sel.isTemp) c = Number(sel.c || 0);
+                    else if(inv[cat] && inv[cat][sel.idx]) c = Number(inv[cat][sel.idx].c || 0);
+                    cost += (c * (sel.qty || 1));
+                });
             }
             totalProfit += (rev - cost);
         }
@@ -436,7 +403,7 @@ function showTab(t) {
     const fsBtn = document.getElementById('floatingSaveBtn'); 
     if(t === 'inventory') { renderInventoryEditor(); fsBtn.classList.remove('hidden'); fsBtn.style.display = 'flex'; } 
     else { fsBtn.classList.add('hidden'); fsBtn.style.display = 'none'; }
-    if(t === 'stats') { updateMonthSelector(); }
+    if(t === 'stats') { updateMonthSelector(); renderStats(); }
 }
 
 function enterScreenshotMode() { 
@@ -483,7 +450,7 @@ function updateSubItem(idx, type, val) { const sel = (currentSelections[currentC
 function saveRecord(st) { if(!document.getElementById('custName').value) { alert('請填寫客戶姓名'); return; } const id = editingRecordId || Date.now(); const r = { id, time: new Date().toLocaleString(), name: document.getElementById('custName').value, seller: document.getElementById('infoSeller').value, selections: currentSelections, total: document.getElementById('ui-totalSale').innerText, noCard: document.getElementById('noCardTotal').value, manualTotal: document.getElementById('manualTotal').value, status: st === 'current' ? currentStatus : st, discount: document.getElementById('discountAmt').value, progress: "待處理" }; db.ref('records/' + id).update(r).then(() => { alert('儲存成功！'); resetForm(); showTab(st === 'order' ? 'orders' : 'drafts'); }); }
 function editRecord(id) { const r = records.find(x => x.id === id); if(!r) return; editingRecordId = id; currentStatus = r.status; currentSelections = r.selections || {}; document.getElementById('custName').value = r.name || ''; document.getElementById('discountAmt').value = r.discount || 0; document.getElementById('noCardTotal').value = r.noCard || ''; document.getElementById('manualTotal').value = r.manualTotal || ''; if(r.status === 'draft') document.getElementById('btnConvertToOrder').classList.remove('hidden'); else document.getElementById('btnConvertToOrder').classList.add('hidden'); renderConfig(); showTab('calc'); }
 function addTempItem() { const n = document.getElementById('tempName').value, p = document.getElementById('tempPrice').value, c = document.getElementById('tempCost').value; if(!n) return; if(!currentSelections[currentCat]) currentSelections[currentCat] = []; currentSelections[currentCat].push({name:n, p:Number(p), c:Number(c), isGift:false, qty:1, isTemp: true}); renderConfig(); renderModalList(); }
-function openDeliveryFast(id) { const r = records.find(x => x.id === id); if(!r) return; let tempDeliv = r.deliveredItems || {}; const list = document.getElementById('deliveryList'); list.innerHTML = ''; for (let cat in r.selections) { r.selections[cat].forEach((sel, idx) => { const k = `${cat}_${idx}`; const isD = tempDeliv[k] !== false; let n = sel.isTemp ? sel.name : (inv[cat] && inv[cat][sel.idx] ? inv[cat][sel.idx].name : "未知品項"); list.innerHTML += `<div class="flex justify-between items-center p-3 border-2 rounded-xl bg-white"><div>${n}</div><input type="checkbox" class="w-5 h-5" ${isD?'checked':''} onchange="db.ref('records/'+${id}+'/deliveredItems/${k}').set(this.checked)"></div>`; }); } document.getElementById('deliveryModal').classList.remove('hidden'); }
+function openDeliveryFast(id) { const r = records.find(x => x.id === id); if(!r) return; let tempDeliv = r.deliveredItems || {}; const list = document.getElementById('deliveryList'); list.innerHTML = ''; for (let cat in (r.selections || {})) { r.selections[cat].forEach((sel, idx) => { const k = `${cat}_${idx}`; const isD = tempDeliv[k] !== false; let n = sel.isTemp ? sel.name : (inv[cat] && inv[cat][sel.idx] ? inv[cat][sel.idx].name : "未知品項"); list.innerHTML += `<div class="flex justify-between items-center p-3 border-2 rounded-xl bg-white"><div>${n}</div><input type="checkbox" class="w-5 h-5" ${isD?'checked':''} onchange="db.ref('records/'+${id}+'/deliveredItems/${k}').set(this.checked)"></div>`; }); } document.getElementById('deliveryModal').classList.remove('hidden'); }
 function saveInventory() { if(confirm('確定要同步到雲端嗎？')) { db.ref('inventory').set(inv); db.ref('catOrder').set(catOrder); alert('同步成功！'); } }
 function resetForm() { editingRecordId=null; currentSelections={}; document.querySelectorAll('input').forEach(i=>i.value=""); renderConfig(); }
 function moveCat(idx, dir) { let newIdx = idx + dir; if (newIdx < 0 || newIdx >= catOrder.length) return; [catOrder[idx], catOrder[newIdx]] = [catOrder[newIdx], catOrder[idx]]; renderInventoryEditor(); }
@@ -495,6 +462,22 @@ function renameCat(idx, newName) { const old = catOrder[idx]; inv[newName] = inv
 function addCustomSeller() { const n = prompt("請輸入業務名稱："); if(n) { const s = document.getElementById('infoSeller'); const o = document.createElement('option'); o.value=n; o.text=n; o.selected=true; s.add(o); } }
 function closeDeliveryModal() { document.getElementById('deliveryModal').classList.add('hidden'); }
 window.onload = () => { renderConfig(); showTab('calc'); };
+
+function renderInventoryEditor() {
+    const area = document.getElementById('inventoryEditor'); area.innerHTML = '';
+    catOrder.forEach((cat, cIdx) => {
+        const sec = document.createElement('div'); sec.className = "bg-gray-50 p-3 rounded-lg border-2 relative mb-4";
+        sec.innerHTML = `<div class="flex justify-between items-center mb-3"><div class="flex items-center gap-3"><div class="flex flex-col text-[10px] text-gray-300"><button onclick="moveCat(${cIdx}, -1)">▲</button><button onclick="moveCat(${cIdx}, 1)">▼</button></div><input class="font-black text-sm text-blue-600 border-none bg-transparent p-0 w-32" value="${cat}" onchange="renameCat(${cIdx}, this.value)"></div><button onclick="removeCat(${cIdx})" class="text-red-300 hover:text-red-500 text-2xl">×</button></div><div id="edit-${cat}" class="space-y-2"></div><button onclick="addInvItem('${cat}')" class="w-full text-[10px] font-bold bg-white mt-2 py-2 rounded-lg border-2 border-dashed border-gray-200 text-gray-400 hover:text-blue-500 active:bg-blue-50">+ 新增零件品項</button>`;
+        area.appendChild(sec);
+        (inv[cat] || []).forEach((item, idx) => {
+            const row = document.createElement('div'); row.className = `inv-item-row ${item.outOfStock ? 'inv-out-of-stock' : ''}`;
+            const sList = item.suppliers || [];
+            const sHtml = ['原', '速', '裕'].map(label => `<button onclick="event.stopPropagation(); toggleSupplier('${cat}', ${idx}, '${label}')" class="supp-btn ${sList.includes(label) ? 'active' : ''}">${label}</button>`).join('');
+            row.innerHTML = `<div class="inv-item-name-row"><div class="flex flex-col text-[10px] text-gray-300 px-1 flex-shrink-0"><button onclick="moveItem('${cat}', ${idx}, -1)">▲</button><button onclick="moveItem('${cat}', ${idx}, 1)">▼</button></div><input type="text" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value" placeholder="請輸入零件名稱..."></div><div class="inv-item-ctrl-row"><div class="flex gap-1.5 mr-auto">${sHtml}</div><div class="flex items-center gap-1 border-2 rounded-lg bg-white px-2 flex-shrink-0"><span class="text-[10px] text-gray-400">售</span><input type="number" class="w-12 text-xs font-black text-blue-600 border-none p-0" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div><div class="flex items-center gap-1 border-2 rounded-lg bg-white px-2 flex-shrink-0"><span class="text-[10px] text-gray-400">本</span><input type="number" class="w-12 text-xs font-black text-red-400 border-none p-0" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div><button onclick="toggleStockStatus('${cat}', ${idx})" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button><button onclick="if(confirm('確定刪除此零件嗎？')) { inv['${cat}'].splice(${idx}, 1); renderInventoryEditor(); }" class="text-red-200 text-xl px-1">×</button></div>`;
+            document.getElementById(`edit-${cat}`).appendChild(row);
+        });
+    });
+}
 </script>
 </body>
 </html>
