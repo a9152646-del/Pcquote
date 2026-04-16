@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.38</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.39</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -16,6 +16,7 @@
         .hidden { display: none !important; }
         input, select, textarea { border: 1px solid #cbd5e1; border-radius: 5px; padding: 6px 10px; font-size: 14px; outline: none; }
         
+        /* 狀態顏色 */
         .status-red { background-color: #fef2f2; color: #ef4444; border: 1px solid #fecaa7; }
         .status-blue { background-color: #eff6ff; color: #3b82f6; border: 1px solid #bfdbfe; }
         .status-orange { background-color: #fffaf1; color: #f59e0b; border: 1px solid #fde68a; }
@@ -35,9 +36,14 @@
         .screenshot-mode .no-screenshot, .screenshot-mode #adminToggleContainer { display: none !important; }
         .screenshot-mode body { background: #fff !important; padding-top: 80px !important; }
         
+        /* 供應商按鈕 */
+        .supp-btn { font-size: 10px; width: 26px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 5px; border: 1px solid #e2e8f0; cursor: pointer; background: #f1f5f9; color: #94a3b8; font-weight: bold; }
+        .supp-btn.active { background: #6366f1 !important; color: white !important; border-color: #4f46e5 !important; }
+
         .inv-item-row { display: flex; flex-direction: column; padding: 10px 12px; border-radius: 8px; border: 1px solid #f1f5f9; background: #fff; margin-bottom: 8px; }
         .inv-item-name-row { display: flex; align-items: center; gap: 8px; width: 100%; padding-bottom: 6px; border-bottom: 1px dashed #f1f5f9; }
         .inv-item-name-row input[type="text"] { border: none !important; background: transparent !important; padding: 0 !important; flex: 1; font-weight: bold; font-size: 13px; min-width: 0; }
+        .inv-item-ctrl-row { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding-top: 6px; }
         
         .stock-btn { font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: bold; border: 1px solid #e2e8f0; cursor: pointer; min-width: 55px; text-align: center; }
         .stock-btn.active { background: #22c55e; color: white; border-color: #22c55e; }
@@ -48,7 +54,7 @@
 <body class="p-2 md:p-4 hide-prices" id="mainBody">
 
     <div class="no-screenshot fixed right-4 bottom-10 z-[80] flex flex-col gap-3">
-        <button onclick="if(confirm('確定要重新整理？')) { window.location.reload(); }" class="bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔄</button>
+        <button onclick="if(confirm('確定重新整理？')) { window.location.reload(); }" class="bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔄</button>
         <button onclick="goBack()" class="bg-black text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔙</button>
     </div>
 
@@ -68,10 +74,7 @@
     <div id="screenshotNav"><button onclick="exitScreenshotMode()">🔙 返回編輯模式</button></div>
 
     <div class="max-w-7xl mx-auto">
-        <div id="screenshot-header" style="display: none;" class="text-center border-b-4 border-blue-600 pb-4 mb-6">
-            <div class="text-3xl font-black text-blue-900 tracking-widest">《報價單》</div>
-            <div id="ss-time" class="text-xs text-gray-400 mt-2 font-mono"></div>
-        </div>
+        <div id="screenshot-header" style="display: none;" class="text-center border-b-4 border-blue-600 pb-4 mb-6"><div class="text-3xl font-black text-blue-900 tracking-widest">《報價單》</div><div id="ss-time" class="text-xs text-gray-400 mt-2 font-mono"></div></div>
         
         <div class="flex border-b-2 mb-4 no-screenshot overflow-x-auto bg-white sticky top-0 z-10 rounded-t">
             <button onclick="showTab('calc')" id="btn-calc" class="flex-1 px-4 py-3 tab-active whitespace-nowrap">🖥️ 報價</button>
@@ -89,26 +92,8 @@
                         <button onclick="openTemplateModal()" class="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-black shadow-md">📂 載入常用配置範本</button>
                         <button onclick="saveTemplate()" class="bg-gray-700 text-white px-4 py-3 rounded-xl font-bold shadow-md">💾 存為範本</button>
                     </div>
-                    <div class="card p-1">
-                        <div id="configRows" class="divide-y divide-gray-100"></div>
-                        <div id="screenshot-footer" style="display: none;" class="text-right p-6 pt-4 border-t-2 border-gray-100 space-y-1">
-                            <div class="text-xs text-gray-500 font-bold">折扣：<span id="ss-val-disc" class="text-red-500"></span></div>
-                            <div class="text-xl font-black text-blue-600">總計 (含稅)：<span id="ss-val-total"></span></div>
-                        </div>
-                    </div>
-                    <div class="card p-4 no-screenshot bg-gray-50/50">
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                            <input type="text" id="custName" placeholder="👤 客戶名稱" class="font-bold">
-                            <input type="text" id="custPhone" placeholder="📞 電話">
-                            <select id="custSource"><option value="FB">FB</option><option value="IG">IG</option><option value="Line">Line</option><option value="蝦皮">蝦皮</option></select>
-                            <div class="flex gap-1">
-                                <select id="infoSeller" class="flex-1 font-bold text-blue-600"><option value="朱冠穎">朱冠穎</option><option value="江苙翔">江苙翔</option><option value="江鈞宇">江鈞宇</option></select>
-                                <button onclick="addCustomSeller()" class="bg-gray-200 px-3 rounded border">+</button>
-                            </div>
-                            <input type="text" id="custAddr" placeholder="📦 地址 / 取貨方式" class="md:col-span-4">
-                            <textarea id="orderMemo" placeholder="📝 內部備註" class="md:col-span-4 h-20 w-full"></textarea>
-                        </div>
-                    </div>
+                    <div class="card p-1"><div id="configRows" class="divide-y divide-gray-100"></div><div id="screenshot-footer" style="display: none;" class="text-right p-6 pt-4 border-t-2 border-gray-100 space-y-1"><div class="text-xs text-gray-500 font-bold">折扣：<span id="ss-val-disc" class="text-red-500"></span></div><div class="text-xl font-black text-blue-600">總計 (含稅)：<span id="ss-val-total"></span></div></div></div>
+                    <div class="card p-4 no-screenshot bg-gray-50/50"><div class="grid grid-cols-1 md:grid-cols-4 gap-3"><input type="text" id="custName" placeholder="👤 客戶名稱" class="font-bold"><input type="text" id="custPhone" placeholder="📞 電話"><select id="custSource"><option value="FB">FB</option><option value="IG">IG</option><option value="Line">Line</option><option value="蝦皮">蝦皮</option></select><div class="flex gap-1"><select id="infoSeller" class="flex-1 font-bold text-blue-600"><option value="朱冠穎">朱冠穎</option><option value="江苙翔">江苙翔</option><option value="江鈞宇">江鈞宇</option></select><button onclick="addCustomSeller()" class="bg-gray-200 px-3 rounded border">+</button></div><input type="text" id="custAddr" placeholder="📦 地址 / 取貨方式" class="md:col-span-4"><textarea id="orderMemo" placeholder="📝 內部備註" class="md:col-span-4 h-20 w-full"></textarea></div></div>
                 </div>
                 <div class="lg:col-span-1 no-screenshot">
                     <div class="card p-4 sticky top-20 border-t-4 border-blue-500 space-y-4">
@@ -135,7 +120,7 @@
         <div id="selectionModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[500] backdrop-blur-md">
             <div class="bg-white rounded-xl max-w-lg w-full max-h-[85vh] overflow-hidden flex flex-col shadow-2xl">
                 <div class="p-4 border-b flex justify-between items-center bg-gray-50"><h3 id="modalTitle" class="font-black text-blue-600 text-lg">選擇品項</h3><button onclick="closeModal()" class="text-gray-400 text-3xl">×</button></div>
-                <div class="p-3 border-b"><input type="text" id="modalSearch" class="w-full bg-gray-100 border-none py-3 px-4 rounded-lg text-sm" placeholder="🔍 快速搜尋零件..." oninput="filterModalList()"></div>
+                <div class="p-3 border-b"><input type="text" id="modalSearch" class="w-full bg-gray-100 border-none py-3 px-4 rounded-lg text-sm" placeholder="🔍 搜尋零件..." oninput="filterModalList()"></div>
                 <div id="modalList" class="overflow-y-auto flex-1 p-3 space-y-2"></div>
                 <div class="p-3 border-t bg-gray-50"><div class="flex gap-2 mb-2"><input type="text" id="tempName" class="flex-1 text-sm" placeholder="臨時名稱"><input type="number" id="tempPrice" class="w-20 text-sm" placeholder="售價"></div><button onclick="addTempItem()" class="w-full bg-orange-500 text-white py-2 rounded-lg text-sm font-bold">➕ 新增臨時項目</button></div>
                 <div class="p-3 border-t"><button onclick="closeModal()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black">確定選擇</button></div>
@@ -152,7 +137,6 @@
 
     let inv = {}; let catOrder = []; let records = []; let templates = {}; let currentSelections = {}; let editingRecordId = null; let currentCat = ""; let searchTerm = "";
 
-    // --- 🧱 計算與渲染 ---
     function calculate() {
         try {
             let subP = 0, subC = 0, disc = parseFloat(document.getElementById('discountAmt')?.value || 0);
@@ -207,52 +191,61 @@
         });
     }
 
-    // --- ⚙️ 核心動作 ---
-    function updateSubItem(idx, type, val) { 
-        const sel = (currentSelections[currentCat] || []).find(s => !s.isTemp && s.idx === idx); 
-        if(!sel) return; 
-        if(type==='qty') sel.qty = Math.max(1, (sel.qty||1)+val); 
-        if(type==='gift') sel.isGift = val; 
-        renderConfig(); renderModalList(); 
-    }
-    
-    function togglePick(idx) { 
-        if(!currentSelections[currentCat]) currentSelections[currentCat] = []; 
-        const i = currentSelections[currentCat].findIndex(s => !s.isTemp && s.idx === idx); 
-        if(i > -1) currentSelections[currentCat].splice(i,1); 
-        else currentSelections[currentCat].push({idx, isGift:false, qty:1, isTemp: false, note:""}); 
-        renderConfig(); renderModalList(); 
+    function renderInventoryEditor() {
+        const area = document.getElementById('inventoryEditor'); if (!area) return; area.innerHTML = '';
+        const head = document.getElementById('inventoryHeader'); 
+        if(head) head.innerHTML = `<h2 class="font-black text-lg text-gray-700">⚙️ 雲端品項管理</h2><div class="flex gap-2"><button onclick="addNewCategory()" class="bg-blue-500 text-white px-3 py-2 rounded-lg text-[10px]">+ 大項</button><button onclick="saveInventory()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-[10px] shadow-md font-bold">💾 同步雲端</button></div>`;
+        catOrder.forEach((cat, cIdx) => {
+            const sec = document.createElement('div'); sec.className = "bg-gray-50 p-3 rounded-lg border-2 relative mb-4";
+            sec.innerHTML = `<div class="flex justify-between items-center mb-3"><div class="flex items-center gap-3"><input class="font-black text-sm text-blue-600 border-none bg-transparent p-0 w-32" value="${cat}" onchange="renameCat(${cIdx}, this.value)"></div><button onclick="removeCat(${cIdx})" class="text-red-300 hover:text-red-500 text-2xl">×</button></div><div id="edit-${cat}" class="space-y-2"></div><button onclick="addInvItem('${cat}')" class="w-full text-[10px] font-bold bg-white mt-2 py-2 rounded-lg border-2 border-dashed border-gray-200 text-gray-400 hover:text-blue-500">+ 新增零件品項</button>`;
+            area.appendChild(sec);
+            (inv[cat] || []).forEach((item, idx) => {
+                const row = document.createElement('div'); row.className = `inv-item-row ${item.outOfStock ? 'inv-out-of-stock' : ''}`;
+                const sList = item.suppliers || [];
+                const sHtml = ['原', '速', '裕'].map(label => `<button onclick="event.stopPropagation(); toggleSupplier('${cat}', ${idx}, '${label}')" class="supp-btn ${sList.includes(label) ? 'active' : ''}">${label}</button>`).join('');
+                row.innerHTML = `<div class="inv-item-name-row"><input type="text" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value" class="flex-1"></div>
+                <div class="inv-item-ctrl-row flex items-center justify-end gap-2 mt-2">
+                    <div class="flex gap-1 mr-auto">${sHtml}</div>
+                    <div class="flex items-center gap-1 border px-2 rounded"><span class="text-[10px] text-gray-400">售</span><input type="number" class="w-12 text-xs font-black text-blue-600" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div>
+                    <div class="flex items-center gap-1 border px-2 rounded"><span class="text-[10px] text-gray-400">本</span><input type="number" class="w-12 text-xs font-black text-red-500" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div>
+                    <button onclick="inv['${cat}'][${idx}].outOfStock=!inv['${cat}'][${idx}].outOfStock;renderInventoryEditor();" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button>
+                </div>`;
+                document.getElementById(`edit-${cat}`).appendChild(row);
+            });
+        });
     }
 
-    // 其餘分頁控制與資料監聽 (維持 9.37 穩定結構)
+    function toggleSupplier(cat, idx, label) { if(!inv[cat][idx].suppliers) inv[cat][idx].suppliers = []; const list = inv[cat][idx].suppliers; const pos = list.indexOf(label); if(pos > -1) list.splice(pos, 1); else list.push(label); renderInventoryEditor(); }
+    function updateSubItem(idx, type, val) { const sel = (currentSelections[currentCat] || []).find(s => !s.isTemp && s.idx === idx); if(!sel) return; if(type==='qty') sel.qty = Math.max(1, (sel.qty||1)+val); if(type==='gift') sel.isGift = val; renderConfig(); renderModalList(); }
+    function togglePick(idx) { if(!currentSelections[currentCat]) currentSelections[currentCat] = []; const i = currentSelections[currentCat].findIndex(s => !s.isTemp && s.idx === idx); if(i > -1) currentSelections[currentCat].splice(i,1); else currentSelections[currentCat].push({idx, isGift:false, qty:1, isTemp: false, note:""}); renderConfig(); renderModalList(); }
     function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); const fsBtn = document.getElementById('floatingSaveBtn'); if(t === 'inventory') { renderInventoryEditor(); fsBtn.classList.remove('hidden'); fsBtn.style.display = 'flex'; } else { fsBtn.classList.add('hidden'); fsBtn.style.display = 'none'; } searchTerm = ""; renderRecords(); if(t === 'stats') { updateMonthSelector(); renderStats(); } }
     function renderRecords() { const lists = { 'draft': document.getElementById('draftList'), 'order': document.getElementById('orderList'), 'completed': document.getElementById('completedList') }; Object.values(lists).forEach(l => { if(l) l.innerHTML = ''; }); records.sort((a,b)=>b.id-a.id).forEach(r => { if (searchTerm) { const sStr = ((r.name||"") + (r.custPhone||"") + (r.seller||"")).toLowerCase(); if (!sStr.includes(searchTerm.toLowerCase())) return; } const status = r.status || 'draft'; if (!lists[status]) return; const getStatusClass = (p) => { const map = {"待處理":"status-red","組裝中":"status-blue","測試中":"status-orange","已完工":"status-purple","已寄出":"status-green"}; return map[p] || ""; }; const pOpts = ["待處理", "組裝中", "測試中", "已完工", "已寄出"].map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join(''); const div = document.createElement('div'); div.className = "p-4 border-2 rounded-xl bg-white shadow-sm space-y-3"; div.innerHTML = `<div class="flex justify-between items-start"><div class="flex-1"><div class="text-[10px] text-gray-400 font-mono">${r.time}</div><div class="text-base font-black text-gray-800">${r.name || '無名客戶'}</div><div class="text-blue-600 font-black text-lg">含稅：${r.total}</div>${r.noCard > 0 ? `<div class="text-[10px] text-orange-500 font-bold">💳 無卡分期：$${Number(r.noCard).toLocaleString()}</div>` : ''}</div><div class="text-right ml-2"><span class="bg-blue-100 text-blue-600 text-[10px] font-bold px-2 py-1 rounded-full">${r.seller||'未指定'}</span><div class="mt-2"><select onchange="db.ref('records/'+${r.id}+'/progress').set(this.value)" class="text-[10px] font-bold px-1 py-1 rounded-lg ${getStatusClass(r.progress)}">${pOpts}</select></div></div></div><div class="flex gap-1 pt-3 border-t border-dashed"><button onclick="editRecord(${r.id})" class="flex-1 py-2 bg-blue-600 text-white text-[10px] rounded-lg font-black">編輯</button>${status === 'draft' ? `<button onclick="if(confirm('確認轉正式？')) db.ref('records/'+${r.id}+'/status').set('order')" class="bg-green-600 text-white px-2 rounded-lg text-[10px] font-bold">轉正式</button>` : `<button onclick="if(confirm('確認結案？')) db.ref('records/'+${r.id}+'/status').set('completed')" class="bg-gray-600 text-white px-2 rounded-lg text-[10px] font-bold">結案</button>`}<button onclick="if(confirm('確定刪除？')) db.ref('records/'+${r.id}).remove()" class="text-red-300 text-xl px-1">✕</button></div>`; lists[status].appendChild(div); }); }
     function globalSearch(val) { searchTerm = val; renderRecords(); }
-    function openSelection(cat) { currentCat = cat; document.getElementById('modalTitle').innerText = '🔍 ' + cat; document.getElementById('selectionModal').classList.remove('hidden'); document.getElementById('modalSearch').value = ''; renderModalList(); }
-    function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
-    function filterModalList() { const q = document.getElementById('modalSearch').value.toLowerCase(); document.querySelectorAll('.pick-item').forEach(el => { el.style.display = el.innerText.toLowerCase().includes(q) ? 'flex' : 'none'; }); }
+    function goBack() { resetForm(); showTab('calc'); }
+    function toggleAdminMode() { const isChecked = document.getElementById('adminToggle').checked; const body = document.getElementById('mainBody'); const box = document.getElementById('sellerBox'); if(isChecked) { body.classList.remove('hide-prices'); box.classList.remove('invisible'); } else { body.classList.add('hide-prices'); box.classList.add('invisible'); } }
     function saveInventory() { if(confirm('同步雲端？')) { db.ref('inventory').set(inv); db.ref('catOrder').set(catOrder); alert('同步成功'); } }
+    function addNewCategory() { const n = prompt("大項名稱："); if(n) { catOrder.push(n); inv[n] = []; renderInventoryEditor(); } }
+    function addInvItem(c) { if(!inv[c]) inv[c] = []; inv[c].push({name: "新零件", p: 0, c: 0, outOfStock: false}); renderInventoryEditor(); }
+    function removeCat(idx) { if(confirm('刪除？')) { delete inv[catOrder[idx]]; catOrder.splice(idx,1); renderInventoryEditor(); } }
+    function renameCat(idx, newName) { const old = catOrder[idx]; inv[newName] = inv[old]; delete inv[old]; catOrder[idx] = newName; }
+    function updateItemNote(cat, sIdx, val) { if(currentSelections[cat] && currentSelections[cat][sIdx]) currentSelections[cat][sIdx].note = val; }
+    function updateMonthSelector() { const stats = document.getElementById('statsMain'); if(!stats) return; stats.innerHTML = `<h2 class="text-xl font-black text-gray-700">業績結算報表</h2><div class="bg-gray-50 p-4 rounded-xl space-y-3"><span class="text-xs font-bold text-gray-400">📅 選擇月份</span><select id="statsMonthSelect" onchange="renderStats()" class="w-full bg-white border-2 border-blue-200 px-4 py-3 rounded-lg font-bold text-blue-600"></select></div><div id="statsContent" class="space-y-4"></div>`; const select = document.getElementById('statsMonthSelect'); const months = new Set(); records.forEach(r => { if(r.status !== 'draft' && r.time) { const p = r.time.split(/[/, :]/); if(p[0].length===4) months.add(`${p[0]}/${p[1]}`); } }); const now = new Date(); months.add(`${now.getFullYear()}/${now.getMonth()+1}`); const sorted = Array.from(months).sort((a,b)=>b.localeCompare(a)); select.innerHTML = sorted.map(m => `<option value="${m}">${m}</option>`).join(''); }
+    function renderStats() { const select = document.getElementById('statsMonthSelect'); if (!select || !select.value) return; const [year, month] = select.value.split('/').map(Number); let totalRev = 0, totalProfit = 0, count = 0; records.forEach(r => { if (r.status === 'draft' || !r.time) return; const p = r.time.split(/[/, :]/); let ry, rm; if(p[0].length===4) { ry=p[0]; rm=p[1]; } if (parseInt(ry) === year && parseInt(rm) === month) { count++; let rev = parseFloat(r.total.replace(/[$,]/g, "")) || 0; totalRev += rev; let cost = 0; for(let cat in (r.selections || {})) { (r.selections[cat]||[]).forEach(sel => { let c = 0; if(sel.isTemp) c = Number(sel.c || 0); else if(inv[cat] && inv[cat][sel.idx]) c = Number(inv[cat][sel.idx].c || 0); cost += (c * (sel.qty || 1)); }); } totalProfit += (rev - cost); } }); document.getElementById('statsContent').innerHTML = `<div class="grid grid-cols-1 gap-4"><div class="p-4 bg-blue-50 rounded-xl"><div class="text-xs text-blue-400 font-bold">訂單數</div><div class="text-2xl font-black text-blue-600">${count}</div></div><div class="p-4 bg-green-50 rounded-xl"><div class="text-xs text-green-400 font-bold">總營收</div><div class="text-2xl font-black text-green-600">$${totalRev.toLocaleString()}</div></div><div class="p-4 bg-orange-50 rounded-xl"><div class="text-xs text-orange-400 font-bold">總利潤</div><div class="text-2xl font-black text-orange-600">$${totalProfit.toLocaleString()}</div></div></div>`; }
+    function saveTemplate() { const name = prompt("範本名稱："); if (!name) return; const data = { id: Date.now(), name, selections: currentSelections, discount: document.getElementById('discountAmt').value || 0 }; db.ref('templates/' + data.id).set(data).then(() => alert('範本儲存成功！')); }
+    function applyTemplate(id) { currentSelections = JSON.parse(JSON.stringify(templates[id].selections)); document.getElementById('discountAmt').value = templates[id].discount || 0; renderConfig(); document.getElementById('templateModal').classList.add('hidden'); }
+    function deleteTemplate(id) { if (confirm('確定刪除？')) db.ref('templates/' + id).remove().then(() => openTemplateModal()); }
     function saveRecord(st) { if(!document.getElementById('custName').value) { alert('填姓名'); return; } const id = editingRecordId || Date.now(); const r = { id, time: new Date().toLocaleString(), name: document.getElementById('custName').value, custPhone: document.getElementById('custPhone').value, seller: document.getElementById('infoSeller').value, selections: currentSelections, total: document.getElementById('ui-totalSale').innerText, noCard: document.getElementById('noCardTotal').value, status: st === 'current' ? 'draft' : st, discount: document.getElementById('discountAmt').value, progress: "待處理" }; db.ref('records/' + id).update(r).then(() => { alert('儲存成功'); resetForm(); showTab(st === 'order' ? 'orders' : 'drafts'); }); }
     function editRecord(id) { const r = records.find(x => x.id === id); if(!r) return; editingRecordId = id; currentSelections = r.selections || {}; document.getElementById('custName').value = r.name || ''; document.getElementById('custPhone').value = r.custPhone || ''; document.getElementById('discountAmt').value = r.discount || 0; document.getElementById('noCardTotal').value = r.noCard || ''; renderConfig(); showTab('calc'); }
     function resetForm() { editingRecordId=null; currentSelections={}; document.querySelectorAll('input').forEach(i=>i.value=""); renderConfig(); }
     function enterScreenshotMode() { document.getElementById('ss-time').innerText = '報價日期：' + new Date().toLocaleString(); document.getElementById('screenshot-footer').style.display = 'block'; document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value || 0).toLocaleString(); document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText; document.getElementById('mainBody').classList.add('screenshot-mode'); document.getElementById('screenshot-header').style.display = 'block'; renderConfig(); }
     function exitScreenshotMode() { document.getElementById('mainBody').classList.remove('screenshot-mode'); document.getElementById('screenshot-header').style.display = 'none'; document.getElementById('screenshot-footer').style.display = 'none'; renderConfig(); }
-    function toggleAdminMode() { const isChecked = document.getElementById('adminToggle').checked; const body = document.getElementById('mainBody'); const box = document.getElementById('sellerBox'); if(isChecked) { body.classList.remove('hide-prices'); box.classList.remove('invisible'); } else { body.classList.add('hide-prices'); box.classList.add('invisible'); } }
-    function goBack() { resetForm(); showTab('calc'); }
     function addTempItem() { const n = document.getElementById('tempName').value, p = document.getElementById('tempPrice').value; if(n) { if(!currentSelections[currentCat]) currentSelections[currentCat] = []; currentSelections[currentCat].push({name:n, p:Number(p), c:0, isGift:false, qty:1, isTemp: true, note:""}); renderConfig(); renderModalList(); } }
     function addCustomSeller() { const n = prompt("業務名稱："); if(n) { const s = document.getElementById('infoSeller'); const o = document.createElement('option'); o.value=n; o.text=n; o.selected=true; s.add(o); } }
     function openTemplateModal() { const list = document.getElementById('templateList'); list.innerHTML = ''; Object.keys(templates).forEach(id => { const t = templates[id]; list.innerHTML += `<div class="p-4 border-2 rounded-xl mb-3 flex justify-between items-center bg-white shadow-sm" onclick="applyTemplate('${id}')"><div class="font-black text-gray-700 text-xs">${t.name}</div><div class="flex gap-2"><button class="bg-blue-600 text-white px-3 py-1 rounded-lg text-[10px]" onclick="applyTemplate('${id}')">套用</button><button class="bg-red-100 text-red-500 px-3 py-1 rounded-lg text-[10px]" onclick="event.stopPropagation(); deleteTemplate('${id}')">刪除</button></div></div>`; }); document.getElementById('templateModal').classList.remove('hidden'); }
-    function applyTemplate(id) { currentSelections = JSON.parse(JSON.stringify(templates[id].selections)); document.getElementById('discountAmt').value = templates[id].discount || 0; renderConfig(); document.getElementById('templateModal').classList.add('hidden'); }
-    function deleteTemplate(id) { if (confirm('確定刪除？')) db.ref('templates/' + id).remove().then(() => openTemplateModal()); }
-    function renderInventoryEditor() { const area = document.getElementById('inventoryEditor'); if (!area) return; area.innerHTML = ''; const head = document.getElementById('inventoryHeader'); if(head) head.innerHTML = `<h2 class="font-black text-lg text-gray-700">⚙️ 雲端品項管理</h2><div class="flex gap-2"><button onclick="addNewCategory()" class="bg-blue-500 text-white px-3 py-2 rounded-lg text-[10px]">+ 大項</button><button onclick="saveInventory()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-[10px] shadow-md font-bold">💾 同步雲端</button></div>`; catOrder.forEach((cat, cIdx) => { const sec = document.createElement('div'); sec.className = "bg-gray-50 p-3 rounded-lg border-2 relative mb-4"; sec.innerHTML = `<div class="flex justify-between items-center mb-3"><div class="flex items-center gap-3"><input class="font-black text-sm text-blue-600 border-none bg-transparent p-0 w-32" value="${cat}" onchange="renameCat(${cIdx}, this.value)"></div><button onclick="removeCat(${cIdx})" class="text-red-300 hover:text-red-500 text-2xl">×</button></div><div id="edit-${cat}" class="space-y-2"></div><button onclick="addInvItem('${cat}')" class="w-full text-[10px] font-bold bg-white mt-2 py-2 rounded-lg border-2 border-dashed border-gray-200 text-gray-400 hover:text-blue-500">+ 新增零件品項</button>`; area.appendChild(sec); (inv[cat] || []).forEach((item, idx) => { const row = document.createElement('div'); row.className = `inv-item-row ${item.outOfStock ? 'inv-out-of-stock' : ''}`; row.innerHTML = `<div class="inv-item-name-row"><input type="text" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value" class="flex-1"></div><div class="inv-item-ctrl-row flex justify-end gap-2 mt-2"><div class="flex items-center gap-1 border px-2 rounded"><span class="text-[10px]">售</span><input type="number" class="w-12 text-xs font-bold" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div><div class="flex items-center gap-1 border px-2 rounded"><span class="text-[10px]">本</span><input type="number" class="w-12 text-xs font-bold" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div><button onclick="inv['${cat}'][${idx}].outOfStock=!inv['${cat}'][${idx}].outOfStock;renderInventoryEditor();" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button></div>`; document.getElementById(`edit-${cat}`).appendChild(row); }); }); }
-    function addNewCategory() { const n = prompt("大項名稱："); if(n) { catOrder.push(n); inv[n] = []; renderInventoryEditor(); } }
-    function addInvItem(c) { if(!inv[c]) inv[c] = []; inv[c].push({name: "新零件", p: 0, c: 0, outOfStock: false}); renderInventoryEditor(); }
-    function removeCat(idx) { if(confirm('刪除？')) { delete inv[catOrder[idx]]; catOrder.splice(idx,1); renderInventoryEditor(); } }
-    function renameCat(idx, newName) { const old = catOrder[idx]; inv[newName] = inv[old]; delete inv[old]; catOrder[idx] = newName; }
-    function updateMonthSelector() { const stats = document.getElementById('statsMain'); if(!stats) return; stats.innerHTML = `<h2 class="text-xl font-black text-gray-700">業績結算報表</h2><div class="bg-gray-50 p-4 rounded-xl space-y-3"><span class="text-xs font-bold text-gray-400">📅 選擇月份</span><select id="statsMonthSelect" onchange="renderStats()" class="w-full bg-white border-2 border-blue-200 px-4 py-3 rounded-lg font-bold text-blue-600"></select></div><div id="statsContent" class="space-y-4"></div>`; const select = document.getElementById('statsMonthSelect'); const months = new Set(); records.forEach(r => { if(r.status !== 'draft' && r.time) { const p = r.time.split(/[/, :]/); if(p[0].length===4) months.add(`${p[0]}/${p[1]}`); } }); const now = new Date(); months.add(`${now.getFullYear()}/${now.getMonth()+1}`); const sorted = Array.from(months).sort((a,b)=>b.localeCompare(a)); select.innerHTML = sorted.map(m => `<option value="${m}">${m}</option>`).join(''); }
-    function renderStats() { const select = document.getElementById('statsMonthSelect'); if (!select || !select.value) return; const [year, month] = select.value.split('/').map(Number); let totalRev = 0, totalProfit = 0, count = 0; records.forEach(r => { if (r.status === 'draft' || !r.time) return; const p = r.time.split(/[/, :]/); let ry, rm; if(p[0].length===4) { ry=p[0]; rm=p[1]; } if (parseInt(ry) === year && parseInt(rm) === month) { count++; let rev = parseFloat(r.total.replace(/[$,]/g, "")) || 0; totalRev += rev; let cost = 0; for(let cat in (r.selections || {})) { (r.selections[cat]||[]).forEach(sel => { let c = 0; if(sel.isTemp) c = Number(sel.c || 0); else if(inv[cat] && inv[cat][sel.idx]) c = Number(inv[cat][sel.idx].c || 0); cost += (c * (sel.qty || 1)); }); } totalProfit += (rev - cost); } }); document.getElementById('statsContent').innerHTML = `<div class="grid grid-cols-1 gap-4"><div class="p-4 bg-blue-50 rounded-xl"><div class="text-xs text-blue-400 font-bold">訂單數</div><div class="text-2xl font-black text-blue-600">${count}</div></div><div class="p-4 bg-green-50 rounded-xl"><div class="text-xs text-green-400 font-bold">總營收</div><div class="text-2xl font-black text-green-600">$${totalRev.toLocaleString()}</div></div><div class="p-4 bg-orange-50 rounded-xl"><div class="text-xs text-orange-400 font-bold">總利潤</div><div class="text-2xl font-black text-orange-600">$${totalProfit.toLocaleString()}</div></div></div>`; }
+    function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
+    function filterModalList() { const q = document.getElementById('modalSearch').value.toLowerCase(); document.querySelectorAll('.pick-item').forEach(el => { el.style.display = el.innerText.toLowerCase().includes(q) ? 'flex' : 'none'; }); }
 
-    db.ref('inventory').on('value', s => { if(s.exists()) inv = s.val(); renderConfig(); });
+    db.ref('inventory').on('value', s => { if(s.exists()) inv = s.val(); renderConfig(); if(!document.getElementById('tab-inventory').classList.contains('hidden')) renderInventoryEditor(); });
     db.ref('catOrder').on('value', s => { if(s.exists()) catOrder = s.val(); renderConfig(); });
     db.ref('records').on('value', s => { records = []; if(s.exists()) { const data = s.val(); for(let id in data) records.push(data[id]); } renderRecords(); });
     db.ref('templates').on('value', s => { templates = s.exists() ? s.val() : {}; });
