@@ -176,13 +176,13 @@
 
     function copyQuoteAsText() {
         const text = generateTextQuote(currentSelections, document.getElementById('discountAmt').value, document.getElementById('ui-totalSale').innerText);
-        navigator.clipboard.writeText(text).then(() => alert('📋 已複製文字報價！'));
+        navigator.clipboard.webText(text).then(() => alert('📋 已複製文字報價！'));
     }
 
     function copyRecordAsText(id) {
         const r = records.find(x => x.id === id); if(!r) return;
         const text = generateTextQuote(r.selections, r.discount, r.total);
-        navigator.clipboard.writeText(text).then(() => alert('📋 已複製訂單文字！'));
+        navigator.clipboard.webText(text).then(() => alert('📋 已複製訂單文字！'));
     }
 
     function openShipmentModal(id) {
@@ -287,7 +287,6 @@
     function renderInventoryEditor() {
         const area = document.getElementById('inventoryEditor'); if (!area) return; 
         
-        // 🚀 核心修正：鎖定目前容器高度，防止頁面塌陷導致捲軸跳動
         area.style.minHeight = area.offsetHeight + 'px';
         const scrollPos = window.scrollY;
         
@@ -299,14 +298,14 @@
             area.appendChild(sec);
             (inv[cat] || []).forEach((item, idx) => {
                 const row = document.createElement('div'); row.className = `inv-item-row item-drag-row`; row.dataset.originalidx = idx;
-                row.innerHTML = `<div class="inv-item-main"><span class="drag-handle item-drag-handle">≡</span><div class="inv-name-area"><textarea class="inv-name-input" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';inv['${cat}'][${idx}].name=this.value" rows="1">${item.name}</textarea></div></div><div class="inv-control-bar"><div class="price-group"><div class="val-box"><span class="val-label">售</span><input type="number" class="val-input p-input" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div><div class="val-box"><span class="val-label">本</span><input type="number" class="val-input c-input" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div><button onclick="inv['${cat}'][${idx}].outOfStock=!inv['${cat}'][${idx}].outOfStock;renderInventoryEditor();" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button></div></div>`;
+                // 📍 修正：在此處補回零件右側的 ✕ 刪除鍵
+                row.innerHTML = `<div class="inv-item-main"><span class="drag-handle item-drag-handle">≡</span><div class="inv-name-area"><textarea class="inv-name-input" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';inv['${cat}'][${idx}].name=this.value" rows="1">${item.name}</textarea></div><button onclick="removeInvItem('${cat}', ${idx})" class="text-red-300 hover:text-red-500 text-2xl px-2">×</button></div><div class="inv-control-bar"><div class="price-group"><div class="val-box"><span class="val-label">售</span><input type="number" class="val-input p-input" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div><div class="val-box"><span class="val-label">本</span><input type="number" class="val-input c-input" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div><button onclick="inv['${cat}'][${idx}].outOfStock=!inv['${cat}'][${idx}].outOfStock;renderInventoryEditor();" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button></div></div>`;
                 document.getElementById(`edit-${cat}`).appendChild(row);
                 const ta = row.querySelector('textarea'); ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px';
             });
         });
         initDragAndDrop();
         
-        // 🚀 繪製完成後放開高度限制並強迫恢復位置
         setTimeout(() => {
             window.scrollTo(0, scrollPos);
             area.style.minHeight = '';
@@ -356,7 +355,9 @@
     function editRecord(id) { const r = records.find(x => x.id === id); if(!r) return; editingRecordId = id; currentSelections = r.selections || {}; document.getElementById('custName').value = r.name || ''; document.getElementById('custPhone').value = r.custPhone || ''; document.getElementById('discountAmt').value = r.discount || 0; document.getElementById('noCardTotal').value = r.noCard || ''; renderConfig(); showTab('calc'); }
     function addNewCategory() { const n = prompt("大項："); if(n) { catOrder.push(n); inv[n] = []; renderInventoryEditor(); } }
     function addInvItem(c) { if(!inv[c]) inv[c] = []; inv[c].push({name: "新零件", p: 0, c: 0, outOfStock: false}); renderInventoryEditor(); }
-    function removeCat(idx) { if(confirm('刪除？')) { delete inv[catOrder[idx]]; catOrder.splice(idx,1); renderInventoryEditor(); } }
+    // 📍 修正：零件刪除邏輯
+    function removeInvItem(cat, idx) { if(confirm('確定刪除此零件？')) { inv[cat].splice(idx, 1); renderInventoryEditor(); } }
+    function removeCat(idx) { if(confirm('刪除整個大項？')) { delete inv[catOrder[idx]]; catOrder.splice(idx,1); renderInventoryEditor(); } }
     function renameCat(idx, newName) { const old = catOrder[idx]; inv[newName] = inv[old]; delete inv[old]; catOrder[idx] = newName; }
     function updateItemNote(cat, sIdx, val) { if(currentSelections[cat] && currentSelections[cat][sIdx]) currentSelections[cat][sIdx].note = val; }
     function saveTemplate() { const name = prompt("名稱："); if (!name) return; const data = { id: Date.now(), name, selections: currentSelections, discount: document.getElementById('discountAmt').value || 0 }; db.ref('templates/' + data.id).set(data).then(() => alert('成功！')); }
