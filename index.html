@@ -141,6 +141,16 @@
         <div id="tab-completed" class="page-content hidden"><div id="completedList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
         <div id="tab-inventory" class="page-content hidden"><div class="card p-4"><div id="inventoryHeader" class="flex justify-between items-center mb-4"></div><div id="inventoryEditor" class="space-y-4"></div></div></div>
 
+        <div id="selectionModal" class="hidden fixed inset-0 bg-black/60 z-[20000] flex items-end">
+            <div class="bg-white w-full rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 id="modalTitle" class="text-xl font-black text-blue-600">🔍 選擇項目</h3>
+                    <button onclick="closeModal()" class="text-3xl text-gray-400">×</button>
+                </div>
+                <div id="modalList" class="space-y-2"></div>
+            </div>
+        </div>
+
         <div id="shipmentModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[10001] backdrop-blur-md"><div class="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl border-2 border-green-100"><div class="p-5 border-b flex justify-between items-center bg-green-50"><h3 class="font-black text-green-700 text-lg">🚚 零件出貨狀態設定</h3><button onclick="document.getElementById('shipmentModal').classList.add('hidden')" class="text-gray-400 text-3xl">×</button></div><div id="shipmentList" class="overflow-y-auto flex-1 p-5 space-y-3"></div><div class="p-5 border-t bg-gray-50"><button onclick="document.getElementById('shipmentModal').classList.add('hidden')" class="w-full bg-green-600 text-white py-4 rounded-xl font-black">確定並返回</button></div></div></div>
 
         <div id="templateModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[10000] backdrop-blur-md"><div class="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl border-2 border-blue-100"><div class="p-5 border-b flex justify-between items-center bg-indigo-50"><h3 class="font-black text-indigo-700 text-lg">📁 載入常用範本</h3><button onclick="document.getElementById('templateModal').classList.add('hidden')" class="text-gray-400 text-3xl">×</button></div><div id="templateList" class="overflow-y-auto flex-1 p-5 space-y-3"></div><div class="p-5 border-t bg-gray-50"><button onclick="document.getElementById('templateModal').classList.add('hidden')" class="w-full bg-gray-200 text-gray-600 py-4 rounded-xl font-bold">關閉</button></div></div></div>
@@ -228,7 +238,6 @@
                     });
                 });
             }
-            // 📍 提示位置：金額下方
             const nsDisplayHtml = nsNames.length > 0 ? `<div class="text-[10px] text-red-600 font-black mt-3 p-3 bg-red-50 rounded-xl border border-red-100 shadow-inner">⚠️ 尚未出貨明細：<br>${nsNames.join('、')}</div>` : '';
             const shipmentBtn = (status === 'order' || status === 'completed') ? `<button onclick="openShipmentModal(${r.id})" class="px-2 py-2 bg-gray-50 text-gray-500 text-[10px] rounded-lg font-black border-2 border-gray-200">🚚 出貨管理</button>` : '';
 
@@ -280,7 +289,12 @@
     }
 
     function renderInventoryEditor() {
-        const area = document.getElementById('inventoryEditor'); if (!area) return; area.innerHTML = '';
+        const area = document.getElementById('inventoryEditor'); if (!area) return; 
+        
+        // 📍 新增位置鎖定邏輯
+        const scrollPos = window.scrollY;
+        
+        area.innerHTML = '';
         const head = document.getElementById('inventoryHeader'); if(head) head.innerHTML = `<h2 class="font-black text-lg text-gray-700">⚙️ 雲端品項管理</h2><div class="flex gap-2"><button onclick="addNewCategory()" class="bg-blue-500 text-white px-3 py-2 rounded-lg text-[10px]">+ 大項</button></div>`;
         catOrder.forEach((cat, cIdx) => {
             const sec = document.createElement('div'); sec.className = "bg-gray-100 p-3 rounded-xl border-2 mb-6 category-drag-item"; sec.dataset.catname = cat;
@@ -294,6 +308,9 @@
             });
         });
         initDragAndDrop();
+        
+        // 📍 恢復位置
+        window.scrollTo(0, scrollPos);
     }
 
     function initDragAndDrop() {
