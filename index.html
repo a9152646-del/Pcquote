@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.69</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.70</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -40,7 +40,10 @@
         .screenshot-mode .selected-badge { font-size: 10px !important; line-height: 1.1 !important; margin-bottom: 0px !important; }
         .screenshot-mode .item-row .text-blue-400 { font-size: 7px !important; margin-bottom: 0px !important; letter-spacing: 0.1em; }
         .screenshot-mode #screenshot-header { margin-bottom: 8px !important; padding-bottom: 4px !important; }
+        .screenshot-mode #screenshot-header .text-3xl { font-size: 1rem !important; }
         .screenshot-mode #screenshot-footer { padding: 6px 12px !important; display: block !important; }
+        .screenshot-mode #screenshot-footer .text-xl { font-size: 0.95rem !important; }
+        .screenshot-mode #screenshot-footer .text-xs { font-size: 8px !important; }
 
         .inv-item-row { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
         .inv-item-main { display: flex; align-items: center; gap: 10px; }
@@ -216,8 +219,8 @@
         calculate();
     }
 
-    // 補足無卡金額在文字報價中
-    function generateTextQuote(recordSelections, discount, totalStr, noCard) {
+    // 修正：文字複製移除無卡金額顯示
+    function generateTextQuote(recordSelections, discount, totalStr) {
         let text = `🐚【神奇海螺電競 | 專業報價】\n日期：${new Date().toLocaleDateString()}\n------------------------------\n`;
         catOrder.forEach(cat => {
             const items = recordSelections[cat] || [];
@@ -228,12 +231,11 @@
         });
         text += `------------------------------\n`;
         if (discount > 0) text += `折扣：-$${Number(discount).toLocaleString()}\n`;
-        text += `總計：${totalStr} (含稅)\n`;
-        if (noCard > 0) text += `無卡分期總額：$${Number(noCard).toLocaleString()}`;
+        text += `總計：${totalStr} (含稅)`;
         return text;
     }
-    function copyQuoteAsText() { const text = generateTextQuote(currentSelections, document.getElementById('discountAmt').value, document.getElementById('ui-totalSale').innerText, document.getElementById('noCardTotal').value); navigator.clipboard.writeText(text).then(() => alert('📋 已複製文字報價！')); }
-    function copyRecordAsText(id) { const r = records.find(x => x.id === id); if(!r) return; const text = generateTextQuote(r.selections, r.discount, r.total, r.noCard); navigator.clipboard.writeText(text).then(() => alert('📋 已複製訂單文字！')); }
+    function copyQuoteAsText() { const text = generateTextQuote(currentSelections, document.getElementById('discountAmt').value, document.getElementById('ui-totalSale').innerText); navigator.clipboard.writeText(text).then(() => alert('📋 已複製文字報價！')); }
+    function copyRecordAsText(id) { const r = records.find(x => x.id === id); if(!r) return; const text = generateTextQuote(r.selections, r.discount, r.total); navigator.clipboard.writeText(text).then(() => alert('📋 已複製訂單文字！')); }
 
     function renderRecords() {
         const lists = { 'draft': document.getElementById('draftList'), 'order': document.getElementById('orderList'), 'completed': document.getElementById('completedList') };
@@ -242,7 +244,7 @@
             const status = r.status || 'draft'; if (!lists[status]) return;
             const pOpts = ["待處理", "組裝中", "測試中", "已完工", "已寄出"].map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
             
-            // 補上無卡金額顯示
+            // 修正：確保紀錄中會顯示無卡金額
             const noCardHtml = (r.noCard && r.noCard > 0) ? `<div class="text-orange-600 font-black text-sm">無卡：$${Number(r.noCard).toLocaleString()}</div>` : '';
             
             const div = document.createElement('div'); div.className = "p-4 border-2 rounded-xl bg-white shadow-sm space-y-3";
@@ -296,8 +298,27 @@
     function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); const fsBtn = document.getElementById('floatingSaveBtn'); if(t === 'inventory') { fsBtn.classList.remove('hidden'); fsBtn.style.display = 'flex'; renderInventoryEditor(); } else if(t === 'stats') { fsBtn.classList.add('hidden'); fsBtn.style.display = 'none'; renderStats(); } else { fsBtn.classList.add('hidden'); fsBtn.style.display = 'none'; } renderRecords(); }
 
     function toggleAdminMode() { const isChecked = document.getElementById('adminToggle').checked; const body = document.getElementById('mainBody'); if(isChecked) { body.classList.remove('hide-prices'); document.getElementById('sellerBox').classList.remove('invisible'); } else { body.classList.add('hide-prices'); document.getElementById('sellerBox').classList.add('invisible'); } }
-    function enterScreenshotMode() { document.getElementById('ss-time').innerText = '報價日期：' + new Date().toLocaleString(); document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value).toLocaleString(); document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText; document.getElementById('mainBody').classList.add('screenshot-mode'); document.getElementById('screenshot-header').style.display = 'block'; document.getElementById('screenshot-footer').style.display = 'block'; document.getElementById('screenshotNav').classList.remove('hidden'); renderConfig(); window.scrollTo(0,0); }
-    function exitScreenshotMode() { document.getElementById('mainBody').classList.remove('screenshot-mode'); document.getElementById('screenshot-header').style.display = 'none'; document.getElementById('screenshot-footer').style.display = 'none'; document.getElementById('screenshotNav').classList.add('hidden'); renderConfig(); }
+    
+    // 修正：進入截圖模式
+    function enterScreenshotMode() { 
+        document.getElementById('ss-time').innerText = '報價日期：' + new Date().toLocaleString(); 
+        document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value).toLocaleString(); 
+        document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText; 
+        document.getElementById('mainBody').classList.add('screenshot-mode'); 
+        document.getElementById('screenshot-header').style.display = 'block'; 
+        document.getElementById('screenshot-footer').style.display = 'block'; 
+        document.getElementById('screenshotNav').classList.remove('hidden'); 
+        renderConfig(); window.scrollTo(0,0); 
+    }
+    
+    // 修正：退出截圖模式
+    function exitScreenshotMode() { 
+        document.getElementById('mainBody').classList.remove('screenshot-mode'); 
+        document.getElementById('screenshot-header').style.display = 'none'; 
+        document.getElementById('screenshot-footer').style.display = 'none'; 
+        document.getElementById('screenshotNav').classList.add('hidden'); 
+        renderConfig(); 
+    }
 
     function openTemplateModal() { const list = document.getElementById('templateList'); list.innerHTML = ''; Object.keys(templates).forEach(id => { const t = templates[id]; list.innerHTML += `<div class="p-4 border-2 rounded-xl mb-3 flex justify-between items-center bg-white shadow-sm" onclick="applyTemplate('${id}')"><div class="font-black text-gray-700 text-xs">${t.name}</div><div class="flex gap-2"><button class="bg-blue-600 text-white px-3 py-1 rounded-lg text-[10px]" onclick="applyTemplate('${id}')">套用</button><button class="bg-red-100 text-red-500 px-3 py-1 rounded-lg text-[10px]" onclick="event.stopPropagation(); db.ref('templates/'+'${id}').remove()">刪除</button></div></div>`; }); document.getElementById('templateModal').classList.remove('hidden'); }
     function applyTemplate(id) { currentSelections = JSON.parse(JSON.stringify(templates[id].selections)); document.getElementById('discountAmt').value = templates[id].discount || 0; renderConfig(); document.getElementById('templateModal').classList.add('hidden'); }
