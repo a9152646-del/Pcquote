@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.23</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.24</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -29,11 +29,7 @@
         .selected-badge { color: #1e293b; font-size: 14px; margin-right: 8px; display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
         .price-tag { color: #94a3b8; font-weight: 400; font-size: 12px; margin-left: 4px; }
         
-        /* 💸 核心隱藏邏輯 - 鈞宇專用 */
-        /* 1. 編輯模式下隱藏所有單價 (當 💰 開關沒勾時) */
         body.hide-prices:not(.screenshot-mode) .price-tag { display: none !important; }
-        
-        /* 2. 截圖模式下隱藏零件單價 (當 📸 開關沒勾時) */
         body.ss-hide-prices .price-tag { display: none !important; }
 
         #adminToggleContainer {
@@ -78,14 +74,13 @@
         .supp-btn.active { background: #6366f1 !important; color: white !important; border-color: #4f46e5 !important; }
 
         button { font-size: 14px !important; }
-
         #floatingSaveBtn { position: fixed; right: 16px; bottom: 230px; z-index: 100; }
     </style>
 </head>
 <body class="p-2 md:p-4 hide-prices" id="mainBody">
 
 <div class="no-screenshot fixed right-4 bottom-10 z-[80] flex flex-col gap-3">
-    <button onclick="if(confirm('確定要重整網頁嗎？')) { window.location.reload(); }" class="bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔄</button>
+    <button onclick="if(confirm('豬豬，確定要重整網頁嗎？')) { window.location.reload(); }" class="bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔄</button>
     <button onclick="goBack()" class="bg-black text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔙</button>
 </div>
 
@@ -115,6 +110,7 @@
         <button onclick="showTab('drafts')" id="btn-drafts" class="flex-1 px-4 py-3 whitespace-nowrap">📂 草稿</button>
         <button onclick="showTab('orders')" id="btn-orders" class="flex-1 px-4 py-3 whitespace-nowrap">✅ 正式</button>
         <button onclick="showTab('completed')" id="btn-completed" class="flex-1 px-4 py-3 whitespace-nowrap">🏁 結案</button>
+        <button onclick="showTab('stats')" id="btn-stats" class="flex-1 px-4 py-3 whitespace-nowrap">📊 統計</button>
         <button onclick="showTab('inventory')" id="btn-inventory" class="flex-1 px-4 py-3 whitespace-nowrap">⚙️ 品項</button>
     </div>
 
@@ -178,6 +174,31 @@
     <div id="tab-drafts" class="page-content hidden"><div id="draftList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
     <div id="tab-orders" class="page-content hidden"><div id="orderList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
     <div id="tab-completed" class="page-content hidden"><div id="completedList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 opacity-80"></div></div>
+
+    <div id="tab-stats" class="page-content hidden">
+        <div class="card p-6 text-center space-y-6">
+            <h2 class="text-xl font-black text-gray-700">📊 豬豬的月度業績結算</h2>
+            <div id="statsContent" class="hidden space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="p-4 bg-blue-50 rounded-xl border-2 border-blue-100">
+                        <div class="text-xs text-blue-400 font-bold">本月總訂單數</div>
+                        <div id="stat-count" class="text-2xl font-black text-blue-600">0</div>
+                    </div>
+                    <div class="p-4 bg-green-50 rounded-xl border-2 border-green-100">
+                        <div class="text-xs text-green-400 font-bold">本月預估營收</div>
+                        <div id="stat-revenue" class="text-2xl font-black text-green-600">$0</div>
+                    </div>
+                    <div class="p-4 bg-orange-50 rounded-xl border-2 border-orange-100">
+                        <div class="text-xs text-orange-400 font-bold">本月淨利潤</div>
+                        <div id="stat-profit" class="text-3xl font-black text-orange-600">$0</div>
+                    </div>
+                </div>
+                <p class="text-[10px] text-gray-400">* 統計範圍包含本月所有「正式訂單」與「已結案」紀錄。</p>
+            </div>
+            <button id="btnShowStats" onclick="toggleStats()" class="bg-gray-800 text-white px-8 py-3 rounded-full font-bold">點擊顯示本月數據</button>
+        </div>
+    </div>
+
     <div id="tab-inventory" class="page-content hidden">
         <div class="card p-4">
             <div class="flex justify-between items-center mb-4">
@@ -319,6 +340,54 @@ function renderRecords() {
     });
 }
 
+// 📈 豬豬統計邏輯
+function toggleStats() {
+    const content = document.getElementById('statsContent');
+    const btn = document.getElementById('btnShowStats');
+    if (content.classList.contains('hidden')) {
+        renderStats();
+        content.classList.remove('hidden');
+        btn.innerText = '隱藏數據';
+    } else {
+        content.classList.add('hidden');
+        btn.innerText = '顯示本月數據';
+    }
+}
+
+function renderStats() {
+    const now = new Date();
+    const currentMonth = (now.getMonth() + 1).toString();
+    const currentYear = now.getFullYear().toString();
+    let totalRev = 0, totalProfit = 0, count = 0;
+
+    records.forEach(r => {
+        if (r.status === 'draft') return;
+        // 簡單解析時間字串
+        if (r.time.includes(`${currentYear}/${currentMonth}`) || r.time.includes(`${currentYear}/${currentMonth.padStart(2,'0')}`)) {
+            count++;
+            // 營收：若有無卡分期以無卡為主，否則以原本含稅為主
+            let rev = r.noCard > 0 ? Number(r.noCard) : Number(r.total.replace(/[^0-9.-]+/g,""));
+            totalRev += rev;
+            
+            // 計算該單成本
+            let cost = 0;
+            for(let cat in r.selections) {
+                r.selections[cat].forEach(sel => {
+                    let c = 0;
+                    if(sel.isTemp) c = Number(sel.c || 0);
+                    else if(inv[cat] && inv[cat][sel.idx]) c = Number(inv[cat][sel.idx].c || 0);
+                    cost += (c * (sel.qty || 1));
+                });
+            }
+            totalProfit += (rev - cost);
+        }
+    });
+
+    document.getElementById('stat-count').innerText = count;
+    document.getElementById('stat-revenue').innerText = `$${totalRev.toLocaleString()}`;
+    document.getElementById('stat-profit').innerText = `$${totalProfit.toLocaleString()}`;
+}
+
 function renderInventoryEditor() {
     const area = document.getElementById('inventoryEditor'); area.innerHTML = '';
     catOrder.forEach((cat, cIdx) => {
@@ -337,50 +406,35 @@ function renderInventoryEditor() {
 
 function toggleSupplier(cat, idx, label) { if(!inv[cat][idx].suppliers) inv[cat][idx].suppliers = []; const list = inv[cat][idx].suppliers; const pos = list.indexOf(label); if(pos > -1) list.splice(pos, 1); else list.push(label); renderInventoryEditor(); }
 function toggleStockStatus(cat, idx) { inv[cat][idx].outOfStock = !inv[cat][idx].outOfStock; renderInventoryEditor(); }
+function toggleAdminMode() { const isChecked = document.getElementById('adminToggle').checked; const body = document.getElementById('mainBody'); const box = document.getElementById('sellerBox'); if(isChecked) { body.classList.remove('hide-prices'); box.classList.remove('invisible'); } else { body.classList.add('hide-prices'); box.classList.add('invisible'); } }
 
-// 💾 金額開關邏輯
-function toggleAdminMode() { 
-    const isChecked = document.getElementById('adminToggle').checked; 
-    const body = document.getElementById('mainBody'); 
-    const box = document.getElementById('sellerBox'); 
-    if(isChecked) { 
-        body.classList.remove('hide-prices'); 
-        box.classList.remove('invisible'); 
-    } else { 
-        body.classList.add('hide-prices'); 
-        box.classList.add('invisible'); 
-    } 
+function showTab(t) { 
+    document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); 
+    document.getElementById('tab-'+t).classList.remove('hidden'); 
+    document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); 
+    document.getElementById('btn-'+t).classList.add('tab-active'); 
+    const fsBtn = document.getElementById('floatingSaveBtn'); 
+    if(t === 'inventory') { renderInventoryEditor(); fsBtn.classList.remove('hidden'); fsBtn.style.display = 'flex'; } 
+    else { fsBtn.classList.add('hidden'); fsBtn.style.display = 'none'; }
+    if(t === 'stats') { document.getElementById('statsContent').classList.add('hidden'); document.getElementById('btnShowStats').innerText = '顯示本月數據'; }
 }
 
-function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); const fsBtn = document.getElementById('floatingSaveBtn'); if(t === 'inventory') { renderInventoryEditor(); fsBtn.classList.remove('hidden'); fsBtn.style.display = 'flex'; } else { fsBtn.classList.add('hidden'); fsBtn.style.display = 'none'; } }
-
-// 📸 截圖模式核心邏輯 - 暴力切換
 function enterScreenshotMode() { 
     const body = document.getElementById('mainBody');
     const isMoneyChecked = document.getElementById('adminToggle').checked;
     const isSSPriceChecked = document.getElementById('ssPriceToggle').checked;
     const footer = document.getElementById('screenshot-footer');
-    
-    // 1. 時間戳記
     const now = new Date(); 
     const timeStr = now.getFullYear() + '/' + (now.getMonth() + 1).toString().padStart(2, '0') + '/' + now.getDate().toString().padStart(2, '0') + ' ' + now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0'); 
     document.getElementById('ss-time').innerText = '報價日期：' + timeStr; 
     calculate(); 
-
-    // 2. 處理底部統計 (💰 金額開關控制)
     footer.style.display = isMoneyChecked ? 'block' : 'none';
     if(isMoneyChecked) {
         document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value || 0).toLocaleString(); 
         document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText; 
     }
-
-    // 3. 處理零件單價 (📸 顯示單價開關控制)
-    if (!isSSPriceChecked) {
-        body.classList.add('ss-hide-prices');
-    } else {
-        body.classList.remove('ss-hide-prices');
-    }
-
+    if (!isSSPriceChecked) body.classList.add('ss-hide-prices');
+    else body.classList.remove('ss-hide-prices');
     body.classList.add('screenshot-mode'); 
     document.getElementById('screenshot-header').style.display = 'block'; 
     renderConfig(); 
