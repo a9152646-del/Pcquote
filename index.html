@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.61</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.62</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -32,13 +32,12 @@
         .drag-handle { cursor: grab; color: #cbd5e1; padding: 5px; font-size: 24px; user-select: none; }
         .drag-handle:active { cursor: grabbing; color: #3b82f6; }
 
-        /* 🟢 品項管理排版 (v9.51 鋼鐵對齊) */
+        /* 🟢 品項管理排版 */
         .inv-item-row { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
         .inv-item-main { display: flex; align-items: flex-start; gap: 10px; }
         .inv-name-area { flex: 1; min-width: 0; }
         .inv-name-input { width: 100%; border: none !important; background: #fdfdfd !important; font-weight: 800; font-size: 15px; padding: 4px 0 !important; color: #1e293b; word-break: break-all; resize: none; overflow: hidden; display: block; }
         .inv-control-bar { display: flex; align-items: center; justify-content: space-between; padding-top: 8px; border-top: 1px solid #f1f5f9; }
-        .supp-group { display: flex; gap: 3px; }
         .price-group { display: flex; gap: 8px; align-items: center; }
         .val-box { display: flex; align-items: center; gap: 2px; background: #f8fafc; padding: 4px 6px; border-radius: 6px; border: 1px solid #e2e8f0; }
         .val-label { font-size: 10px; font-weight: 900; color: #94a3b8; }
@@ -71,7 +70,7 @@
 
     <div id="screenshotNav" class="hidden"><button onclick="exitScreenshotMode()" class="bg-gray-800 text-white px-8 py-4 rounded-full font-black shadow-2xl">🔙 返回編輯模式</button></div>
 
-    <div class="max-w-7xl mx-auto w-full">
+    <div class="max-w-7xl mx-auto w-full px-1">
         <div id="screenshot-header" style="display: none;" class="text-center border-b-4 border-blue-600 pb-4 mb-6"><div class="text-3xl font-black text-blue-900 tracking-widest">《報價單》</div><div id="ss-time" class="text-xs text-gray-400 mt-2 font-mono font-bold"></div></div>
         
         <div class="flex border-b-2 mb-4 no-screenshot overflow-x-auto bg-white sticky top-0 z-50 rounded-t">
@@ -89,7 +88,6 @@
                         <button onclick="openTemplateModal()" class="flex-[2] bg-indigo-600 text-white py-3 rounded-xl font-black shadow-md">📂 載入範本</button>
                         <button onclick="copyQuoteAsText()" class="flex-[3] bg-cyan-500 text-white py-3 rounded-xl font-black shadow-md border-b-4 border-cyan-700 active:border-0">📋 複製 Line 文字報價</button>
                     </div>
-
                     <div class="card p-1">
                         <div id="configRows" class="divide-y divide-gray-100"></div>
                         <div id="screenshot-footer" class="text-right p-6 pt-4 border-t-2 border-gray-100 space-y-1" style="display: none;">
@@ -109,11 +107,7 @@
                             <input type="number" id="noCardTotal" class="w-full border-orange-200 text-sm" placeholder="輸入無卡金額" oninput="calculate()">
                         </div>
                         <div id="sellerBox" class="bg-blue-50 p-3 rounded-lg invisible"><div class="flex justify-between text-xs text-blue-500"><span>成本</span><span id="ui-totalCost">$0</span></div><div class="flex justify-between text-sm font-black text-green-600 border-t-2 border-blue-100 mt-2 pt-2"><span>利潤</span><span id="ui-totalProfit">$0</span></div></div>
-                        <div class="space-y-2">
-                            <button onclick="saveTemplate()" class="w-full bg-gray-700 text-white py-3 rounded-lg font-bold">💾 存為範本</button>
-                            <button onclick="saveRecord('current')" class="w-full bg-blue-600 text-white py-3 rounded-lg font-black">💾 儲存草稿</button>
-                            <button onclick="enterScreenshotMode()" class="w-full bg-orange-500 text-white py-3 rounded-lg font-black">📸 截圖模式</button>
-                        </div>
+                        <div class="space-y-2"><button onclick="saveTemplate()" class="w-full bg-gray-700 text-white py-3 rounded-lg font-bold">💾 存為範本</button><button onclick="saveRecord('current')" class="w-full bg-blue-600 text-white py-3 rounded-lg font-black">💾 儲存草稿</button><button onclick="enterScreenshotMode()" class="w-full bg-orange-500 text-white py-3 rounded-lg font-black">📸 截圖模式</button></div>
                     </div>
                 </div>
             </div>
@@ -126,7 +120,7 @@
 
         <div id="selectionModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[9999] backdrop-blur-md"><div class="bg-white rounded-xl max-w-lg w-full max-h-[85vh] overflow-hidden flex flex-col shadow-2xl"><div class="p-4 border-b flex justify-between items-center bg-gray-50"><h3 id="modalTitle" class="font-black text-blue-600 text-lg">選擇品項</h3><button onclick="closeModal()" class="text-gray-400 text-3xl">×</button></div><div id="modalList" class="overflow-y-auto flex-1 p-3 space-y-2"></div><div class="p-3 border-t bg-gray-50"><div class="flex gap-2 mb-2"><input type="text" id="tempName" class="flex-1 text-sm" placeholder="臨時零件名稱"><input type="number" id="tempPrice" class="w-20 text-sm border-blue-200" placeholder="售價"><input type="number" id="tempCost" class="w-20 text-sm border-red-200" placeholder="成本"></div><button onclick="addTempItem()" class="w-full bg-orange-500 text-white py-2 rounded-lg text-sm font-bold">➕ 確認新增臨時項目</button></div><div class="p-3 border-t"><button onclick="closeModal()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black">確定選擇</button></div></div></div>
 
-        <div id="shipmentModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[10001] backdrop-blur-md"><div class="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl border-2 border-green-100"><div class="p-5 border-b flex justify-between items-center bg-green-50"><h3 class="font-black text-green-700 text-lg">🚚 出貨細節管理</h3><button onclick="document.getElementById('shipmentModal').classList.add('hidden')" class="text-gray-400 text-3xl">×</button></div><div id="shipmentList" class="overflow-y-auto flex-1 p-5 space-y-3"></div><div class="p-5 border-t bg-gray-50"><button onclick="document.getElementById('shipmentModal').classList.add('hidden')" class="w-full bg-green-600 text-white py-4 rounded-xl font-black">完成設定</button></div></div></div>
+        <div id="shipmentModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[10001] backdrop-blur-md"><div class="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl border-2 border-green-100"><div class="p-5 border-b flex justify-between items-center bg-green-50"><h3 class="font-black text-green-700 text-lg">🚚 零件出貨狀態設定</h3><button onclick="document.getElementById('shipmentModal').classList.add('hidden')" class="text-gray-400 text-3xl">×</button></div><div id="shipmentList" class="overflow-y-auto flex-1 p-5 space-y-3"></div><div class="p-5 border-t bg-gray-50"><button onclick="document.getElementById('shipmentModal').classList.add('hidden')" class="w-full bg-green-600 text-white py-4 rounded-xl font-black">確定並返回</button></div></div></div>
 
         <div id="templateModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[10000] backdrop-blur-md"><div class="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl border-2 border-blue-100"><div class="p-5 border-b flex justify-between items-center bg-indigo-50"><h3 class="font-black text-indigo-700 text-lg">📁 載入常用範本</h3><button onclick="document.getElementById('templateModal').classList.add('hidden')" class="text-gray-400 text-3xl">×</button></div><div id="templateList" class="overflow-y-auto flex-1 p-5 space-y-3"></div><div class="p-5 border-t bg-gray-50"><button onclick="document.getElementById('templateModal').classList.add('hidden')" class="w-full bg-gray-200 text-gray-600 py-4 rounded-xl font-bold">關閉</button></div></div></div>
     </div>
@@ -157,32 +151,31 @@
 
     function copyQuoteAsText() {
         const text = generateTextQuote(currentSelections, document.getElementById('discountAmt').value, document.getElementById('ui-totalSale').innerText);
-        navigator.clipboard.writeText(text).then(() => alert('📋 已複製文字報價！')).catch(() => alert('複製失敗'));
+        navigator.clipboard.writeText(text).then(() => alert('📋 已複製文字報價！'));
     }
 
     function copyRecordAsText(id) {
         const r = records.find(x => x.id === id);
         if(!r) return;
         const text = generateTextQuote(r.selections, r.discount, r.total);
-        navigator.clipboard.writeText(text).then(() => alert('📋 已複製該訂單文字報價！'));
+        navigator.clipboard.writeText(text).then(() => alert('📋 已複製訂單文字！'));
     }
 
-    // 🏆 新功能：開啟出貨細節管理
+    // 🏆 出貨明細設定
     function openShipmentModal(id) {
-        const r = records.find(x => x.id === id);
-        if(!r) return;
+        const r = records.find(x => x.id === id); if(!r) return;
         const list = document.getElementById('shipmentList'); list.innerHTML = '';
-        const notShipped = r.notShipped || {};
-        
+        const ns = r.notShipped || {};
         catOrder.forEach(cat => {
             const items = r.selections[cat] || [];
             items.forEach((sel, idx) => {
                 let target = sel.isTemp ? sel : (inv[cat] || [])[sel.idx];
                 if (target) {
-                    const isNS = notShipped[cat] && notShipped[cat].includes(idx);
-                    list.innerHTML += `<label class="flex items-center gap-3 p-3 border-2 rounded-xl bg-white ${isNS?'border-red-200':'border-gray-100'}">
-                        <input type="checkbox" class="w-5 h-5" ${isNS?'checked':''} onchange="toggleItemShipment(${id}, '${cat}', ${idx}, this.checked)">
-                        <span class="flex-1 text-xs font-bold ${isNS?'text-red-500':'text-gray-700'}">${target.name} ${isNS?'(未出貨)':''}</span>
+                    const isNS = ns[cat] && ns[cat].includes(idx);
+                    list.innerHTML += `<label class="flex items-center gap-3 p-4 border-2 rounded-xl bg-white ${isNS?'border-red-500 bg-red-50':'border-gray-100'}">
+                        <input type="checkbox" class="w-6 h-6" ${isNS?'checked':''} onchange="updateItemShipment(${id}, '${cat}', ${idx}, this.checked)">
+                        <div class="flex-1"><div class="text-[10px] text-gray-400 font-black">${cat}</div><div class="font-bold text-sm">${target.name}</div></div>
+                        <div class="text-[10px] font-black ${isNS?'text-red-500':'text-gray-300'}">${isNS?'尚未出貨':'已出貨'}</div>
                     </label>`;
                 }
             });
@@ -190,17 +183,11 @@
         document.getElementById('shipmentModal').classList.remove('hidden');
     }
 
-    function toggleItemShipment(id, cat, idx, isNotShipped) {
-        const r = records.find(x => x.id === id);
-        if(!r) return;
-        let ns = r.notShipped || {};
-        if(!ns[cat]) ns[cat] = [];
-        
-        if(isNotShipped) {
-            if(!ns[cat].includes(idx)) ns[cat].push(idx);
-        } else {
-            ns[cat] = ns[cat].filter(i => i !== idx);
-        }
+    function updateItemShipment(id, cat, idx, isNotShipped) {
+        const r = records.find(x => x.id === id); if(!r) return;
+        let ns = r.notShipped || {}; if(!ns[cat]) ns[cat] = [];
+        if(isNotShipped) { if(!ns[cat].includes(idx)) ns[cat].push(idx); } 
+        else { ns[cat] = ns[cat].filter(i => i !== idx); if(ns[cat].length === 0) delete ns[cat]; }
         db.ref('records/' + id + '/notShipped').set(ns);
     }
 
@@ -211,10 +198,10 @@
             const status = r.status || 'draft'; if (!lists[status]) return;
             const pOpts = ["待處理", "組裝中", "測試中", "已完工", "已寄出"].map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
             
-            // 💳 顯示無卡金額
-            const noCardHtml = (r.noCard > 0) ? `<div class="text-[10px] text-orange-600 font-black mt-1">💳 無卡：$${Number(r.noCard).toLocaleString()}</div>` : '';
+            // 💳 無卡金額
+            const noCardHtml = (r.noCard > 0) ? `<div class="text-[10px] text-orange-600 font-black mt-1">💳 無卡分期：$${Number(r.noCard).toLocaleString()}</div>` : '';
             
-            // 🚚 未出貨細節顯示 (顯示在金額上面)
+            // 🚚 未出貨細節顯示 (顯示在金額上方)
             let nsNames = [];
             if(r.notShipped) {
                 Object.keys(r.notShipped).forEach(cat => {
@@ -227,13 +214,13 @@
                     });
                 });
             }
-            const nsDisplayHtml = nsNames.length > 0 ? `<div class="text-[10px] text-red-500 font-black mt-2 bg-red-50 p-1 rounded border border-red-100">⚠️ 未出貨：${nsNames.join(', ')}</div>` : '';
+            const nsDisplayHtml = nsNames.length > 0 ? `<div class="text-[10px] text-red-600 font-black mb-2 p-2 bg-red-50 rounded-lg border border-red-100 leading-relaxed">⚠️ 尚未出貨：<br>${nsNames.join('、')}</div>` : '';
 
-            // 🚚 出貨管理按鈕
-            const shipmentBtn = (status === 'order' || status === 'completed') ? `<button onclick="openShipmentModal(${r.id})" class="px-2 py-2 bg-gray-100 text-gray-500 text-[10px] rounded-lg font-black border">🚚 出貨管理</button>` : '';
+            // 🚚 出貨管理按鈕 (正式/結案訂單專用)
+            const shipmentBtn = (status === 'order' || status === 'completed') ? `<button onclick="openShipmentModal(${r.id})" class="px-2 py-2 bg-gray-50 text-gray-500 text-[10px] rounded-lg font-black border-2 border-gray-200">🚚 出貨細節</button>` : '';
 
             const div = document.createElement('div'); div.className = "p-4 border-2 rounded-xl bg-white shadow-sm space-y-3";
-            div.innerHTML = `<div class="flex justify-between items-start"><div class="flex-1"><div class="text-[10px] text-gray-400 font-mono">${r.time}</div><div class="text-base font-black text-gray-800">${r.name || '無名'}</div>${nsDisplayHtml}<div class="text-blue-600 font-black text-lg mt-1">${r.total}</div>${noCardHtml}</div><div class="text-right ml-2"><span class="bg-blue-100 text-blue-600 text-[10px] font-bold px-2 py-1 rounded-full">${r.seller||'未指定'}</span><div class="mt-2">
+            div.innerHTML = `<div class="flex justify-between items-start"><div class="flex-1"><div class="text-[10px] text-gray-400 font-mono">${r.time}</div><div class="text-base font-black text-gray-800 mb-1">${r.name || '無名客戶'}</div>${nsDisplayHtml}<div class="text-blue-600 font-black text-lg">${r.total}</div>${noCardHtml}</div><div class="text-right ml-2"><span class="bg-blue-100 text-blue-600 text-[10px] font-bold px-2 py-1 rounded-full">${r.seller||'未指定'}</span><div class="mt-2">
                 <select onchange="db.ref('records/'+${r.id}+'/progress').set(this.value)" class="text-[10px] font-bold px-1 py-1 rounded-lg ${getStatusClass(r.progress)}">${pOpts}</select>
             </div></div></div><div class="flex flex-wrap gap-1 pt-3 border-t border-dashed">
                 <button onclick="editRecord(${r.id})" class="flex-1 py-2 bg-blue-600 text-white text-[10px] rounded-lg font-black">編輯</button>
@@ -287,7 +274,7 @@
             sec.innerHTML = `<div class="flex justify-between items-center mb-4"><div class="flex items-center gap-2"><span class="drag-handle cat-drag-handle">≡</span><input class="font-black text-base text-blue-700 border-none bg-transparent p-0 w-40" value="${cat}" onchange="renameCat(${cIdx}, this.value)"></div><button onclick="removeCat(${cIdx})" class="text-red-300 hover:text-red-500 text-2xl">×</button></div><div id="edit-${cat}" class="space-y-3 item-drag-container" data-cat="${cat}"></div><button onclick="addInvItem('${cat}')" class="w-full text-xs font-bold bg-white mt-4 py-3 rounded-xl border-2 border-dashed border-gray-300 text-gray-400">+ 新增零件品項</button>`;
             area.appendChild(sec);
             (inv[cat] || []).forEach((item, idx) => {
-                const row = document.createElement('div'); row.className = `inv-item-row ${item.outOfStock ? 'opacity-40' : ''} item-drag-row`; row.dataset.originalidx = idx;
+                const row = document.createElement('div'); row.className = `inv-item-row item-drag-row`; row.dataset.originalidx = idx;
                 row.innerHTML = `<div class="inv-item-main"><span class="drag-handle item-drag-handle">≡</span><div class="inv-name-area"><textarea class="inv-name-input" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';inv['${cat}'][${idx}].name=this.value" rows="1">${item.name}</textarea></div></div><div class="inv-control-bar"><div class="supp-group"></div><div class="price-group"><div class="val-box"><span class="val-label">售</span><input type="number" class="val-input p-input" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div><div class="val-box"><span class="val-label">本</span><input type="number" class="val-input c-input" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div><button onclick="inv['${cat}'][${idx}].outOfStock=!inv['${cat}'][${idx}].outOfStock;renderInventoryEditor();" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button></div></div>`;
                 document.getElementById(`edit-${cat}`).appendChild(row);
                 const ta = row.querySelector('textarea'); ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px';
@@ -312,10 +299,9 @@
 
     function addTempItem() {
         const nInput = document.getElementById('tempName'), pInput = document.getElementById('tempPrice'), cInput = document.getElementById('tempCost');
-        const n = nInput.value, p = pInput.value, c = cInput.value;
-        if(n) {
+        if(nInput.value) {
             if(!currentSelections[currentCat]) currentSelections[currentCat] = [];
-            currentSelections[currentCat].push({name:n, p:Number(p), c:Number(c||0), isGift:false, qty:1, isTemp: true, note:""});
+            currentSelections[currentCat].push({name:nInput.value, p:Number(pInput.value), c:Number(cInput.value||0), isGift:false, qty:1, isTemp: true, note:""});
             nInput.value = ""; pInput.value = ""; cInput.value = ""; 
             renderConfig(); renderModalList();
         }
@@ -349,7 +335,7 @@
     function saveRecord(st) { if(!document.getElementById('custName').value) { alert('填姓名'); return; } const id = editingRecordId || Date.now(); const r = { id, time: new Date().toLocaleString(), name: document.getElementById('custName').value, custPhone: document.getElementById('custPhone').value, seller: document.getElementById('infoSeller').value, selections: currentSelections, total: document.getElementById('ui-totalSale').innerText, noCard: document.getElementById('noCardTotal').value, status: st === 'current' ? 'draft' : st, discount: document.getElementById('discountAmt').value, progress: "待處理", notShipped: {} }; db.ref('records/' + id).update(r).then(() => { alert('成功'); resetForm(); showTab(st === 'order' ? 'orders' : 'drafts'); }); }
     function editRecord(id) { const r = records.find(x => x.id === id); if(!r) return; editingRecordId = id; currentSelections = r.selections || {}; document.getElementById('custName').value = r.name || ''; document.getElementById('custPhone').value = r.custPhone || ''; document.getElementById('discountAmt').value = r.discount || 0; document.getElementById('noCardTotal').value = r.noCard || ''; renderConfig(); showTab('calc'); }
     function addNewCategory() { const n = prompt("大項："); if(n) { catOrder.push(n); inv[n] = []; renderInventoryEditor(); } }
-    function addInvItem(c) { if(!inv[c]) inv[c] = []; inv[c].push({name: "新零件", p: 0, c: 0, outOfStock: false, suppliers: []}); renderInventoryEditor(); }
+    function addInvItem(c) { if(!inv[c]) inv[c] = []; inv[c].push({name: "新零件", p: 0, c: 0, outOfStock: false}); renderInventoryEditor(); }
     function removeCat(idx) { if(confirm('刪除？')) { delete inv[catOrder[idx]]; catOrder.splice(idx,1); renderInventoryEditor(); } }
     function renameCat(idx, newName) { const old = catOrder[idx]; inv[newName] = inv[old]; delete inv[old]; catOrder[idx] = newName; }
     function updateItemNote(cat, sIdx, val) { if(currentSelections[cat] && currentSelections[cat][sIdx]) currentSelections[cat][sIdx].note = val; }
