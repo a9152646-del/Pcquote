@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.21</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.23</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -29,9 +29,12 @@
         .selected-badge { color: #1e293b; font-size: 14px; margin-right: 8px; display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
         .price-tag { color: #94a3b8; font-weight: 400; font-size: 12px; margin-left: 4px; }
         
-        /* 隱藏金額邏輯 */
-        .hide-prices .price-tag { display: none !important; }
-        .ss-hide-item-prices .price-tag { display: none !important; }
+        /* 💸 核心隱藏邏輯 - 鈞宇專用 */
+        /* 1. 編輯模式下隱藏所有單價 (當 💰 開關沒勾時) */
+        body.hide-prices:not(.screenshot-mode) .price-tag { display: none !important; }
+        
+        /* 2. 截圖模式下隱藏零件單價 (當 📸 開關沒勾時) */
+        body.ss-hide-prices .price-tag { display: none !important; }
 
         #adminToggleContainer {
             position: fixed;
@@ -40,16 +43,17 @@
             z-index: 50;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 12px;
         }
-        #adminToggleLabel, #ssPriceToggleLabel {
+        .floating-label {
             background: #fff;
-            padding: 8px 12px;
+            padding: 10px 16px;
             border-radius: 50px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
             border: 2px solid #e2e8f0;
             display: flex;
-            align-items: center; gap: 6px; cursor: pointer;
+            align-items: center; gap: 8px; cursor: pointer;
+            width: fit-content;
         }
 
         #screenshotNav { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 99999; display: none; }
@@ -81,20 +85,20 @@
 <body class="p-2 md:p-4 hide-prices" id="mainBody">
 
 <div class="no-screenshot fixed right-4 bottom-10 z-[80] flex flex-col gap-3">
-    <button onclick="if(confirm('確定要重整網頁嗎？未儲存的資料會消失喔！')) { window.location.reload(); }" class="bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔄</button>
+    <button onclick="if(confirm('確定要重整網頁嗎？')) { window.location.reload(); }" class="bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔄</button>
     <button onclick="goBack()" class="bg-black text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔙</button>
 </div>
 
 <button id="floatingSaveBtn" onclick="saveInventory()" class="hidden bg-green-600 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl no-screenshot">💾</button>
 
 <div id="adminToggleContainer" class="no-screenshot">
-    <label id="adminToggleLabel">
-        <span class="text-xs font-black text-gray-700">💰 金額</span>
+    <label class="floating-label">
+        <span class="text-xs font-black text-gray-700">💰 金額開關</span>
         <input type="checkbox" id="adminToggle" onchange="toggleAdminMode()" class="w-5 h-5 cursor-pointer">
     </label>
-    <label id="ssPriceToggleLabel">
-        <span class="text-[10px] font-black text-gray-700">📸 顯示單價</span>
-        <input type="checkbox" id="ssPriceToggle" checked class="w-4 h-4 cursor-pointer">
+    <label class="floating-label">
+        <span class="text-xs font-black text-blue-600">📸 截圖顯示單價</span>
+        <input type="checkbox" id="ssPriceToggle" checked class="w-5 h-5 cursor-pointer">
     </label>
 </div>
 
@@ -149,23 +153,18 @@
                 <div class="card p-4 sticky top-20 border-t-4 border-blue-500 space-y-4">
                     <div class="space-y-3">
                         <div><label class="text-xs text-gray-400 font-bold">DISCOUNT 折扣</label><input type="number" id="discountAmt" class="w-full mt-1 text-red-500 font-black text-lg" value="0" oninput="calculate()"></div>
-                        
-                        <div><label class="text-xs text-blue-400 font-bold">EDIT TOTAL 手動修改含稅金額</label><input type="number" id="manualTotal" class="w-full mt-1 border-blue-200 font-black text-lg text-blue-600" placeholder="點此修改總額..." oninput="calculate()"></div>
-
+                        <div><label class="text-xs text-blue-400 font-bold">EDIT TOTAL 手動總額</label><input type="number" id="manualTotal" class="w-full mt-1 border-blue-200 font-black text-lg text-blue-600" placeholder="點此修改總額..." oninput="calculate()"></div>
                         <div class="pt-1"><div class="text-xs text-blue-400 font-bold">TOTAL 含稅 ✏️</div><div id="ui-totalSale" class="text-3xl font-black text-blue-600">$0</div></div>
-                        
                         <div id="ui-noCardShow" class="p-2 bg-orange-50 rounded hidden border-2 border-orange-200">
                             <div class="text-[10px] text-orange-400 font-bold uppercase">無卡分期</div>
                             <div id="ui-noCardVal" class="text-lg font-black text-orange-600">$0</div>
                         </div>
                         <input type="number" id="noCardTotal" class="w-full border-orange-200 text-sm" placeholder="輸入無卡分期金額" oninput="calculate()">
                     </div>
-                    
                     <div id="sellerBox" class="bg-blue-50 p-3 rounded-lg invisible">
                         <div class="flex justify-between text-xs text-blue-500"><span>成本</span><span id="ui-totalCost">$0</span></div>
                         <div class="flex justify-between text-sm font-black text-green-600 border-t-2 border-blue-100 mt-2 pt-2"><span>利潤</span><span id="ui-totalProfit">$0</span></div>
                     </div>
-
                     <div class="space-y-2">
                         <button onclick="saveRecord('current')" class="w-full bg-blue-600 text-white py-3 rounded-lg font-black">💾 儲存草稿</button>
                         <button id="btnConvertToOrder" onclick="saveRecord('order')" class="hidden w-full bg-green-600 text-white py-3 rounded-lg font-black">✅ 轉正式訂單</button>
@@ -179,7 +178,6 @@
     <div id="tab-drafts" class="page-content hidden"><div id="draftList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
     <div id="tab-orders" class="page-content hidden"><div id="orderList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
     <div id="tab-completed" class="page-content hidden"><div id="completedList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 opacity-80"></div></div>
-
     <div id="tab-inventory" class="page-content hidden">
         <div class="card p-4">
             <div class="flex justify-between items-center mb-4">
@@ -239,7 +237,6 @@ function goBack() {
 function calculate() {
     let subP = 0, subC = 0, disc = parseFloat(document.getElementById('discountAmt')?.value || 0);
     let noCard = parseFloat(document.getElementById('noCardTotal').value) || 0;
-    
     catOrder.forEach(cat => {
         (currentSelections[cat] || []).forEach(s => {
             let p = 0, c = 0;
@@ -249,24 +246,17 @@ function calculate() {
             subC += (c * (s.qty || 1));
         });
     });
-
     const autoTotal = subP - disc; 
     const manualVal = parseFloat(document.getElementById('manualTotal').value);
     const baseTaxedTotal = !isNaN(manualVal) ? manualVal : autoTotal;
-
     document.getElementById('ui-totalSale').innerText = `$${baseTaxedTotal.toLocaleString()}`;
-
     const originalProfit = baseTaxedTotal - subC;
     let profit = originalProfit;
-    if (noCard > 0) {
-        profit = (noCard - baseTaxedTotal) + originalProfit;
-    }
-    
+    if (noCard > 0) profit = (noCard - baseTaxedTotal) + originalProfit;
     if(noCard > 0) {
         document.getElementById('ui-noCardVal').innerText = `$${noCard.toLocaleString()}`;
         document.getElementById('ui-noCardShow').classList.remove('hidden');
     } else document.getElementById('ui-noCardShow').classList.add('hidden');
-
     document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`;
     document.getElementById('ui-totalProfit').innerText = `$${profit.toLocaleString()}`;
 }
@@ -348,6 +338,7 @@ function renderInventoryEditor() {
 function toggleSupplier(cat, idx, label) { if(!inv[cat][idx].suppliers) inv[cat][idx].suppliers = []; const list = inv[cat][idx].suppliers; const pos = list.indexOf(label); if(pos > -1) list.splice(pos, 1); else list.push(label); renderInventoryEditor(); }
 function toggleStockStatus(cat, idx) { inv[cat][idx].outOfStock = !inv[cat][idx].outOfStock; renderInventoryEditor(); }
 
+// 💾 金額開關邏輯
 function toggleAdminMode() { 
     const isChecked = document.getElementById('adminToggle').checked; 
     const body = document.getElementById('mainBody'); 
@@ -363,32 +354,31 @@ function toggleAdminMode() {
 
 function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); const fsBtn = document.getElementById('floatingSaveBtn'); if(t === 'inventory') { renderInventoryEditor(); fsBtn.classList.remove('hidden'); fsBtn.style.display = 'flex'; } else { fsBtn.classList.add('hidden'); fsBtn.style.display = 'none'; } }
 
-// 📸 豬豬修改：控制截圖模式底部的顯示與品項單價的顯示
+// 📸 截圖模式核心邏輯 - 暴力切換
 function enterScreenshotMode() { 
+    const body = document.getElementById('mainBody');
+    const isMoneyChecked = document.getElementById('adminToggle').checked;
+    const isSSPriceChecked = document.getElementById('ssPriceToggle').checked;
+    const footer = document.getElementById('screenshot-footer');
+    
+    // 1. 時間戳記
     const now = new Date(); 
     const timeStr = now.getFullYear() + '/' + (now.getMonth() + 1).toString().padStart(2, '0') + '/' + now.getDate().toString().padStart(2, '0') + ' ' + now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0'); 
     document.getElementById('ss-time').innerText = '報價日期：' + timeStr; 
     calculate(); 
 
-    const isMoneyChecked = document.getElementById('adminToggle').checked;
-    const isSSPriceChecked = document.getElementById('ssPriceToggle').checked;
-    const footer = document.getElementById('screenshot-footer');
-    const body = document.getElementById('mainBody');
-
-    // 控制底部折扣/總額
-    if (isMoneyChecked) {
-        footer.style.display = 'block';
+    // 2. 處理底部統計 (💰 金額開關控制)
+    footer.style.display = isMoneyChecked ? 'block' : 'none';
+    if(isMoneyChecked) {
         document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value || 0).toLocaleString(); 
         document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText; 
-    } else {
-        footer.style.display = 'none';
     }
 
-    // 控制品項後面的 ($單價) 是否顯示
+    // 3. 處理零件單價 (📸 顯示單價開關控制)
     if (!isSSPriceChecked) {
-        body.classList.add('ss-hide-item-prices');
+        body.classList.add('ss-hide-prices');
     } else {
-        body.classList.remove('ss-hide-item-prices');
+        body.classList.remove('ss-hide-prices');
     }
 
     body.classList.add('screenshot-mode'); 
@@ -398,8 +388,7 @@ function enterScreenshotMode() {
 
 function exitScreenshotMode() { 
     const body = document.getElementById('mainBody');
-    body.classList.remove('screenshot-mode'); 
-    body.classList.remove('ss-hide-item-prices');
+    body.classList.remove('screenshot-mode', 'ss-hide-prices');
     document.getElementById('screenshot-header').style.display = 'none'; 
     document.getElementById('screenshot-footer').style.display = 'none'; 
     renderConfig(); 
@@ -421,7 +410,7 @@ function saveRecord(st) { if(!document.getElementById('custName').value) { alert
 function editRecord(id) { const r = records.find(x => x.id === id); if(!r) return; editingRecordId = id; currentStatus = r.status; currentSelections = r.selections || {}; document.getElementById('custName').value = r.name || ''; document.getElementById('discountAmt').value = r.discount || 0; document.getElementById('noCardTotal').value = r.noCard || ''; document.getElementById('manualTotal').value = r.manualTotal || ''; if(r.status === 'draft') document.getElementById('btnConvertToOrder').classList.remove('hidden'); else document.getElementById('btnConvertToOrder').classList.add('hidden'); renderConfig(); showTab('calc'); }
 function addTempItem() { const n = document.getElementById('tempName').value, p = document.getElementById('tempPrice').value, c = document.getElementById('tempCost').value; if(!n) return; if(!currentSelections[currentCat]) currentSelections[currentCat] = []; currentSelections[currentCat].push({name:n, p:Number(p), c:Number(c), isGift:false, qty:1, isTemp: true}); renderConfig(); renderModalList(); }
 function openDeliveryFast(id) { const r = records.find(x => x.id === id); if(!r) return; let tempDeliv = r.deliveredItems || {}; const list = document.getElementById('deliveryList'); list.innerHTML = ''; for (let cat in r.selections) { r.selections[cat].forEach((sel, idx) => { const k = `${cat}_${idx}`; const isD = tempDeliv[k] !== false; let n = sel.isTemp ? sel.name : (inv[cat] && inv[cat][sel.idx] ? inv[cat][sel.idx].name : "未知品項"); list.innerHTML += `<div class="flex justify-between items-center p-3 border-2 rounded-xl bg-white"><div>${n}</div><input type="checkbox" class="w-5 h-5" ${isD?'checked':''} onchange="db.ref('records/'+${id}+'/deliveredItems/${k}').set(this.checked)"></div>`; }); } document.getElementById('deliveryModal').classList.remove('hidden'); }
-function saveInventory() { if(confirm('豬豬，確定要將更改同步到雲端嗎？')) { db.ref('inventory').set(inv); db.ref('catOrder').set(catOrder); alert('同步成功！'); } }
+function saveInventory() { if(confirm('豬豬，確定要同步到雲端嗎？')) { db.ref('inventory').set(inv); db.ref('catOrder').set(catOrder); alert('同步成功！'); } }
 function resetForm() { editingRecordId=null; currentSelections={}; document.querySelectorAll('input').forEach(i=>i.value=""); renderConfig(); }
 function moveCat(idx, dir) { let newIdx = idx + dir; if (newIdx < 0 || newIdx >= catOrder.length) return; [catOrder[idx], catOrder[newIdx]] = [catOrder[newIdx], catOrder[idx]]; renderInventoryEditor(); }
 function moveItem(cat, idx, dir) { let newIdx = idx + dir; if (newIdx < 0 || newIdx >= inv[cat].length) return; [inv[cat][idx], inv[cat][newIdx]] = [inv[cat][newIdx], inv[cat][idx]]; renderInventoryEditor(); }
