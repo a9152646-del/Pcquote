@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.63</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.64</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -17,7 +17,7 @@
         .hidden { display: none !important; }
         input, select, textarea { border: 1px solid #cbd5e1; border-radius: 5px; padding: 6px 10px; font-size: 14px; outline: none; }
         
-        /* 🏆 隱私鎖定 */
+        /* 🏆 金額隱私最強鎖定 */
         .price-tag { color: #94a3b8; font-weight: 400; font-size: 12px; margin-left: 4px; }
         body.hide-prices .price-tag, body.hide-prices #screenshot-footer { display: none !important; }
         body.ss-hide-prices .price-tag { display: none !important; }
@@ -29,21 +29,18 @@
         .status-purple { background-color: #f3e8ff !important; color: #6b21a8 !important; }
         .status-green { background-color: #dcfce7 !important; color: #166534 !important; }
 
-        /* ≡ 拖曳樣式 */
         .drag-handle { cursor: grab; color: #cbd5e1; padding: 5px; font-size: 24px; user-select: none; }
         .drag-handle:active { cursor: grabbing; color: #3b82f6; }
 
-        /* 📋 報價單品項優化：拒絕太擠 */
+        /* 📋 報價單排版優化：增加間距，拒絕擠壓 */
         .item-row { 
-            padding: 16px 18px !important; 
-            border-bottom: 1px solid #f1f5f9; 
-            margin-bottom: 6px;
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-            transition: all 0.2s;
+            padding: 16px !important; 
+            margin-bottom: 12px !important; 
+            background: #ffffff; 
+            border: 1px solid #f1f5f9 !important;
+            border-radius: 12px !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
-        .item-row:active { background: #f1f5f9; }
 
         /* 🟢 品項管理排版 */
         .inv-item-row { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
@@ -101,8 +98,8 @@
                         <button onclick="openTemplateModal()" class="flex-[2] bg-indigo-600 text-white py-3 rounded-xl font-black shadow-md">📂 載入範本</button>
                         <button onclick="copyQuoteAsText()" class="flex-[3] bg-cyan-500 text-white py-3 rounded-xl font-black shadow-md border-b-4 border-cyan-700 active:border-0">📋 複製 Line 文字報價</button>
                     </div>
-                    <div class="card p-1 !bg-gray-50/30">
-                        <div id="configRows" class="space-y-1"></div>
+                    <div class="card p-2 !bg-gray-100/50">
+                        <div id="configRows" class="space-y-3"></div>
                         <div id="screenshot-footer" class="text-right p-6 pt-4 border-t-2 border-gray-100 space-y-1" style="display: none;">
                             <div class="text-xs text-gray-500 font-bold">折扣：<span id="ss-val-disc" class="text-red-500"></span></div>
                             <div class="text-xl font-black text-blue-600">總計 (含稅)：<span id="ss-val-total"></span></div>
@@ -122,7 +119,7 @@
                         <div id="sellerBox" class="bg-blue-50 p-3 rounded-lg invisible"><div class="flex justify-between text-xs text-blue-500"><span>成本</span><span id="ui-totalCost">$0</span></div><div class="flex justify-between text-sm font-black text-green-600 border-t-2 border-blue-100 mt-2 pt-2"><span>利潤</span><span id="ui-totalProfit">$0</span></div></div>
                         <div class="space-y-2">
                             <button onclick="saveRecord('current')" class="w-full bg-blue-600 text-white py-3 rounded-lg font-black shadow-lg">💾 儲存草稿</button>
-                            <button onclick="saveTemplate()" class="w-full bg-gray-700 text-white py-3 rounded-lg font-bold">💾 存為範本</button>
+                            <button onclick="saveTemplate()" class="w-full bg-gray-700 text-white py-3 rounded-lg font-bold">📂 存為範本</button>
                             <button onclick="enterScreenshotMode()" class="w-full bg-orange-500 text-white py-3 rounded-lg font-black">📸 截圖模式</button>
                         </div>
                     </div>
@@ -217,7 +214,7 @@
             // 💳 無卡金額
             const noCardHtml = (r.noCard > 0) ? `<div class="text-[10px] text-orange-600 font-black mt-1">💳 無卡：$${Number(r.noCard).toLocaleString()}</div>` : '';
             
-            // ⚠️ 未出貨細節顯示
+            // ⚠️ 未出貨細節
             let nsNames = [];
             if(r.notShipped) {
                 Object.keys(r.notShipped).forEach(cat => {
@@ -230,10 +227,10 @@
                     });
                 });
             }
-            // 🏆 修正：移到金額下方
-            const nsDisplayHtml = nsNames.length > 0 ? `<div class="text-[10px] text-red-600 font-black mt-2 p-2 bg-red-50 rounded-lg border border-red-100 leading-relaxed shadow-inner">⚠️ 尚未出貨：<br>${nsNames.join('、')}</div>` : '';
+            // 🏆 修正：移到金額與無卡金額的下方
+            const nsDisplayHtml = nsNames.length > 0 ? `<div class="text-[10px] text-red-600 font-black mt-3 p-3 bg-red-50 rounded-xl border border-red-100 leading-relaxed shadow-inner">⚠️ 尚未出貨明細：<br>${nsNames.join('、')}</div>` : '';
 
-            const shipmentBtn = (status === 'order' || status === 'completed') ? `<button onclick="openShipmentModal(${r.id})" class="px-2 py-2 bg-gray-50 text-gray-500 text-[10px] rounded-lg font-black border-2 border-gray-200">🚚 出貨細節</button>` : '';
+            const shipmentBtn = (status === 'order' || status === 'completed') ? `<button onclick="openShipmentModal(${r.id})" class="px-2 py-2 bg-gray-50 text-gray-500 text-[10px] rounded-lg font-black border-2 border-gray-200">🚚 出貨管理</button>` : '';
 
             const div = document.createElement('div'); div.className = "p-4 border-2 rounded-xl bg-white shadow-sm space-y-3";
             div.innerHTML = `<div class="flex justify-between items-start"><div class="flex-1"><div class="text-[10px] text-gray-400 font-mono">${r.time}</div><div class="text-base font-black text-gray-800 mb-1">${r.name || '無名客戶'}</div><div class="text-blue-600 font-black text-lg">${r.total}</div>${noCardHtml}${nsDisplayHtml}</div><div class="text-right ml-2"><span class="bg-blue-100 text-blue-600 text-[10px] font-bold px-2 py-1 rounded-full">${r.seller||'未指定'}</span><div class="mt-2">
