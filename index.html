@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.55</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.56</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -29,11 +29,10 @@
         .status-purple { background-color: #f3e8ff !important; color: #6b21a8 !important; }
         .status-green { background-color: #dcfce7 !important; color: #166534 !important; }
 
-        /* ≡ 拖曳樣式 */
         .drag-handle { cursor: grab; color: #cbd5e1; padding: 5px; font-size: 24px; user-select: none; }
         .drag-handle:active { cursor: grabbing; color: #3b82f6; }
 
-        /* 🟢 品項管理排版 (v9.51 鋼鐵排版) */
+        /* 🟢 品項管理排版 */
         .inv-item-row { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
         .inv-item-main { display: flex; align-items: flex-start; gap: 10px; }
         .inv-name-area { flex: 1; min-width: 0; }
@@ -140,7 +139,7 @@
 
     let inv = {}; let catOrder = []; let records = []; let templates = {}; let currentSelections = {}; let editingRecordId = null; let currentCat = "";
 
-    // 🏆 文字報價核心函數
+    // 🏆 文字報價核心函數 (已移除聲明)
     function generateTextQuote(recordSelections, discount, totalStr) {
         let text = `🐚【神奇海螺電競 | 專業報價】\n`;
         text += `日期：${new Date().toLocaleDateString()}\n`;
@@ -156,18 +155,15 @@
         });
         text += `------------------------------\n`;
         if (discount > 0) text += `折扣：-$${Number(discount).toLocaleString()}\n`;
-        text += `總計：${totalStr} (含稅)\n`;
-        text += `\n本報價三日內有效，下單前請與店家確認清楚喔！`;
+        text += `總計：${totalStr} (含稅)`;
         return text;
     }
 
-    // 🏆 當前報價頁面複製
     function copyQuoteAsText() {
         const text = generateTextQuote(currentSelections, document.getElementById('discountAmt').value, document.getElementById('ui-totalSale').innerText);
         navigator.clipboard.writeText(text).then(() => alert('📋 已複製文字報價！')).catch(() => alert('複製失敗'));
     }
 
-    // 🏆 從歷史訂單卡片複製
     function copyRecordAsText(id) {
         const r = records.find(x => x.id === id);
         if(!r) return;
