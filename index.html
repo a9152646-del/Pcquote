@@ -17,7 +17,6 @@
         .hidden { display: none !important; }
         input, select, textarea { border: 1px solid #cbd5e1; border-radius: 5px; padding: 6px 10px; font-size: 14px; outline: none; }
         
-        /* 🏆 隱私與顏色鎖定 */
         .price-tag { color: #94a3b8; font-weight: 400; font-size: 12px; margin-left: 4px; }
         body.hide-prices .price-tag, body.hide-prices #screenshot-footer { display: none !important; }
         body.ss-hide-prices .price-tag { display: none !important; }
@@ -30,10 +29,8 @@
         .drag-handle { cursor: grab; color: #cbd5e1; padding: 5px; font-size: 24px; user-select: none; }
         .drag-handle:active { cursor: grabbing; color: #3b82f6; }
 
-        /* 📋 報價單正常排版 */
         .item-row { padding: 16px !important; margin-bottom: 12px !important; background: #fff; border: 1px solid #f1f5f9 !important; border-radius: 12px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
 
-        /* 📸 截圖模式：地獄壓縮比例 (v9.67 核心修正) */
         .screenshot-mode .item-row { 
             padding: 2px 10px !important; 
             margin-bottom: 0px !important; 
@@ -51,7 +48,6 @@
         .screenshot-mode #screenshot-footer .text-xl { font-size: 0.95rem !important; }
         .screenshot-mode #screenshot-footer .text-xs { font-size: 8px !important; }
 
-        /* 🟢 品項管理排版 */
         .inv-item-row { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
         .inv-item-main { display: flex; align-items: flex-start; gap: 10px; }
         .inv-name-area { flex: 1; min-width: 0; }
@@ -291,7 +287,8 @@
     function renderInventoryEditor() {
         const area = document.getElementById('inventoryEditor'); if (!area) return; 
         
-        // 📍 新增位置鎖定邏輯
+        // 🚀 核心修正：鎖定目前容器高度，防止頁面塌陷導致捲軸跳動
+        area.style.minHeight = area.offsetHeight + 'px';
         const scrollPos = window.scrollY;
         
         area.innerHTML = '';
@@ -309,8 +306,11 @@
         });
         initDragAndDrop();
         
-        // 📍 恢復位置
-        window.scrollTo(0, scrollPos);
+        // 🚀 繪製完成後放開高度限制並強迫恢復位置
+        setTimeout(() => {
+            window.scrollTo(0, scrollPos);
+            area.style.minHeight = '';
+        }, 0);
     }
 
     function initDragAndDrop() {
