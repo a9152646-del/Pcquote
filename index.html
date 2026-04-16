@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.59</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.60</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -32,7 +32,7 @@
         .drag-handle { cursor: grab; color: #cbd5e1; padding: 5px; font-size: 24px; user-select: none; }
         .drag-handle:active { cursor: grabbing; color: #3b82f6; }
 
-        /* 🟢 品項管理排版 */
+        /* 🟢 品項管理排版 (v9.51 鋼鐵對齊) */
         .inv-item-row { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
         .inv-item-main { display: flex; align-items: flex-start; gap: 10px; }
         .inv-name-area { flex: 1; min-width: 0; }
@@ -167,6 +167,37 @@
         navigator.clipboard.writeText(text).then(() => alert('📋 已複製該訂單文字報價！'));
     }
 
+    function toggleShipment(id, current) {
+        const next = (current === '已出貨') ? false : true;
+        db.ref('records/' + id + '/shipped').set(next);
+    }
+
+    function renderRecords() {
+        const lists = { 'draft': document.getElementById('draftList'), 'order': document.getElementById('orderList'), 'completed': document.getElementById('completedList') };
+        Object.values(lists).forEach(l => { if(l) l.innerHTML = ''; });
+        records.sort((a,b)=>b.id-a.id).forEach(r => {
+            const status = r.status || 'draft'; if (!lists[status]) return;
+            const pOpts = ["待處理", "組裝中", "測試中", "已完工", "已寄出"].map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
+            
+            // 🏆 功能回歸：在清單中顯示「無卡金額」
+            const noCardHtml = (r.noCard > 0) ? `<div class="text-[10px] text-orange-600 font-black mt-1">💳 無卡：$${Number(r.noCard).toLocaleString()}</div>` : '';
+            
+            // 🏆 功能回歸：正式/結案訂單專用「出貨管理」按鈕
+            const shipmentHtml = (status === 'order' || status === 'completed') ? `<button onclick="toggleShipment(${r.id}, '${r.shipped?'已出貨':'未出貨'}')" class="px-2 py-2 ${r.shipped?'bg-green-100 text-green-700':'bg-gray-100 text-gray-500'} text-[10px] rounded-lg font-black border">🚚 ${r.shipped?'已出貨':'未出貨'}</button>` : '';
+
+            const div = document.createElement('div'); div.className = "p-4 border-2 rounded-xl bg-white shadow-sm space-y-3";
+            div.innerHTML = `<div class="flex justify-between items-start"><div class="flex-1"><div class="text-[10px] text-gray-400 font-mono">${r.time}</div><div class="text-base font-black text-gray-800">${r.name || '無名'}</div><div class="text-blue-600 font-black text-lg">${r.total}</div>${noCardHtml}</div><div class="text-right ml-2"><span class="bg-blue-100 text-blue-600 text-[10px] font-bold px-2 py-1 rounded-full">${r.seller||'未指定'}</span><div class="mt-2">
+                <select onchange="db.ref('records/'+${r.id}+'/progress').set(this.value)" class="text-[10px] font-bold px-1 py-1 rounded-lg ${getStatusClass(r.progress)}">${pOpts}</select>
+            </div></div></div><div class="flex flex-wrap gap-1 pt-3 border-t border-dashed">
+                <button onclick="editRecord(${r.id})" class="flex-1 py-2 bg-blue-600 text-white text-[10px] rounded-lg font-black">編輯</button>
+                <button onclick="copyRecordAsText(${r.id})" class="flex-1 py-2 bg-cyan-600 text-white text-[10px] rounded-lg font-black">📋 文字</button>
+                ${shipmentHtml}
+                ${status === 'draft' ? `<button onclick="if(confirm('轉正式？')) db.ref('records/'+${r.id}+'/status').set('order')" class="bg-green-600 text-white px-2 rounded-lg text-[10px] font-bold">轉正式</button>` : `<button onclick="if(confirm('結案？')) db.ref('records/'+${r.id}+'/status').set('completed')" class="bg-gray-600 text-white px-2 rounded-lg text-[10px] font-bold">結案</button>`}
+                <button onclick="if(confirm('確定刪除？')) db.ref('records/'+${r.id}).remove()" class="text-red-300 text-xl px-1">✕</button></div>`;
+            lists[status].appendChild(div);
+        });
+    }
+
     function calculate() {
         try {
             let subP = 0, subC = 0, disc = parseFloat(document.getElementById('discountAmt')?.value || 0);
@@ -231,37 +262,6 @@
     function getStatusClass(p) {
         const map = {"待處理":"status-red","組裝中":"status-blue","測試中":"status-orange","已完工":"status-purple","已寄出":"status-green"};
         return map[p] || "";
-    }
-
-    function renderRecords() {
-        const lists = { 'draft': document.getElementById('draftList'), 'order': document.getElementById('orderList'), 'completed': document.getElementById('completedList') };
-        Object.values(lists).forEach(l => { if(l) l.innerHTML = ''; });
-        records.sort((a,b)=>b.id-a.id).forEach(r => {
-            const status = r.status || 'draft'; if (!lists[status]) return;
-            const pOpts = ["待處理", "組裝中", "測試中", "已完工", "已寄出"].map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
-            
-            // 🏆 修正 2：在列表中顯示無卡金額
-            const noCardHtml = (r.noCard > 0) ? `<div class="text-[10px] text-orange-600 font-black mt-1">💳 無卡：$${Number(r.noCard).toLocaleString()}</div>` : '';
-            
-            // 🏆 修正 1：正式/結案訂單出貨按鈕
-            const shipmentHtml = (status === 'order' || status === 'completed') ? `<button onclick="toggleShipment(${r.id}, '${r.shipped?'已出貨':'未出貨'}')" class="px-2 py-2 ${r.shipped?'bg-green-100 text-green-700':'bg-gray-100 text-gray-500'} text-[10px] rounded-lg font-black border">🚚 ${r.shipped?'已出貨':'未出貨'}</button>` : '';
-
-            const div = document.createElement('div'); div.className = "p-4 border-2 rounded-xl bg-white shadow-sm space-y-3";
-            div.innerHTML = `<div class="flex justify-between items-start"><div class="flex-1"><div class="text-[10px] text-gray-400 font-mono">${r.time}</div><div class="text-base font-black text-gray-800">${r.name || '無名'}</div><div class="text-blue-600 font-black text-lg">${r.total}</div>${noCardHtml}</div><div class="text-right ml-2"><span class="bg-blue-100 text-blue-600 text-[10px] font-bold px-2 py-1 rounded-full">${r.seller||'未指定'}</span><div class="mt-2">
-                <select onchange="db.ref('records/'+${r.id}+'/progress').set(this.value)" class="text-[10px] font-bold px-1 py-1 rounded-lg ${getStatusClass(r.progress)}">${pOpts}</select>
-            </div></div></div><div class="flex flex-wrap gap-1 pt-3 border-t border-dashed">
-                <button onclick="editRecord(${r.id})" class="flex-1 py-2 bg-blue-600 text-white text-[10px] rounded-lg font-black">編輯</button>
-                <button onclick="copyRecordAsText(${r.id})" class="flex-1 py-2 bg-cyan-600 text-white text-[10px] rounded-lg font-black">📋 文字</button>
-                ${shipmentHtml}
-                ${status === 'draft' ? `<button onclick="if(confirm('轉正式？')) db.ref('records/'+${r.id}+'/status').set('order')" class="bg-green-600 text-white px-2 rounded-lg text-[10px] font-bold">轉正式</button>` : `<button onclick="if(confirm('結案？')) db.ref('records/'+${r.id}+'/status').set('completed')" class="bg-gray-600 text-white px-2 rounded-lg text-[10px] font-bold">結案</button>`}
-                <button onclick="if(confirm('確定刪除？')) db.ref('records/'+${r.id}).remove()" class="text-red-300 text-xl px-1">✕</button></div>`;
-            lists[status].appendChild(div);
-        });
-    }
-
-    function toggleShipment(id, current) {
-        const next = (current === '已出貨') ? false : true;
-        db.ref('records/' + id + '/shipped').set(next);
     }
 
     function addTempItem() {
