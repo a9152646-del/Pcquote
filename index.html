@@ -33,7 +33,7 @@
         /* 📋 報價單正常排版 */
         .item-row { padding: 16px !important; margin-bottom: 12px !important; background: #fff; border: 1px solid #f1f5f9 !important; border-radius: 12px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
 
-        /* 📸 截圖模式：地獄壓縮比例 */
+        /* 📸 截圖模式：核心修正 */
         .screenshot-mode .item-row { 
             padding: 2px 10px !important; 
             margin-bottom: 0px !important; 
@@ -291,12 +291,14 @@
     function renderInventoryEditor() {
         const area = document.getElementById('inventoryEditor'); if (!area) return; 
         
-        // 🚀 核心修正：鎖定目前容器高度，防止捲軸跳回頂部
         area.style.minHeight = area.offsetHeight + 'px';
         const scrollPos = window.scrollY;
         
         area.innerHTML = '';
-        const head = document.getElementById('inventoryHeader'); if(head) head.innerHTML = `<h2 class="font-black text-lg text-gray-700">⚙️ 雲端品項管理</h2><div class="flex gap-2"><button onclick="addNewCategory()" class="bg-blue-500 text-white px-3 py-2 rounded-lg text-[10px]">+ 大項</button></div>`;
+        const head = document.getElementById('inventoryHeader'); 
+        // 補回：頂部功能按鈕區域 (+大項 與 💾同步到雲端)
+        if(head) head.innerHTML = `<h2 class="font-black text-lg text-gray-700">⚙️ 雲端品項管理</h2><div class="flex gap-2"><button onclick="addNewCategory()" class="bg-blue-500 text-white px-3 py-2 rounded-lg text-[10px]">+ 大項</button><button onclick="saveInventory()" class="bg-green-600 text-white px-3 py-2 rounded-lg text-[10px]">💾 同步順序</button></div>`;
+        
         catOrder.forEach((cat, cIdx) => {
             const sec = document.createElement('div'); sec.className = "bg-gray-100 p-3 rounded-xl border-2 mb-6 category-drag-item"; sec.dataset.catname = cat;
             sec.innerHTML = `<div class="flex justify-between items-center mb-4"><div class="flex items-center gap-2"><span class="drag-handle cat-drag-handle">≡</span><input class="font-black text-base text-blue-700 border-none bg-transparent p-0 w-40" value="${cat}" onchange="renameCat(${cIdx}, this.value)"></div><button onclick="removeCat(${cIdx})" class="text-red-300 hover:text-red-500 text-2xl">×</button></div><div id="edit-${cat}" class="space-y-3 item-drag-container" data-cat="${cat}"></div><button onclick="addInvItem('${cat}')" class="w-full text-xs font-bold bg-white mt-4 py-3 rounded-xl border-2 border-dashed border-gray-300 text-gray-400">+ 新增零件品項</button>`;
@@ -304,7 +306,6 @@
             (inv[cat] || []).forEach((item, idx) => {
                 const row = document.createElement('div'); row.className = `inv-item-row item-drag-row`; row.dataset.originalidx = idx;
                 
-                // ❌ 補回零件右側的 ✕ 刪除鍵，並加上 flex-shrink-0 確保它在 iPhone 不會被擠掉
                 row.innerHTML = `<div class="inv-item-main">
                     <span class="drag-handle item-drag-handle">≡</span>
                     <div class="inv-name-area">
@@ -373,10 +374,9 @@
     function resetForm() { editingRecordId=null; currentSelections={}; document.querySelectorAll('input').forEach(i=>i.value=""); document.getElementById('discountAmt').value=0; renderConfig(); }
     function saveRecord(st) { if(!document.getElementById('custName').value) { alert('填姓名'); return; } const id = editingRecordId || Date.now(); const r = { id, time: new Date().toLocaleString(), name: document.getElementById('custName').value, custPhone: document.getElementById('custPhone').value, seller: document.getElementById('infoSeller').value, selections: currentSelections, total: document.getElementById('ui-totalSale').innerText, noCard: document.getElementById('noCardTotal').value, status: st === 'current' ? 'draft' : st, discount: document.getElementById('discountAmt').value, progress: "待處理", notShipped: {} }; db.ref('records/' + id).update(r).then(() => { alert('成功'); resetForm(); showTab(st === 'order' ? 'orders' : 'drafts'); }); }
     function editRecord(id) { const r = records.find(x => x.id === id); if(!r) return; editingRecordId = id; currentSelections = r.selections || {}; document.getElementById('custName').value = r.name || ''; document.getElementById('custPhone').value = r.custPhone || ''; document.getElementById('discountAmt').value = r.discount || 0; document.getElementById('noCardTotal').value = r.noCard || ''; renderConfig(); showTab('calc'); }
-    function addNewCategory() { const n = prompt("大項："); if(n) { catOrder.push(n); inv[n] = []; renderInventoryEditor(); } }
+    function addNewCategory() { const n = prompt("大項名稱："); if(n) { catOrder.push(n); inv[n] = []; renderInventoryEditor(); } }
     function addInvItem(c) { if(!inv[c]) inv[c] = []; inv[c].push({name: "新零件", p: 0, c: 0, outOfStock: false}); renderInventoryEditor(); }
 
-    // 📍 補回零件刪除邏輯
     function removeInvItem(cat, idx) { 
         if(confirm('確定刪除此零件？')) { 
             inv[cat].splice(idx, 1); 
@@ -384,7 +384,7 @@
         } 
     }
 
-    function removeCat(idx) { if(confirm('刪除？')) { delete inv[catOrder[idx]]; catOrder.splice(idx,1); renderInventoryEditor(); } }
+    function removeCat(idx) { if(confirm('確定刪除整個大項？')) { delete inv[catOrder[idx]]; catOrder.splice(idx,1); renderInventoryEditor(); } }
     function renameCat(idx, newName) { const old = catOrder[idx]; inv[newName] = inv[old]; delete inv[old]; catOrder[idx] = newName; }
     function updateItemNote(cat, sIdx, val) { if(currentSelections[cat] && currentSelections[cat][sIdx]) currentSelections[cat][sIdx].note = val; }
     function saveTemplate() { const name = prompt("名稱："); if (!name) return; const data = { id: Date.now(), name, selections: currentSelections, discount: document.getElementById('discountAmt').value || 0 }; db.ref('templates/' + data.id).set(data).then(() => alert('成功！')); }
