@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.32</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.33</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -107,28 +107,37 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="lg:col-span-1 no-screenshot">
                     <div class="card p-4 sticky top-20 border-t-4 border-blue-500 space-y-4">
                         <div class="space-y-3">
                             <div><label class="text-xs text-gray-400 font-bold">DISCOUNT 折扣</label><input type="number" id="discountAmt" class="w-full mt-1 text-red-500 font-black text-lg" value="0" oninput="calculate()"></div>
                             <div><label class="text-xs text-blue-400 font-bold">EDIT TOTAL 手動總額</label><input type="number" id="manualTotal" class="w-full mt-1 border-blue-200 font-black text-lg text-blue-600" placeholder="點此修改總額..." oninput="calculate()"></div>
                             <div class="pt-1"><div class="text-xs text-blue-400 font-bold">TOTAL 含稅 ✏️</div><div id="ui-totalSale" class="text-3xl font-black text-blue-600">$0</div></div>
-                            <div id="ui-noCardShow" class="p-2 bg-orange-50 rounded hidden border-2 border-orange-200"><div class="text-[10px] text-orange-400 font-bold uppercase">無卡分期</div><div id="ui-noCardVal" class="text-lg font-black text-orange-600">$0</div></div>
+                            <div id="ui-noCardShow" class="p-2 bg-orange-50 rounded hidden border-2 border-orange-200">
+                                <div class="text-[10px] text-orange-400 font-bold uppercase">無卡分期</div>
+                                <div id="ui-noCardVal" class="text-lg font-black text-orange-600">$0</div>
+                            </div>
                             <input type="number" id="noCardTotal" class="w-full border-orange-200 text-sm" placeholder="輸入無卡分期金額" oninput="calculate()">
                         </div>
-                        <div id="sellerBox" class="bg-blue-50 p-3 rounded-lg invisible"><div class="flex justify-between text-xs text-blue-500"><span>成本</span><span id="ui-totalCost">$0</span></div><div class="flex justify-between text-sm font-black text-green-600 border-t-2 border-blue-100 mt-2 pt-2"><span>利潤</span><span id="ui-totalProfit">$0</span></div></div>
-                        <div class="space-y-2"><button onclick="saveRecord('current')" class="w-full bg-blue-600 text-white py-3 rounded-lg font-black">💾 儲存草稿</button><button id="btnConvertToOrder" onclick="saveRecord('order')" class="hidden w-full bg-green-600 text-white py-3 rounded-lg font-black">✅ 轉正式訂單</button><button onclick="enterScreenshotMode()" class="w-full bg-orange-500 text-white py-3 rounded-lg font-black">📸 截圖模式</button></div>
+                        <div id="sellerBox" class="bg-blue-50 p-3 rounded-lg invisible">
+                            <div class="flex justify-between text-xs text-blue-500"><span>成本</span><span id="ui-totalCost">$0</span></div>
+                            <div class="flex justify-between text-sm font-black text-green-600 border-t-2 border-blue-100 mt-2 pt-2"><span>利潤</span><span id="ui-totalProfit">$0</span></div>
+                        </div>
+                        <div class="space-y-2">
+                            <button onclick="saveRecord('current')" class="w-full bg-blue-600 text-white py-3 rounded-lg font-black">💾 儲存草稿</button>
+                            <button id="btnConvertToOrder" onclick="saveRecord('order')" class="hidden w-full bg-green-600 text-white py-3 rounded-lg font-black">✅ 轉正式訂單</button>
+                            <button onclick="enterScreenshotMode()" class="w-full bg-orange-500 text-white py-3 rounded-lg font-black">📸 截圖模式</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div id="tab-drafts" class="page-content hidden"><div id="draftList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
-        
         <div id="tab-orders" class="page-content hidden"><div id="orderList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
-        
         <div id="tab-completed" class="page-content hidden"><div id="completedList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 opacity-80"></div></div>
-        
+
         <div id="tab-stats" class="page-content hidden">
             <div class="card p-6 text-center space-y-6">
                 <h2 class="text-xl font-black text-gray-700">業績結算報表</h2>
@@ -143,7 +152,7 @@
                         <div class="p-4 bg-orange-50 rounded-xl border-2 border-orange-100 text-center"><div class="text-[10px] text-orange-400 font-bold">總利潤</div><div id="stat-profit" class="text-3xl font-black text-orange-600">$0</div></div>
                     </div>
                 </div>
-                <button id="btnShowStats" onclick="toggleStats()" class="w-full bg-gray-800 text-white py-4 rounded-xl font-bold">📊 顯示數據</button>
+                <button id="btnShowStats" onclick="toggleStats()" class="w-full bg-gray-800 text-white py-4 rounded-xl font-bold">📊 顯示結算數據</button>
             </div>
         </div>
 
@@ -162,7 +171,7 @@
 
         <div id="templateModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[600] backdrop-blur-md">
             <div class="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl border-2 border-blue-100">
-                <div class="p-5 border-b flex justify-between items-center bg-indigo-50"><h3 class="font-black text-indigo-700 text-lg">📁 常用配置範本</h3><button onclick="document.getElementById('templateModal').classList.add('hidden')" class="text-gray-400 text-3xl">×</button></div>
+                <div class="p-5 border-b flex justify-between items-center bg-indigo-50"><h3 class="font-black text-indigo-700 text-lg">📁 載入配置範本</h3><button onclick="document.getElementById('templateModal').classList.add('hidden')" class="text-gray-400 text-3xl">×</button></div>
                 <div id="templateList" class="overflow-y-auto flex-1 p-5 space-y-3"></div>
                 <div class="p-5 border-t bg-gray-50"><button onclick="document.getElementById('templateModal').classList.add('hidden')" class="w-full bg-gray-200 text-gray-600 py-4 rounded-xl font-bold">關閉</button></div>
             </div>
@@ -182,29 +191,10 @@
     </div>
 
     <script>
-    const firebaseConfig = { apiKey: "AIzaSyDeCI3yFPr1v9KxOmko-qim2a7EtllEHKM", authDomain: "magic-conch-gaming.firebaseapp.com", databaseURL: "https://magic-conch-gaming-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "magic-conch-gaming", storageBucket: "magic-conch-gaming.firebasestorage.app", messagingSenderId: "105735978925", appId: "1:105735978925:web:3ec77acbfd344475322b24" };
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
+    // --- 🧱 全域變數定義 ---
     let inv = {}; let catOrder = []; let records = []; let templates = {}; let currentSelections = {}; let editingRecordId = null; let currentCat = ""; let currentStatus = 'draft';
 
-    // --- 🧱 顯示與計算邏輯 ---
-    function renderInventoryEditor() {
-        const area = document.getElementById('inventoryEditor'); if (!area) return; area.innerHTML = '';
-        catOrder.forEach((cat, cIdx) => {
-            const sec = document.createElement('div'); sec.className = "bg-gray-50 p-3 rounded-lg border-2 relative mb-4";
-            sec.innerHTML = `<div class="flex justify-between items-center mb-3"><div class="flex items-center gap-3"><div class="flex flex-col text-[10px] text-gray-300"><button onclick="moveCat(${cIdx}, -1)">▲</button><button onclick="moveCat(${cIdx}, 1)">▼</button></div><input class="font-black text-sm text-blue-600 border-none bg-transparent p-0 w-32" value="${cat}" onchange="renameCat(${cIdx}, this.value)"></div><button onclick="removeCat(${cIdx})" class="text-red-300 hover:text-red-500 text-2xl">×</button></div><div id="edit-${cat}" class="space-y-2"></div><button onclick="addInvItem('${cat}')" class="w-full text-[10px] font-bold bg-white mt-2 py-2 rounded-lg border-2 border-dashed border-gray-200 text-gray-400 hover:text-blue-500 active:bg-blue-50">+ 新增零件品項</button>`;
-            area.appendChild(sec);
-            (inv[cat] || []).forEach((item, idx) => {
-                const row = document.createElement('div'); row.className = `inv-item-row ${item.outOfStock ? 'inv-out-of-stock' : ''}`;
-                const sList = item.suppliers || [];
-                const sHtml = ['原', '速', '裕'].map(label => `<button onclick="event.stopPropagation(); toggleSupplier('${cat}', ${idx}, '${label}')" class="supp-btn ${sList.includes(label) ? 'active' : ''}">${label}</button>`).join('');
-                row.innerHTML = `<div class="inv-item-name-row"><div class="flex flex-col text-[10px] text-gray-300 px-1 flex-shrink-0"><button onclick="moveItem('${cat}', ${idx}, -1)">▲</button><button onclick="moveItem('${cat}', ${idx}, 1)">▼</button></div><input type="text" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value" placeholder="零件名稱..."></div><div class="inv-item-ctrl-row"><div class="flex gap-1.5 mr-auto">${sHtml}</div><div class="flex items-center gap-1 border-2 rounded-lg bg-white px-2 flex-shrink-0"><span class="text-[10px] text-gray-400">售</span><input type="number" class="w-12 text-xs font-black text-blue-600 border-none p-0" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div><div class="flex items-center gap-1 border-2 rounded-lg bg-white px-2 flex-shrink-0"><span class="text-[10px] text-gray-400">本</span><input type="number" class="w-12 text-xs font-black text-red-400 border-none p-0" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div><button onclick="toggleStockStatus('${cat}', ${idx})" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button><button onclick="if(confirm('確定刪除？')) { inv['${cat}'].splice(${idx}, 1); renderInventoryEditor(); }" class="text-red-200 text-xl px-1">×</button></div>`;
-                document.getElementById(`edit-${cat}`).appendChild(row);
-            });
-        });
-    }
-
+    // --- 🧱 核心計算邏輯 ---
     function calculate() {
         let subP = 0, subC = 0, disc = parseFloat(document.getElementById('discountAmt')?.value || 0);
         let noCard = parseFloat(document.getElementById('noCardTotal').value) || 0;
@@ -221,6 +211,7 @@
         document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`; document.getElementById('ui-totalProfit').innerText = `$${profit.toLocaleString()}`;
     }
 
+    // --- 🧱 UI 渲染邏輯 ---
     function renderConfig() {
         const container = document.getElementById('configRows'); if(!container) return;
         const isSS = document.getElementById('mainBody').classList.contains('screenshot-mode'); container.innerHTML = '';
@@ -240,14 +231,29 @@
         if(!dList || !oList || !cList) return;
         dList.innerHTML = ''; oList.innerHTML = ''; cList.innerHTML = '';
         records.sort((a,b)=>b.id-a.id).forEach(r => {
-            let undeliveredHtml = ""; if(r.status !== 'draft') { let undeliveredNames = []; for (let cat in r.selections) { r.selections[cat].forEach((sel, idx) => { const k = `${cat}_${idx}`; if(!r.deliveredItems || r.deliveredItems[k] === false) { let n = sel.isTemp ? sel.name : (inv[cat] && inv[cat][sel.idx] ? inv[cat][sel.idx].name : "未知品項"); undeliveredNames.push(`●${n}`); } }); } if(undeliveredNames.length > 0) undeliveredHtml = `<div class="text-[10px] text-red-500 mt-2 pt-1 border-t border-dashed line-clamp-1 font-bold">未出貨：${undeliveredNames.join(' ')}</div>`; }
+            let undeliveredHtml = ""; if(r.status !== 'draft') { let undeliveredNames = []; for (let cat in r.selections) { r.selections[cat].forEach((sel, idx) => { const k = `${cat}_${idx}`; if(!r.deliveredItems || r.deliveredItems[k] === false) { let n = sel.isTemp ? sel.name : (inv[cat] && inv[cat][sel.idx] ? inv[cat][sel.idx].name : "未知"); undeliveredNames.push(`●${n}`); } }); } if(undeliveredNames.length > 0) undeliveredHtml = `<div class="text-[10px] text-red-500 mt-2 pt-1 border-t border-dashed line-clamp-1 font-bold">未出貨：${undeliveredNames.join(' ')}</div>`; }
             const pOpts = ["待處理", "組裝中", "測試中", "已完工", "已寄出"].map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
             const div = `<div class="p-4 border-2 rounded-xl bg-white shadow-sm space-y-3"><div class="flex justify-between items-start"><div class="flex-1"><div class="text-[10px] text-gray-400 font-mono">${r.time}</div><div class="text-base font-black text-gray-800">${r.name || '無名客戶'}</div><div class="text-blue-600 font-black text-lg">含稅：${r.total}</div>${r.noCard > 0 ? `<div class="text-[10px] text-orange-500 font-bold">💳 無卡分期：$${Number(r.noCard).toLocaleString()}</div>` : ''}${undeliveredHtml}</div><div class="text-right ml-2"><span class="bg-blue-100 text-blue-600 text-[10px] font-bold px-2 py-1 rounded-full">${r.seller||'未指定'}</span><div class="mt-2"><select onchange="db.ref('records/'+${r.id}+'/progress').set(this.value)" class="text-[10px] font-bold border-2 border-gray-100 px-1 py-1 rounded-lg">${pOpts}</select></div></div></div><div class="flex gap-1 pt-3 border-t border-dashed"><button onclick="editRecord(${r.id})" class="flex-1 py-2 bg-blue-600 text-white text-[10px] rounded-lg font-black">編輯</button>${r.status === 'draft' ? `<button onclick="if(confirm('確認轉為正式訂單？')) db.ref('records/'+${r.id}+'/status').set('order')" class="bg-green-600 text-white px-2 rounded-lg text-[10px] font-bold">轉正式</button>` : `<button onclick="openDeliveryFast(${r.id})" class="bg-orange-500 text-white px-2 rounded-lg text-[10px] font-bold">📦 出貨</button><button onclick="if(confirm('確認結案？')) db.ref('records/'+${r.id}+'/status').set('completed')" class="bg-gray-600 text-white px-2 rounded-lg text-[10px] font-bold">結案</button>`}<button onclick="if(confirm('確定刪除紀錄？')) db.ref('records/'+${r.id}).remove()" class="text-red-300 text-xl px-1">✕</button></div></div>`;
             if(r.status === 'draft') dList.innerHTML += div; else if(r.status === 'completed') cList.innerHTML += div; else oList.innerHTML += div;
         });
     }
 
-    // --- 📈 統計與報表 ---
+    function renderInventoryEditor() {
+        const area = document.getElementById('inventoryEditor'); if (!area) return; area.innerHTML = '';
+        catOrder.forEach((cat, cIdx) => {
+            const sec = document.createElement('div'); sec.className = "bg-gray-50 p-3 rounded-lg border-2 relative mb-4";
+            sec.innerHTML = `<div class="flex justify-between items-center mb-3"><div class="flex items-center gap-3"><div class="flex flex-col text-[10px] text-gray-300"><button onclick="moveCat(${cIdx}, -1)">▲</button><button onclick="moveCat(${cIdx}, 1)">▼</button></div><input class="font-black text-sm text-blue-600 border-none bg-transparent p-0 w-32" value="${cat}" onchange="renameCat(${cIdx}, this.value)"></div><button onclick="removeCat(${cIdx})" class="text-red-300 hover:text-red-500 text-2xl">×</button></div><div id="edit-${cat}" class="space-y-2"></div><button onclick="addInvItem('${cat}')" class="w-full text-[10px] font-bold bg-white mt-2 py-2 rounded-lg border-2 border-dashed border-gray-200 text-gray-400 hover:text-blue-500 active:bg-blue-50">+ 新增零件品項</button>`;
+            area.appendChild(sec);
+            (inv[cat] || []).forEach((item, idx) => {
+                const row = document.createElement('div'); row.className = `inv-item-row ${item.outOfStock ? 'inv-out-of-stock' : ''}`;
+                const sList = item.suppliers || []; const sHtml = ['原', '速', '裕'].map(label => `<button onclick="event.stopPropagation(); toggleSupplier('${cat}', ${idx}, '${label}')" class="supp-btn ${sList.includes(label) ? 'active' : ''}">${label}</button>`).join('');
+                row.innerHTML = `<div class="inv-item-name-row"><div class="flex flex-col text-[10px] text-gray-300 px-1 flex-shrink-0"><button onclick="moveItem('${cat}', ${idx}, -1)">▲</button><button onclick="moveItem('${cat}', ${idx}, 1)">▼</button></div><input type="text" value="${item.name}" onchange="inv['${cat}'][${idx}].name=this.value" placeholder="零件名稱..."></div><div class="inv-item-ctrl-row"><div class="flex gap-1.5 mr-auto">${sHtml}</div><div class="flex items-center gap-1 border-2 rounded-lg bg-white px-2 flex-shrink-0"><span class="text-[10px] text-gray-400">售</span><input type="number" class="w-12 text-xs font-black text-blue-600 border-none p-0" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div><div class="flex items-center gap-1 border-2 rounded-lg bg-white px-2 flex-shrink-0"><span class="text-[10px] text-gray-400">本</span><input type="number" class="w-12 text-xs font-black text-red-400 border-none p-0" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div><button onclick="toggleStockStatus('${cat}', ${idx})" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button><button onclick="if(confirm('確定刪除？')) { inv['${cat}'].splice(${idx}, 1); renderInventoryEditor(); }" class="text-red-200 text-xl px-1">×</button></div>`;
+                document.getElementById(`edit-${cat}`).appendChild(row);
+            });
+        });
+    }
+
+    // --- 📈 統計邏輯 ---
     function updateMonthSelector() {
         const select = document.getElementById('statsMonthSelect'); if (!select) return; const months = new Set();
         records.forEach(r => { if(r.status === 'draft' || !r.time) return; const parts = r.time.split(/[/, :]/); let y, m; if (parts[0].length === 4) { y = parts[0]; m = parts[1]; } else if (parts[2] && parts[2].length === 4) { y = parts[2]; m = parts[1]; } if (y && m) months.add(`${y}/${parseInt(m)}`); });
@@ -255,7 +261,7 @@
         const sorted = Array.from(months).sort((a,b) => { const pa = a.split('/').map(Number), pb = b.split('/').map(Number); return pb[0] - pa[0] || pb[1] - pa[1]; });
         select.innerHTML = sorted.map(m => `<option value="${m}" ${m===currentStr?'selected':''}>${m}</option>`).join('');
     }
-    function toggleStats() { const content = document.getElementById('statsContent'); const btn = document.getElementById('btnShowStats'); if (content.classList.contains('hidden')) { renderStats(); content.classList.remove('hidden'); btn.innerText = '🔼 隱藏報價數據'; } else { content.classList.add('hidden'); btn.innerText = '📊 顯示報價數據'; } }
+    function toggleStats() { const content = document.getElementById('statsContent'); const btn = document.getElementById('btnShowStats'); if (content.classList.contains('hidden')) { renderStats(); content.classList.remove('hidden'); btn.innerText = '🔼 隱藏結算數據'; } else { content.classList.add('hidden'); btn.innerText = '📊 顯示結算數據'; } }
     function renderStats() {
         const select = document.getElementById('statsMonthSelect'); if (!select.value) return; const [year, month] = select.value.split('/').map(Number);
         let totalRev = 0, totalProfit = 0, count = 0;
@@ -266,20 +272,20 @@
         document.getElementById('stat-count').innerText = count; document.getElementById('stat-revenue').innerText = `$${totalRev.toLocaleString()}`; document.getElementById('stat-profit').innerText = `$${totalProfit.toLocaleString()}`;
     }
 
-    // --- 📁 範本系統 ---
-    function saveTemplate() { const name = prompt("範本名稱："); if (!name) return; const id = Date.now(); const data = { id, name, selections: currentSelections, discount: document.getElementById('discountAmt').value || 0 }; db.ref('templates/' + id).set(data).then(() => alert('範本儲存成功！')); }
+    // --- 📁 範本邏輯 ---
+    function saveTemplate() { const name = prompt("請輸入範本名稱："); if (!name) return; const id = Date.now(); const data = { id, name, selections: currentSelections, discount: document.getElementById('discountAmt').value || 0 }; db.ref('templates/' + id).set(data).then(() => alert('範本儲存成功！')); }
     function openTemplateModal() {
         const list = document.getElementById('templateList'); list.innerHTML = '';
         Object.keys(templates).forEach(id => {
             const t = templates[id];
-            list.innerHTML += `<div class="p-4 border-2 rounded-xl mb-3 flex justify-between items-center bg-white shadow-sm" onclick="applyTemplate('${id}')"><div class="font-black text-gray-700">${t.name}</div><div class="flex gap-2"><button class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs" onclick="applyTemplate('${id}')">套用</button><button class="bg-red-100 text-red-500 px-3 py-1 rounded-lg text-xs" onclick="event.stopPropagation(); deleteTemplate('${id}')">刪除</button></div></div>`;
+            list.innerHTML += `<div class="p-4 border-2 rounded-xl mb-3 flex justify-between items-center bg-white shadow-sm" onclick="applyTemplate('${id}')"><div class="font-black text-gray-700 text-xs">${t.name}</div><div class="flex gap-2"><button class="bg-blue-600 text-white px-3 py-1 rounded-lg text-[10px]" onclick="applyTemplate('${id}')">套用</button><button class="bg-red-100 text-red-500 px-3 py-1 rounded-lg text-[10px]" onclick="event.stopPropagation(); deleteTemplate('${id}')">刪除</button></div></div>`;
         });
         document.getElementById('templateModal').classList.remove('hidden');
     }
     function applyTemplate(id) { if (confirm(`載入「${templates[id].name}」？`)) { currentSelections = JSON.parse(JSON.stringify(templates[id].selections)); document.getElementById('discountAmt').value = templates[id].discount || 0; renderConfig(); document.getElementById('templateModal').classList.add('hidden'); } }
     function deleteTemplate(id) { if (confirm('確定刪除？')) db.ref('templates/' + id).remove().then(() => openTemplateModal()); }
 
-    // --- ⚙️ 分頁控制與基本功能 ---
+    // --- ⚙️ 基本控制功能 ---
     function showTab(t) { 
         document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); 
         document.getElementById('tab-'+t).classList.remove('hidden'); 
@@ -300,13 +306,12 @@
     function moveItem(cat, idx, dir) { let newIdx = idx + dir; if (newIdx >= 0 && newIdx < inv[cat].length) { [inv[cat][idx], inv[cat][newIdx]] = [inv[cat][newIdx], inv[cat][idx]]; renderInventoryEditor(); } }
     function toggleSupplier(cat, idx, label) { if(!inv[cat][idx].suppliers) inv[cat][idx].suppliers = []; const list = inv[cat][idx].suppliers; const pos = list.indexOf(label); if(pos > -1) list.splice(pos, 1); else list.push(label); renderInventoryEditor(); }
     function toggleStockStatus(cat, idx) { inv[cat][idx].outOfStock = !inv[cat][idx].outOfStock; renderInventoryEditor(); }
-    function addCustomSeller() { const n = prompt("業務："); if(n) { const s = document.getElementById('infoSeller'); const o = document.createElement('option'); o.value=n; o.text=n; o.selected=true; s.add(o); } }
+    function addCustomSeller() { const n = prompt("業務名稱："); if(n) { const s = document.getElementById('infoSeller'); const o = document.createElement('option'); o.value=n; o.text=n; o.selected=true; s.add(o); } }
     function openSelection(cat) { currentCat = cat; document.getElementById('modalTitle').innerText = '🔍 ' + cat; document.getElementById('selectionModal').classList.remove('hidden'); document.getElementById('modalSearch').value = ''; renderModalList(); }
     function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
     function filterModalList() { const q = document.getElementById('modalSearch').value.toLowerCase(); document.querySelectorAll('.pick-item').forEach(el => { el.style.display = el.innerText.toLowerCase().includes(q) ? 'flex' : 'none'; }); }
     function renderModalList() {
-        const list = document.getElementById('modalList'); list.innerHTML = '';
-        (inv[currentCat] || []).forEach((item, idx) => {
+        const list = document.getElementById('modalList'); list.innerHTML = ''; (inv[currentCat] || []).forEach((item, idx) => {
             const sel = (currentSelections[currentCat] || []).find(s => !s.isTemp && s.idx === idx);
             list.innerHTML += `<div class="pick-item p-3 border-2 rounded-xl flex justify-between items-center mb-2 ${sel?'border-blue-500 bg-blue-50':'border-gray-100'} ${item.outOfStock?'opacity-30 pointer-events-none':''}" onclick="togglePick(${idx})"><div class="flex-1"><div class="font-black text-gray-800 text-xs">${item.outOfStock?'[缺貨] ':''}${item.name}</div><div class="text-blue-600 font-black mt-1 text-sm">$${Number(item.p).toLocaleString()}</div></div>${sel ? `<div class="flex items-center gap-2" onclick="event.stopPropagation()"><label class="text-[10px] font-bold flex items-center gap-1 bg-white px-2 py-1 rounded-full border"><input type="checkbox" ${sel.isGift?'checked':''} onchange="updateSubItem(${idx}, 'gift', this.checked)"> 贈</label><div class="flex items-center border-2 border-blue-200 rounded-lg bg-white overflow-hidden"><button class="px-2 py-1 bg-blue-50" onclick="updateSubItem(${idx}, 'qty', -1)">-</button><span class="px-2 font-black text-blue-600 text-xs">${sel.qty || 1}</span><button class="px-2 py-1 bg-blue-50" onclick="updateSubItem(${idx}, 'qty', 1)">+</button></div></div>` : ''}</div>`;
         });
@@ -329,13 +334,10 @@
     }
     function exitScreenshotMode() { const body = document.getElementById('mainBody'); body.classList.remove('screenshot-mode', 'ss-hide-prices'); document.getElementById('screenshot-header').style.display = 'none'; document.getElementById('screenshot-footer').style.display = 'none'; renderConfig(); }
 
-    // --- 📡 Firebase 即時監聽啟動 ---
+    // --- 📡 Firebase 核心監聽 ---
     db.ref('inventory').on('value', s => { if(s.exists()) inv = s.val(); renderConfig(); if(!document.getElementById('tab-inventory').classList.contains('hidden')) renderInventoryEditor(); });
     db.ref('catOrder').on('value', s => { if(s.exists()) catOrder = s.val(); renderConfig(); });
-    db.ref('records').on('value', s => { 
-        records = []; if(s.exists()) { const data = s.val(); for(let id in data) records.push(data[id]); } 
-        renderRecords(); if(!document.getElementById('tab-stats').classList.contains('hidden')) updateMonthSelector();
-    });
+    db.ref('records').on('value', s => { records = []; if(s.exists()) { const data = s.val(); for(let id in data) records.push(data[id]); } renderRecords(); if(!document.getElementById('tab-stats').classList.contains('hidden')) updateMonthSelector(); });
     db.ref('templates').on('value', s => { templates = s.exists() ? s.val() : {}; });
 
     window.onload = () => { showTab('calc'); };
