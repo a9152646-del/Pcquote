@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.24</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.25</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -180,22 +180,22 @@
             <h2 class="text-xl font-black text-gray-700">📊 豬豬的月度業績結算</h2>
             <div id="statsContent" class="hidden space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="p-4 bg-blue-50 rounded-xl border-2 border-blue-100">
-                        <div class="text-xs text-blue-400 font-bold">本月總訂單數</div>
+                    <div class="p-4 bg-blue-50 rounded-xl border-2 border-blue-100 text-center">
+                        <div class="text-[10px] text-blue-400 font-bold">本月總訂單數</div>
                         <div id="stat-count" class="text-2xl font-black text-blue-600">0</div>
                     </div>
-                    <div class="p-4 bg-green-50 rounded-xl border-2 border-green-100">
-                        <div class="text-xs text-green-400 font-bold">本月預估營收</div>
+                    <div class="p-4 bg-green-50 rounded-xl border-2 border-green-100 text-center">
+                        <div class="text-[10px] text-green-400 font-bold">本月預估營收</div>
                         <div id="stat-revenue" class="text-2xl font-black text-green-600">$0</div>
                     </div>
-                    <div class="p-4 bg-orange-50 rounded-xl border-2 border-orange-100">
-                        <div class="text-xs text-orange-400 font-bold">本月淨利潤</div>
+                    <div class="p-4 bg-orange-50 rounded-xl border-2 border-orange-100 text-center">
+                        <div class="text-[10px] text-orange-400 font-bold">本月淨利潤</div>
                         <div id="stat-profit" class="text-3xl font-black text-orange-600">$0</div>
                     </div>
                 </div>
-                <p class="text-[10px] text-gray-400">* 統計範圍包含本月所有「正式訂單」與「已結案」紀錄。</p>
+                <p class="text-[10px] text-gray-400 mt-4">* 數據包含本月「正式」與「結案」紀錄，計算時間以系統記錄日期為準。</p>
             </div>
-            <button id="btnShowStats" onclick="toggleStats()" class="bg-gray-800 text-white px-8 py-3 rounded-full font-bold">點擊顯示本月數據</button>
+            <button id="btnShowStats" onclick="toggleStats()" class="bg-gray-800 text-white px-10 py-4 rounded-full font-bold shadow-lg active:scale-95 transition">點擊顯示數據</button>
         </div>
     </div>
 
@@ -340,7 +340,7 @@ function renderRecords() {
     });
 }
 
-// 📈 豬豬統計邏輯
+// 📈 豬豬統計邏輯：相容各種日期格式
 function toggleStats() {
     const content = document.getElementById('statsContent');
     const btn = document.getElementById('btnShowStats');
@@ -356,30 +356,39 @@ function toggleStats() {
 
 function renderStats() {
     const now = new Date();
-    const currentMonth = (now.getMonth() + 1).toString();
-    const currentYear = now.getFullYear().toString();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
     let totalRev = 0, totalProfit = 0, count = 0;
 
     records.forEach(r => {
         if (r.status === 'draft') return;
-        // 簡單解析時間字串
-        if (r.time.includes(`${currentYear}/${currentMonth}`) || r.time.includes(`${currentYear}/${currentMonth.padStart(2,'0')}`)) {
-            count++;
-            // 營收：若有無卡分期以無卡為主，否則以原本含稅為主
-            let rev = r.noCard > 0 ? Number(r.noCard) : Number(r.total.replace(/[^0-9.-]+/g,""));
-            totalRev += rev;
+        
+        // 更穩健的解析：將日期字串分割成數字比對
+        const dateParts = r.time.split('/');
+        if (dateParts.length >= 2) {
+            const rYear = parseInt(dateParts[0]);
+            const rMonth = parseInt(dateParts[1]);
             
-            // 計算該單成本
-            let cost = 0;
-            for(let cat in r.selections) {
-                r.selections[cat].forEach(sel => {
-                    let c = 0;
-                    if(sel.isTemp) c = Number(sel.c || 0);
-                    else if(inv[cat] && inv[cat][sel.idx]) c = Number(inv[cat][sel.idx].c || 0);
-                    cost += (c * (sel.qty || 1));
-                });
+            if (rYear === year && rMonth === month) {
+                count++;
+                // 清理金額字串中的逗號和錢字號
+                let revStr = (r.noCard > 0 ? String(r.noCard) : r.total).replace(/[$,]/g, "");
+                let rev = parseFloat(revStr) || 0;
+                totalRev += rev;
+                
+                let cost = 0;
+                for(let cat in r.selections) {
+                    if (r.selections[cat]) {
+                        r.selections[cat].forEach(sel => {
+                            let c = 0;
+                            if(sel.isTemp) c = Number(sel.c || 0);
+                            else if(inv[cat] && inv[cat][sel.idx]) c = Number(inv[cat][sel.idx].c || 0);
+                            cost += (c * (sel.qty || 1));
+                        });
+                    }
+                }
+                totalProfit += (rev - cost);
             }
-            totalProfit += (rev - cost);
         }
     });
 
