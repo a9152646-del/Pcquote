@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.73</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.74</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -38,6 +38,7 @@
         .screenshot-mode .item-row { padding: 2px 10px !important; margin-bottom: 0px !important; border-radius: 0px !important; border: none !important; border-bottom: 1px solid #f1f5f9 !important; box-shadow: none !important; }
         .screenshot-mode #configRows { gap: 0 !important; space-y: 0 !important; }
         .screenshot-mode .selected-badge { font-size: 10px !important; line-height: 1.1 !important; margin-bottom: 0px !important; }
+        .screenshot-mode .item-row .text-blue-400 { font-size: 7px !important; margin-bottom: 0px !important; letter-spacing: 0.1em; }
         .screenshot-mode #screenshot-header { margin-bottom: 8px !important; padding-bottom: 4px !important; }
         .screenshot-mode #screenshot-footer { padding: 6px 12px !important; display: block !important; }
 
@@ -101,7 +102,7 @@
                     <div class="card p-2 !bg-gray-100/50">
                         <div id="configRows" class="space-y-3"></div>
                         <div id="screenshot-footer" class="text-right p-4 pt-2 border-t-2 border-gray-100 space-y-1" style="display: none;">
-                            <div id="ss-warranty-show" class="text-[9px] text-blue-500 font-bold"></div>
+                            <div id="ss-warranty-info" class="text-[9px] text-blue-500 font-bold mb-1"></div>
                             <div class="text-[9px] text-gray-500 font-bold">折扣：<span id="ss-val-disc" class="text-red-500"></span></div>
                             <div class="text-lg font-black text-blue-600">總計 (含稅)：<span id="ss-val-total"></span></div>
                         </div>
@@ -120,7 +121,7 @@
                                 <button onclick="addCustomSeller()" class="bg-gray-200 px-3 rounded border">+</button>
                             </div>
                             <input type="text" id="custAddr" placeholder="📦 地址 / 取貨方式" class="md:col-span-4">
-                            <input type="text" id="custWarranty" placeholder="🛡️ 保固備註 (例如：全機一年保固)" class="md:col-span-4">
+                            <input type="text" id="custWarranty" placeholder="🛡️ 保固備註 (截圖會顯示)" class="md:col-span-4 font-bold text-blue-600">
                             <textarea id="orderMemo" placeholder="📝 內部備註" class="md:col-span-4 h-20 w-full"></textarea>
                         </div>
                     </div>
@@ -146,15 +147,15 @@
         </div>
 
         <div id="tab-drafts" class="page-content hidden">
-            <input type="text" oninput="renderRecords()" id="search-drafts" placeholder="🔍 搜尋草稿姓名或電話..." class="w-full mb-3 p-3 rounded-xl border-2">
+            <input type="text" id="search-drafts" oninput="renderRecords()" placeholder="🔍 搜尋草稿 (姓名或電話)" class="w-full mb-3 p-3 rounded-xl border-2">
             <div id="draftList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
         </div>
         <div id="tab-orders" class="page-content hidden">
-            <input type="text" oninput="renderRecords()" id="search-orders" placeholder="🔍 搜尋訂單姓名或電話..." class="w-full mb-3 p-3 rounded-xl border-2">
+            <input type="text" id="search-orders" oninput="renderRecords()" placeholder="🔍 搜尋訂單 (姓名或電話)" class="w-full mb-3 p-3 rounded-xl border-2">
             <div id="orderList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
         </div>
         <div id="tab-completed" class="page-content hidden">
-            <input type="text" oninput="renderRecords()" id="search-completed" placeholder="🔍 搜尋結案姓名或電話..." class="w-full mb-3 p-3 rounded-xl border-2">
+            <input type="text" id="search-completed" oninput="renderRecords()" placeholder="🔍 搜尋結案 (姓名或電話)" class="w-full mb-3 p-3 rounded-xl border-2">
             <div id="completedList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
         </div>
         <div id="tab-stats" class="page-content hidden"><div id="statsContent" class="space-y-4"></div></div>
@@ -226,6 +227,7 @@
         calculate();
     }
 
+    // 修正點：文字複製排除無卡金額
     function generateTextQuote(recordSelections, discount, totalStr) {
         let text = `🐚【神奇海螺電競 | 專業報價】\n日期：${new Date().toLocaleDateString()}\n------------------------------\n`;
         catOrder.forEach(cat => {
@@ -251,11 +253,13 @@
         records.sort((a,b)=>b.id-a.id).forEach(r => {
             const status = r.status || 'draft'; if (!lists[status]) return;
             
-            // 搜尋邏輯
+            // 搜尋過濾
             const q = queries[status];
             if (q && !r.name?.toLowerCase().includes(q) && !r.custPhone?.toLowerCase().includes(q)) return;
 
             const pOpts = ["待處理", "組裝中", "測試中", "已完工", "已寄出"].map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
+            
+            // 修正點：紀錄清單顯示無卡金額
             const noCardHtml = (r.noCard && r.noCard > 0) ? `<div class="text-orange-500 font-black text-xs">無卡分期：$${Number(r.noCard).toLocaleString()}</div>` : '';
             
             const div = document.createElement('div'); div.className = "p-4 border-2 rounded-xl bg-white shadow-sm space-y-3";
@@ -308,13 +312,17 @@
     function goBack() { resetForm(); showTab('calc'); }
     function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); const fsBtn = document.getElementById('floatingSaveBtn'); if(t === 'inventory') { fsBtn.classList.remove('hidden'); fsBtn.style.display = 'flex'; renderInventoryEditor(); } else if(t === 'stats') { fsBtn.classList.add('hidden'); fsBtn.style.display = 'none'; renderStats(); } else { fsBtn.classList.add('hidden'); fsBtn.style.display = 'none'; } renderRecords(); }
 
-    function toggleAdminMode() { const isChecked = document.getElementById('adminToggle').checked; const body = document.getElementById('mainBody'); if(isChecked) { body.classList.remove('hide-prices'); document.getElementById('sellerBox').classList.remove('invisible'); } else { body.classList.add('hide-prices'); document.getElementById('sellerBox').classList.invisible = true; } }
+    function toggleAdminMode() { const isChecked = document.getElementById('adminToggle').checked; const body = document.getElementById('mainBody'); if(isChecked) { body.classList.remove('hide-prices'); document.getElementById('sellerBox').classList.remove('invisible'); } else { body.classList.add('hide-prices'); document.getElementById('sellerBox').classList.add('invisible'); } }
+    
     function enterScreenshotMode() { 
         document.getElementById('ss-time').innerText = '報價日期：' + new Date().toLocaleString(); 
         document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value).toLocaleString(); 
         document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText; 
+        
+        // 修正點：截圖顯示保固
         const w = document.getElementById('custWarranty').value;
-        document.getElementById('ss-warranty-show').innerText = w ? `🛡️ 保固：${w}` : '';
+        document.getElementById('ss-warranty-info').innerText = w ? `🛡️ 保固：${w}` : '';
+        
         document.getElementById('mainBody').classList.add('screenshot-mode'); 
         document.getElementById('screenshot-header').style.display = 'block'; 
         document.getElementById('screenshot-footer').style.display = 'block'; 
@@ -330,7 +338,7 @@
     function openSelection(cat) { currentCat = cat; document.getElementById('modalTitle').innerText = '🔍 ' + cat; document.getElementById('selectionModal').classList.remove('hidden'); renderModalList(); }
     function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
     
-    // 修正點：補回贈品鈕，修正加減按鈕順序 [-] 數量 [+]
+    // 修正點：配單區補回贈品鈕，修正加減按鈕順序 [-] [數量] [+]
     function renderModalList() { 
         const list = document.getElementById('modalList'); list.innerHTML = ''; 
         (inv[currentCat] || []).forEach((item, idx) => { 
@@ -348,7 +356,7 @@
                             <span class="text-sm font-black w-6 text-center">${sel.qty}</span>
                             <button onclick="updateSubItem(${idx}, 'qty', 1)" class="bg-blue-100 px-3 py-1 rounded-lg font-black text-lg">+</button>
                         </div>
-                        <button onclick="toggleGift(${idx})" class="text-[10px] px-2 py-1 rounded ${sel.isGift?'bg-pink-500 text-white':'bg-gray-200 text-gray-500'} font-black">🎁 贈品</button>
+                        <button onclick="toggleGift(${idx})" class="text-[10px] px-2 py-1 rounded ${sel.isGift?'bg-red-500 text-white':'bg-gray-200 text-gray-500'} font-black">🎁 贈品</button>
                     </div>`:''}
                 </div>`; 
         }); 
