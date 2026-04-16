@@ -29,9 +29,9 @@
         .drag-handle { cursor: grab; color: #cbd5e1; padding: 5px; font-size: 24px; user-select: none; }
         .drag-handle:active { cursor: grabbing; color: #3b82f6; }
 
-        /* 📍 供應商按鈕樣式 */
-        .sup-btn { font-size: 10px; padding: 2px 5px; border-radius: 4px; border: 1px solid #e2e8f0; color: #cbd5e1; font-weight: 900; transition: all 0.2s; }
-        .sup-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
+        /* 📍 供應商按鈕加強：確保有邊框色，iPhone 才看得到位置 */
+        .sup-btn { font-size: 10px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 4px; border: 1.5px solid #3b82f6; color: #3b82f6; font-weight: 900; transition: all 0.2s; background: white; flex-shrink: 0; }
+        .sup-btn.active { background: #3b82f6; color: white; }
 
         .item-row { padding: 16px !important; margin-bottom: 12px !important; background: #fff; border: 1px solid #f1f5f9 !important; border-radius: 12px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
 
@@ -53,7 +53,7 @@
         .screenshot-mode #screenshot-footer .text-xs { font-size: 8px !important; }
 
         .inv-item-row { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
-        .inv-item-main { display: flex; align-items: flex-start; gap: 10px; }
+        .inv-item-main { display: flex; align-items: center; gap: 8px; }
         .inv-name-area { flex: 1; min-width: 0; }
         .inv-name-input { width: 100%; border: none !important; background: #fdfdfd !important; font-weight: 800; font-size: 15px; padding: 4px 0 !important; color: #1e293b; word-break: break-all; resize: none; overflow: hidden; display: block; }
         .inv-control-bar { display: flex; align-items: center; justify-content: space-between; padding-top: 8px; border-top: 1px solid #f1f5f9; }
@@ -291,12 +291,13 @@
     function renderInventoryEditor() {
         const area = document.getElementById('inventoryEditor'); if (!area) return; 
         
-        // 🚀 核心優化：鎖定目前高度與捲軸，避免畫面跳動
+        // 🚀 核心優化：紀錄目前高度與捲軸，避免畫面跳動
         const scrollPos = window.scrollY;
         area.style.minHeight = area.scrollHeight + 'px';
         
         area.innerHTML = '';
-        const head = document.getElementById('inventoryHeader'); if(head) head.innerHTML = `<h2 class="font-black text-lg text-gray-700">⚙️ 雲端品項管理</h2><div class="flex gap-2"><button onclick="addNewCategory()" class="bg-blue-500 text-white px-3 py-2 rounded-lg text-[10px]">+ 大項</button></div>`;
+        const head = document.getElementById('inventoryHeader'); 
+        if(head) head.innerHTML = `<h2 class="font-black text-lg text-gray-700">⚙️ 雲端品項管理</h2><div class="flex gap-2"><button onclick="addNewCategory()" class="bg-blue-500 text-white px-3 py-2 rounded-lg text-[10px]">+ 大項</button><button onclick="saveInventory()" class="bg-green-600 text-white px-3 py-2 rounded-lg text-[10px]">💾 同步雲端</button></div>`;
         
         catOrder.forEach((cat, cIdx) => {
             const sec = document.createElement('div'); sec.className = "bg-gray-100 p-3 rounded-xl border-2 mb-6 category-drag-item"; sec.dataset.catname = cat;
@@ -306,7 +307,7 @@
             (inv[cat] || []).forEach((item, idx) => {
                 const row = document.createElement('div'); row.className = `inv-item-row item-drag-row`; row.dataset.originalidx = idx;
                 
-                // 📍 補回「原、速、裕」複選按鈕
+                // 📍 補回「原、速、裕」複選按鈕，確保每個按鈕都有外框
                 const sups = ['原', '速', '裕'];
                 let supHtml = sups.map(s => {
                     const active = (item.sups || []).includes(s);
@@ -315,7 +316,7 @@
 
                 row.innerHTML = `<div class="inv-item-main">
                     <span class="drag-handle item-drag-handle">≡</span>
-                    <div class="flex flex-col gap-1 items-center">
+                    <div class="flex flex-col gap-1 items-center justify-center flex-shrink-0" style="min-width: 25px;">
                         ${supHtml}
                     </div>
                     <div class="inv-name-area">
@@ -337,10 +338,11 @@
         });
         initDragAndDrop();
         
-        setTimeout(() => {
+        // 🚀 使用動畫幀恢復位置，防止 iPhone 螢幕閃爍
+        requestAnimationFrame(() => {
             window.scrollTo(0, scrollPos);
             area.style.minHeight = '';
-        }, 0);
+        });
     }
 
     // 📍 供應商切換邏輯
