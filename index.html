@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.43</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.44</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -53,15 +53,21 @@
 <body class="p-2 md:p-4 hide-prices" id="mainBody">
 
     <div class="no-screenshot fixed right-4 bottom-10 z-[80] flex flex-col gap-3">
-        <button onclick="if(confirm('確定重新整理？')) { window.location.reload(); }" class="bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔄</button>
+        <button onclick="if(confirm('確定要重新整理？')) { window.location.reload(); }" class="bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔄</button>
         <button onclick="goBack()" class="bg-black text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔙</button>
     </div>
 
     <button id="floatingSaveBtn" onclick="saveInventory()" class="hidden bg-green-600 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl no-screenshot">💾</button>
 
     <div id="adminToggleContainer" class="no-screenshot">
-        <label class="floating-label"><span class="text-xs font-black text-gray-700">💰 金額開關</span><input type="checkbox" id="adminToggle" onchange="toggleAdminMode()" class="w-5 h-5 cursor-pointer"></label>
-        <label class="floating-label"><span class="text-xs font-black text-blue-600">📸 截圖顯示單價</span><input type="checkbox" id="ssPriceToggle" checked class="w-5 h-5 cursor-pointer"></label>
+        <label class="floating-label">
+            <span class="text-xs font-black text-gray-700">💰 金額開關</span>
+            <input type="checkbox" id="adminToggle" onchange="toggleAdminMode()" class="w-5 h-5 cursor-pointer">
+        </label>
+        <label class="floating-label">
+            <span class="text-xs font-black text-blue-600">📸 截圖顯示單價</span>
+            <input type="checkbox" id="ssPriceToggle" checked class="w-5 h-5 cursor-pointer">
+        </label>
     </div>
 
     <div id="screenshotNav" class="no-screenshot fixed bottom-[25px] left-1/2 -translate-x-1/2 z-[99999] hidden"><button onclick="exitScreenshotMode()" class="bg-gray-800 text-white px-6 py-3 rounded-full font-bold shadow-2xl">🔙 返回編輯模式</button></div>
@@ -108,6 +114,7 @@
         <div id="tab-orders" class="page-content hidden"><div class="mb-4 no-screenshot"><input type="text" placeholder="🔍 搜尋正式訂單..." class="w-full py-3 px-4 shadow-sm" oninput="globalSearch(this.value)"></div><div id="orderList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
         <div id="tab-completed" class="page-content hidden"><div class="mb-4 no-screenshot"><input type="text" placeholder="🔍 搜尋結案訂單..." class="w-full py-3 px-4 shadow-sm" oninput="globalSearch(this.value)"></div><div id="completedList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 opacity-80"></div></div>
         <div id="tab-stats" class="page-content hidden"><div id="statsMain" class="card p-6 text-center space-y-6"></div></div>
+        
         <div id="tab-inventory" class="page-content hidden"><div class="card p-4"><div id="inventoryHeader" class="flex justify-between items-center mb-4"></div><div id="inventoryEditor" class="space-y-4"></div></div></div>
 
         <div id="selectionModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[500] backdrop-blur-md">
@@ -119,7 +126,6 @@
                 <div class="p-3 border-t"><button onclick="closeModal()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black">確定選擇</button></div>
             </div>
         </div>
-
         <div id="templateModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[600] backdrop-blur-md"><div class="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl border-2 border-blue-100"><div class="p-5 border-b flex justify-between items-center bg-indigo-50"><h3 class="font-black text-indigo-700 text-lg">📁 載入配置範本</h3><button onclick="document.getElementById('templateModal').classList.add('hidden')" class="text-gray-400 text-3xl">×</button></div><div id="templateList" class="overflow-y-auto flex-1 p-5 space-y-3"></div><div class="p-5 border-t bg-gray-50"><button onclick="document.getElementById('templateModal').classList.add('hidden')" class="w-full bg-gray-200 text-gray-600 py-4 rounded-xl font-bold">關閉</button></div></div></div>
     </div>
 
@@ -148,7 +154,7 @@
         } catch(e) {}
     }
 
-    // 核心修正：加入 onclick="event.stopPropagation()" 防止點框時跳出選擇視窗
+    // 🏆 核心修正：最強阻擋機制 (ontouchstart + onclick + onmousedown)
     function renderConfig() {
         const container = document.getElementById('configRows'); if(!container) return;
         const isSS = document.getElementById('mainBody').classList.contains('screenshot-mode'); container.innerHTML = '';
@@ -157,7 +163,7 @@
             const badges = items.map((sel, sIdx) => {
                 if (typeof sel === 'number') sel = {idx: sel, qty: 1, isGift: false, isTemp: false, note: ""};
                 let target = sel.isTemp ? sel : (inv[cat] || [])[sel.idx]; if(!target) return '';
-                const noteHtml = isSS ? '' : `<div class="mt-1" onclick="event.stopPropagation()"><input type="text" placeholder="保固/序號備註" class="text-[10px] py-1 px-2 w-full bg-gray-50 border-dashed" value="${sel.note || ''}" onchange="updateItemNote('${cat}', ${sIdx}, this.value)"></div>`;
+                const noteHtml = isSS ? '' : `<div class="mt-1" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()"><input type="text" placeholder="保固/序號備註" class="text-[10px] py-1 px-2 w-full bg-gray-50 border-dashed" value="${sel.note || ''}" onchange="updateItemNote('${cat}', ${sIdx}, this.value)" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()" onclick="event.stopPropagation()"></div>`;
                 return `<div class="selected-badge flex-col !items-start mb-2">${sel.isGift?'<span class="text-red-500 font-black">[贈] </span> ':''}<div>${target.name}${sel.qty>1?`<span class="bg-blue-100 text-blue-600 px-2 rounded-full ml-1 text-xs">x${sel.qty}</span>`:''} <span class="price-tag">($${Number(target.p).toLocaleString()})</span></div>${noteHtml}</div>`;
             }).join('');
             container.innerHTML += `<div class="item-row cursor-pointer" onclick="openSelection('${cat}')"><div class="text-[10px] font-black text-blue-400 uppercase mb-1 tracking-wider">${cat}</div><div class="flex flex-col gap-1">${badges || '<span class="text-gray-300 italic text-sm no-screenshot">未選中項目...</span>'}</div></div>`;
@@ -192,6 +198,7 @@
         });
     }
 
+    // 基礎功能
     function updateItemNote(cat, sIdx, val) { if(currentSelections[cat] && currentSelections[cat][sIdx]) currentSelections[cat][sIdx].note = val; }
     function toggleSupplier(cat, idx, label) { if(!inv[cat][idx].suppliers) inv[cat][idx].suppliers = []; const list = inv[cat][idx].suppliers; const pos = list.indexOf(label); if(pos > -1) list.splice(pos, 1); else list.push(label); renderInventoryEditor(); }
     function updateSubItem(idx, type, val) { const sel = (currentSelections[currentCat] || []).find(s => !s.isTemp && s.idx === idx); if(!sel) return; if(type==='qty') sel.qty = Math.max(1, (sel.qty||1)+val); if(type==='gift') sel.isGift = val; renderConfig(); renderModalList(); }
