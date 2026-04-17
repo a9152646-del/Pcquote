@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.75</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.76</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -135,12 +135,12 @@
                             <div id="ui-noCardShow" class="p-2 bg-orange-50 rounded hidden border-2 border-orange-200"><div id="ui-noCardVal" class="text-lg font-black text-orange-600">$0</div></div>
                             <input type="number" id="noCardTotal" class="w-full border-orange-200 text-sm" placeholder="輸入無卡金額" oninput="calculate()">
                         </div>
-                        
+
                         <div id="sellerBox" class="bg-blue-50 p-3 rounded-lg invisible">
                             <div class="flex justify-between text-xs text-blue-500"><span>成本</span><span id="ui-totalCost">$0</span></div>
-                            <div class="flex justify-between text-[10px] text-red-400 mt-1"><span>預估稅金 (5%)</span><span id="ui-taxAmount">-$0</span></div>
-                            <div class="flex justify-between text-[10px] text-green-500 font-bold"><span>稅後淨利</span><span id="ui-netProfit">$0</span></div>
-                            <div class="flex justify-between text-sm font-black text-green-600 border-t-2 border-blue-100 mt-2 pt-2"><span>利潤</span><span id="ui-totalProfit">$0</span></div>
+                            <div class="flex justify-between text-[10px] text-red-500 mt-1 font-bold"><span>預估稅金 (5%)</span><span id="ui-taxAmt">-$0</span></div>
+                            <div class="flex justify-between text-[11px] text-green-600 font-black mt-1"><span>稅後實賺</span><span id="ui-realProfit">$0</span></div>
+                            <div class="flex justify-between text-sm font-black text-gray-400 border-t-2 border-blue-100 mt-2 pt-2"><span>帳面毛利</span><span id="ui-totalProfit">$0</span></div>
                         </div>
 
                         <div class="space-y-2">
@@ -198,7 +198,7 @@
 
     let inv = {}; let catOrder = []; let records = []; let templates = {}; let currentSelections = {}; let editingRecordId = null; let currentCat = "";
 
-    // 核心修改點：計算邏輯加入稅金
+    // 這裡改了：加入稅金計算邏輯
     function calculate() {
         try {
             let subP = 0, subC = 0, disc = parseFloat(document.getElementById('discountAmt')?.value || 0);
@@ -213,21 +213,26 @@
             const baseTaxedTotal = !isNaN(parseFloat(document.getElementById('manualTotal').value)) ? parseFloat(document.getElementById('manualTotal').value) : (subP - disc);
             document.getElementById('ui-totalSale').innerText = `$${baseTaxedTotal.toLocaleString()}`;
 
-            // 稅金計算 (1.05 反推)
-            const taxVal = Math.round(baseTaxedTotal - (baseTaxedTotal / 1.05));
-
-            let profit = baseTaxedTotal - subC; if (noCard > 0) { profit = (noCard - baseTaxedTotal) + (baseTaxedTotal - subC); document.getElementById('ui-noCardVal').innerText = `$${noCard.toLocaleString()}`; document.getElementById('ui-noCardShow').classList.remove('hidden'); } else document.getElementById('ui-noCardShow').classList.add('hidden');
+            // 稅金計算 (5% 營業稅 = 總價 - 總價/1.05)
+            const taxAmount = Math.round(baseTaxedTotal - (baseTaxedTotal / 1.05));
             
-            // 稅後淨利
-            const netProfit = profit - taxVal;
+            let profit = baseTaxedTotal - subC; 
+            if (noCard > 0) { 
+                profit = (noCard - baseTaxedTotal) + (baseTaxedTotal - subC); 
+                document.getElementById('ui-noCardVal').innerText = `$${noCard.toLocaleString()}`; 
+                document.getElementById('ui-noCardShow').classList.remove('hidden'); 
+            } else document.getElementById('ui-noCardShow').classList.add('hidden');
+            
+            // 稅後實賺
+            const realProfit = profit - taxAmount;
 
             document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`; 
             document.getElementById('ui-totalProfit').innerText = `$${profit.toLocaleString()}`;
             
-            // 更新稅金與淨利介面
-            document.getElementById('ui-taxAmount').innerText = `-$${taxVal.toLocaleString()}`;
-            document.getElementById('ui-netProfit').innerText = `$${netProfit.toLocaleString()}`;
-
+            // 更新新欄位
+            document.getElementById('ui-taxAmt').innerText = `-$${taxAmount.toLocaleString()}`;
+            document.getElementById('ui-realProfit').innerText = `$${realProfit.toLocaleString()}`;
+            
         } catch(e) {}
     }
 
@@ -288,6 +293,7 @@
         });
     }
 
+    // 這裡改了：統計頁面的利潤現在也會自動扣除稅金
     function renderStats() {
         const content = document.getElementById('statsContent'); if(!content) return;
         let monthlyData = {};
@@ -306,16 +312,17 @@
             }
             monthlyData[monthKey].revenue += rev; monthlyData[monthKey].cost += itemCost; monthlyData[monthKey].count += 1;
         });
-        Object.keys(monthlyData).forEach(k => { monthlyData[k].profit = monthlyData[k].revenue - monthlyData[k].cost; });
+        // 核心改動：利潤改為 (營業額 / 1.05) - 成本
+        Object.keys(monthlyData).forEach(k => { monthlyData[k].profit = Math.round((monthlyData[k].revenue / 1.05) - monthlyData[k].cost); });
         const sortedMonths = Object.keys(monthlyData).sort((a,b) => b.localeCompare(a));
         if(sortedMonths.length === 0) { content.innerHTML = '<div class="text-center p-10 text-gray-400">尚無數據</div>'; return; }
         content.innerHTML = sortedMonths.map(m => `
             <div class="stats-card">
-                <div class="text-lg font-black text-gray-800 mb-2">${m} 績效報表</div>
+                <div class="text-lg font-black text-gray-800 mb-2">${m} 績效報表 (稅後)</div>
                 <div class="grid grid-cols-3 gap-2">
-                    <div><div class="text-[10px] text-gray-400">總營業額</div><div class="text-blue-600 font-bold">$${monthlyData[m].revenue.toLocaleString()}</div></div>
-                    <div><div class="text-[10px] text-gray-400">總成本</div><div class="text-red-500 font-bold">$${monthlyData[m].cost.toLocaleString()}</div></div>
-                    <div><div class="text-[10px] text-gray-400">利潤</div><div class="text-green-600 font-bold">$${monthlyData[m].profit.toLocaleString()}</div></div>
+                    <div><div class="text-[10px] text-gray-400">總營業額(含稅)</div><div class="text-blue-600 font-bold">$${monthlyData[m].revenue.toLocaleString()}</div></div>
+                    <div><div class="text-[10px] text-gray-400">總零件成本</div><div class="text-red-500 font-bold">$${monthlyData[m].cost.toLocaleString()}</div></div>
+                    <div><div class="text-[10px] text-gray-400">稅後純利</div><div class="text-green-600 font-bold">$${monthlyData[m].profit.toLocaleString()}</div></div>
                 </div>
                 <div class="mt-2 text-[10px] text-gray-400 font-bold">成交件數：${monthlyData[m].count} 件</div>
             </div>`).join('');
