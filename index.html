@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.74</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.75</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -135,7 +135,14 @@
                             <div id="ui-noCardShow" class="p-2 bg-orange-50 rounded hidden border-2 border-orange-200"><div id="ui-noCardVal" class="text-lg font-black text-orange-600">$0</div></div>
                             <input type="number" id="noCardTotal" class="w-full border-orange-200 text-sm" placeholder="輸入無卡金額" oninput="calculate()">
                         </div>
-                        <div id="sellerBox" class="bg-blue-50 p-3 rounded-lg invisible"><div class="flex justify-between text-xs text-blue-500"><span>成本</span><span id="ui-totalCost">$0</span></div><div class="flex justify-between text-sm font-black text-green-600 border-t-2 border-blue-100 mt-2 pt-2"><span>利潤</span><span id="ui-totalProfit">$0</span></div></div>
+                        
+                        <div id="sellerBox" class="bg-blue-50 p-3 rounded-lg invisible">
+                            <div class="flex justify-between text-xs text-blue-500"><span>成本</span><span id="ui-totalCost">$0</span></div>
+                            <div class="flex justify-between text-[10px] text-red-400 mt-1"><span>預估稅金 (5%)</span><span id="ui-taxAmount">-$0</span></div>
+                            <div class="flex justify-between text-[10px] text-green-500 font-bold"><span>稅後淨利</span><span id="ui-netProfit">$0</span></div>
+                            <div class="flex justify-between text-sm font-black text-green-600 border-t-2 border-blue-100 mt-2 pt-2"><span>利潤</span><span id="ui-totalProfit">$0</span></div>
+                        </div>
+
                         <div class="space-y-2">
                             <button onclick="saveRecord('current')" class="w-full bg-blue-600 text-white py-3 rounded-lg font-black shadow-lg">💾 儲存草稿</button>
                             <button onclick="saveTemplate()" class="w-full bg-gray-700 text-white py-3 rounded-lg font-bold">📂 存為範本</button>
@@ -191,6 +198,7 @@
 
     let inv = {}; let catOrder = []; let records = []; let templates = {}; let currentSelections = {}; let editingRecordId = null; let currentCat = "";
 
+    // 核心修改點：計算邏輯加入稅金
     function calculate() {
         try {
             let subP = 0, subC = 0, disc = parseFloat(document.getElementById('discountAmt')?.value || 0);
@@ -204,8 +212,22 @@
             });
             const baseTaxedTotal = !isNaN(parseFloat(document.getElementById('manualTotal').value)) ? parseFloat(document.getElementById('manualTotal').value) : (subP - disc);
             document.getElementById('ui-totalSale').innerText = `$${baseTaxedTotal.toLocaleString()}`;
+
+            // 稅金計算 (1.05 反推)
+            const taxVal = Math.round(baseTaxedTotal - (baseTaxedTotal / 1.05));
+
             let profit = baseTaxedTotal - subC; if (noCard > 0) { profit = (noCard - baseTaxedTotal) + (baseTaxedTotal - subC); document.getElementById('ui-noCardVal').innerText = `$${noCard.toLocaleString()}`; document.getElementById('ui-noCardShow').classList.remove('hidden'); } else document.getElementById('ui-noCardShow').classList.add('hidden');
-            document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`; document.getElementById('ui-totalProfit').innerText = `$${profit.toLocaleString()}`;
+            
+            // 稅後淨利
+            const netProfit = profit - taxVal;
+
+            document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`; 
+            document.getElementById('ui-totalProfit').innerText = `$${profit.toLocaleString()}`;
+            
+            // 更新稅金與淨利介面
+            document.getElementById('ui-taxAmount').innerText = `-$${taxVal.toLocaleString()}`;
+            document.getElementById('ui-netProfit').innerText = `$${netProfit.toLocaleString()}`;
+
         } catch(e) {}
     }
 
@@ -227,7 +249,6 @@
         calculate();
     }
 
-    // 修正點：文字複製排除無卡金額
     function generateTextQuote(recordSelections, discount, totalStr) {
         let text = `🐚【神奇海螺電競 | 專業報價】\n日期：${new Date().toLocaleDateString()}\n------------------------------\n`;
         catOrder.forEach(cat => {
@@ -252,16 +273,10 @@
         Object.values(lists).forEach(l => { if(l) l.innerHTML = ''; });
         records.sort((a,b)=>b.id-a.id).forEach(r => {
             const status = r.status || 'draft'; if (!lists[status]) return;
-            
-            // 搜尋過濾
             const q = queries[status];
             if (q && !r.name?.toLowerCase().includes(q) && !r.custPhone?.toLowerCase().includes(q)) return;
-
             const pOpts = ["待處理", "組裝中", "測試中", "已完工", "已寄出"].map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
-            
-            // 修正點：紀錄清單顯示無卡金額
             const noCardHtml = (r.noCard && r.noCard > 0) ? `<div class="text-orange-500 font-black text-xs">無卡分期：$${Number(r.noCard).toLocaleString()}</div>` : '';
-            
             const div = document.createElement('div'); div.className = "p-4 border-2 rounded-xl bg-white shadow-sm space-y-3";
             const shipmentBtn = (status === 'order' || status === 'completed') ? `<button onclick="openShipmentModal(${r.id})" class="flex-1 py-2 bg-gray-50 text-gray-500 text-[10px] rounded-lg font-black border">🚚 出貨管理</button>` : '';
             div.innerHTML = `<div class="flex justify-between items-start"><div><div class="text-[10px] text-gray-400">${r.time}</div><div class="text-base font-black">${r.name || '無名氏'}</div><div class="text-blue-600 font-black text-lg">${r.total}</div>${noCardHtml}</div><div class="text-right"><span class="bg-blue-100 text-blue-600 text-[10px] px-2 py-1 rounded-full">${r.seller||'未指定'}</span><div class="mt-2"><select onchange="db.ref('records/'+${r.id}+'/progress').set(this.value)" class="text-[10px] font-bold px-1 rounded ${getStatusClass(r.progress)}">${pOpts}</select></div></div></div><div class="flex gap-1 pt-3 border-t">
@@ -318,11 +333,8 @@
         document.getElementById('ss-time').innerText = '報價日期：' + new Date().toLocaleString(); 
         document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value).toLocaleString(); 
         document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText; 
-        
-        // 修正點：截圖顯示保固
         const w = document.getElementById('custWarranty').value;
         document.getElementById('ss-warranty-info').innerText = w ? `🛡️ 保固：${w}` : '';
-        
         document.getElementById('mainBody').classList.add('screenshot-mode'); 
         document.getElementById('screenshot-header').style.display = 'block'; 
         document.getElementById('screenshot-footer').style.display = 'block'; 
@@ -338,7 +350,6 @@
     function openSelection(cat) { currentCat = cat; document.getElementById('modalTitle').innerText = '🔍 ' + cat; document.getElementById('selectionModal').classList.remove('hidden'); renderModalList(); }
     function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
     
-    // 修正點：配單區補回贈品鈕，修正加減按鈕順序 [-] [數量] [+]
     function renderModalList() { 
         const list = document.getElementById('modalList'); list.innerHTML = ''; 
         (inv[currentCat] || []).forEach((item, idx) => { 
