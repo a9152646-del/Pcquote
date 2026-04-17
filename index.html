@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.79</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.80</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -65,16 +65,14 @@
         .stats-card { background: white; padding: 15px; border-radius: 15px; border-left: 5px solid #3b82f6; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
     </style>
 </head>
-<body class="p-2 md:p-4 hide-prices" id="mainBody">
-
-    <div class="no-screenshot fixed right-4 bottom-10 z-[2000] flex flex-col gap-3">
+<body class="p-2 md:p-4" id="mainBody"> <div class="no-screenshot fixed right-4 bottom-10 z-[2000] flex flex-col gap-3">
         <button id="floatingSaveBtn" onclick="saveInventory()" class="hidden bg-green-600 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl no-screenshot">💾</button>
         <button onclick="if(confirm('重新整理？')) { window.location.reload(); }" class="bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔄</button>
         <button onclick="goBack()" class="bg-black text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔙</button>
     </div>
 
     <div id="adminToggleContainer" class="no-screenshot">
-        <label class="floating-label"><span class="text-xs font-black text-gray-700">💰 金額開關</span><input type="checkbox" id="adminToggle" onchange="toggleAdminMode()" class="w-5 h-5 cursor-pointer"></label>
+        <label class="floating-label"><span class="text-xs font-black text-gray-700">💰 金額開關</span><input type="checkbox" id="adminToggle" checked onchange="toggleAdminMode()" class="w-5 h-5 cursor-pointer"></label>
         <label class="floating-label"><span class="text-xs font-black text-blue-600">📸 截圖顯示單價</span><input type="checkbox" id="ssPriceToggle" checked class="w-5 h-5 cursor-pointer"></label>
     </div>
 
@@ -136,7 +134,7 @@
                             <input type="number" id="noCardTotal" class="w-full border-orange-200 text-sm" placeholder="輸入無卡金額" oninput="calculate()">
                         </div>
 
-                        <div id="sellerBox" class="bg-blue-50 p-3 rounded-lg invisible">
+                        <div id="sellerBox" class="bg-blue-50 p-3 rounded-lg">
                             <div class="flex justify-between text-xs text-blue-500"><span>成本</span><span id="ui-totalCost">$0</span></div>
                             <div class="flex justify-between text-[10px] text-red-500 mt-1 font-bold"><span>預估稅金 (5%)</span><span id="ui-taxAmt">-$0</span></div>
                             <div class="flex justify-between text-[10px] text-gray-400 mt-1 font-bold"><span>帳面毛利 (未扣稅)</span><span id="ui-totalProfit">$0</span></div>
@@ -144,7 +142,7 @@
                         </div>
 
                         <div class="space-y-2">
-                            <button onclick="saveRecord('current')" class="w-full bg-blue-600 text-white py-3 rounded-lg font-black shadow-lg">💾 儲存草稿</button>
+                            <button onclick="saveRecord('current')" class="w-full bg-blue-600 text-white py-3 rounded-lg font-black shadow-lg">💾 儲存修訂</button>
                             <button onclick="saveTemplate()" class="w-full bg-gray-700 text-white py-3 rounded-lg font-bold">📂 存為範本</button>
                             <button onclick="enterScreenshotMode()" class="w-full bg-orange-500 text-white py-3 rounded-lg font-black">📸 截圖模式</button>
                         </div>
@@ -197,44 +195,44 @@
     const db = firebase.database();
 
     let inv = {}; let catOrder = []; let records = []; let templates = {}; let currentSelections = {}; let editingRecordId = null; let currentCat = "";
-    let collapsedCats = {}; // 用於控制大項收合狀態
+    let collapsedCats = {}; 
 
+    // 核心修正：加入歷史價格優先邏輯
     function calculate() {
         try {
             let subP = 0, subC = 0, disc = parseFloat(document.getElementById('discountAmt')?.value || 0);
             let noCard = parseFloat(document.getElementById('noCardTotal')?.value || 0);
-            
-            // 重要修正：先抓取目前手動總額欄位的值
             let manualVal = document.getElementById('manualTotal').value;
 
             catOrder.forEach(cat => {
                 (currentSelections[cat] || []).forEach(s => {
-                    let p = 0, c = 0; if (s.isTemp) { p = Number(s.p || 0); c = Number(s.c || 0); } 
-                    else { const item = (inv[cat] || [])[s.idx]; if(item) { p = Number(item.p || 0); c = Number(item.c || 0); } }
+                    let p = 0, c = 0; 
+                    // 修正點：若 selection 內存有歷史價格 (p, c)，優先使用歷史價格，不抓品項庫目前的價格
+                    if (s.p !== undefined && s.c !== undefined) {
+                        p = Number(s.p || 0); c = Number(s.c || 0);
+                    } else if (s.isTemp) { 
+                        p = Number(s.p || 0); c = Number(s.c || 0); 
+                    } else { 
+                        const item = (inv[cat] || [])[s.idx]; if(item) { p = Number(item.p || 0); c = Number(item.c || 0); } 
+                    }
                     if(!s.isGift) subP += (p * (s.qty || 1)); subC += (c * (s.qty || 1));
                 });
             });
 
-            // 如果有手動輸入且不為空，則優先使用手動金額，否則使用零件總和減折扣
             const baseTaxedTotal = (manualVal !== "" && !isNaN(parseFloat(manualVal))) ? parseFloat(manualVal) : (subP - disc);
             document.getElementById('ui-totalSale').innerText = `$${baseTaxedTotal.toLocaleString()}`;
-
             const taxAmount = Math.round(baseTaxedTotal - (baseTaxedTotal / 1.05));
-            
             let profit = baseTaxedTotal - subC; 
             if (noCard > 0) { 
                 profit = (noCard - baseTaxedTotal) + (baseTaxedTotal - subC); 
                 document.getElementById('ui-noCardVal').innerText = `$${noCard.toLocaleString()}`; 
                 document.getElementById('ui-noCardShow').classList.remove('hidden'); 
             } else document.getElementById('ui-noCardShow').classList.add('hidden');
-            
             const realProfit = profit - taxAmount;
-
             document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`; 
             document.getElementById('ui-totalProfit').innerText = `$${profit.toLocaleString()}`;
             document.getElementById('ui-taxAmt').innerText = `-$${taxAmount.toLocaleString()}`;
             document.getElementById('ui-realProfit').innerText = `$${realProfit.toLocaleString()}`;
-            
         } catch(e) {}
     }
 
@@ -249,7 +247,9 @@
             const items = currentSelections[cat] || []; if (isSS && items.length === 0) return;
             const badges = items.map((sel, sIdx) => {
                 let target = sel.isTemp ? sel : (inv[cat] || [])[sel.idx]; if(!target) return '';
-                return `<div class="selected-badge flex-col mb-2">${sel.isGift?'[贈] ':''}<div>${target.name}${sel.qty>1?`<span class="bg-blue-100 text-blue-600 px-2 rounded-full ml-1 text-xs">x${sel.qty}</span>`:''} <span class="price-tag">($${Number(target.p).toLocaleString()})</span></div></div>`;
+                // 顯示邏輯優先使用歷史儲存的價格標籤
+                const dispP = (sel.p !== undefined) ? sel.p : target.p;
+                return `<div class="selected-badge flex-col mb-2">${sel.isGift?'[贈] ':''}<div>${target.name}${sel.qty>1?`<span class="bg-blue-100 text-blue-600 px-2 rounded-full ml-1 text-xs">x${sel.qty}</span>`:''} <span class="price-tag">($${Number(dispP).toLocaleString()})</span></div></div>`;
             }).join('');
             container.innerHTML += `<div class="item-row cursor-pointer" onclick="openSelection('${cat}')"><div class="text-[10px] font-black text-blue-400 uppercase mb-1">${cat}</div><div class="flex flex-col">${badges || '<span class="text-gray-300 italic text-sm">未選中項目...</span>'}</div></div>`;
         });
@@ -276,7 +276,6 @@
     function renderRecords() {
         const lists = { 'draft': document.getElementById('draftList'), 'order': document.getElementById('orderList'), 'completed': document.getElementById('completedList') };
         const queries = { 'draft': document.getElementById('search-drafts').value.toLowerCase(), 'order': document.getElementById('search-orders').value.toLowerCase(), 'completed': document.getElementById('search-completed').value.toLowerCase() };
-        
         Object.values(lists).forEach(l => { if(l) l.innerHTML = ''; });
         records.sort((a,b)=>b.id-a.id).forEach(r => {
             const status = r.status || 'draft'; if (!lists[status]) return;
@@ -306,7 +305,10 @@
             let itemCost = 0;
             for(let cat in r.selections) {
                 r.selections[cat].forEach(s => {
-                    let c = 0; if(s.isTemp) c = Number(s.c || 0);
+                    let c = 0; 
+                    // 統計頁面同步採用歷史成本優先邏輯
+                    if(s.c !== undefined) c = Number(s.c || 0);
+                    else if(s.isTemp) c = Number(s.c || 0);
                     else { const item = (inv[cat] || [])[s.idx]; if(item) c = Number(item.c || 0); }
                     itemCost += (c * (s.qty || 1));
                 });
@@ -328,12 +330,24 @@
             </div>`).join('');
     }
 
-    // 核心修正：儲存時明確存入 manualTotal 欄位
-    function saveRecord(st) { const id = editingRecordId || Date.now(); const r = { id, time: new Date().toLocaleString(), name: document.getElementById('custName').value, custPhone: document.getElementById('custPhone').value, custAddr: document.getElementById('custAddr').value, custWarranty: document.getElementById('custWarranty').value, seller: document.getElementById('infoSeller').value, orderMemo: document.getElementById('orderMemo').value, selections: currentSelections, total: document.getElementById('ui-totalSale').innerText, discount: document.getElementById('discountAmt').value, noCard: document.getElementById('noCardTotal').value, manualTotal: document.getElementById('manualTotal').value, status: st === 'current' ? 'draft' : st, progress: "待處理", notShipped: {} }; db.ref('records/' + id).update(r).then(() => { alert('成功'); resetForm(); showTab('drafts'); }); }
+    // 核心修正：正式訂單編輯儲存後不會跳回草稿
+    function saveRecord(st) { 
+        const id = editingRecordId || Date.now(); 
+        const oldR = records.find(x => x.id === id);
+        
+        // 判斷狀態：若 st 是 current (點擊儲存按鈕)，優先繼承舊訂單狀態，沒舊訂單才叫 draft
+        const status = st === 'current' ? (oldR ? oldR.status : 'draft') : st;
+
+        const r = { id, time: new Date().toLocaleString(), name: document.getElementById('custName').value, custPhone: document.getElementById('custPhone').value, custAddr: document.getElementById('custAddr').value, custWarranty: document.getElementById('custWarranty').value, seller: document.getElementById('infoSeller').value, orderMemo: document.getElementById('orderMemo').value, selections: currentSelections, total: document.getElementById('ui-totalSale').innerText, discount: document.getElementById('discountAmt').value, noCard: document.getElementById('noCardTotal').value, manualTotal: document.getElementById('manualTotal').value, status: status, progress: (oldR ? oldR.progress : "待處理"), notShipped: (oldR ? oldR.notShipped : {}) }; 
+        
+        db.ref('records/' + id).update(r).then(() => { 
+            alert('儲存成功'); 
+            resetForm(); 
+            showTab(status === 'draft' ? 'drafts' : (status === 'order' ? 'orders' : 'completed')); 
+        }); 
+    }
     
-    // 核心修正：編輯時將 manualTotal 讀回輸入框，並執行計算
     function editRecord(id) { const r = records.find(x => x.id === id); if(!r) return; editingRecordId = id; currentSelections = r.selections || {}; document.getElementById('custName').value = r.name || ''; document.getElementById('custPhone').value = r.custPhone || ''; document.getElementById('discountAmt').value = r.discount || 0; document.getElementById('manualTotal').value = r.manualTotal || ''; document.getElementById('noCardTotal').value = r.noCard || ''; document.getElementById('custAddr').value = r.custAddr || ''; document.getElementById('custWarranty').value = r.custWarranty || ''; document.getElementById('orderMemo').value = r.orderMemo || ''; renderConfig(); showTab('calc'); }
-    
     function resetForm() { editingRecordId=null; currentSelections={}; document.querySelectorAll('input').forEach(i=>i.value=""); document.getElementById('discountAmt').value=0; renderConfig(); }
     function goBack() { resetForm(); showTab('calc'); }
     function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); const fsBtn = document.getElementById('floatingSaveBtn'); if(t === 'inventory') { fsBtn.classList.remove('hidden'); fsBtn.style.display = 'flex'; renderInventoryEditor(); } else if(t === 'stats') { fsBtn.classList.add('hidden'); fsBtn.style.display = 'none'; renderStats(); } else { fsBtn.classList.add('hidden'); fsBtn.style.display = 'none'; } renderRecords(); }
@@ -383,20 +397,31 @@
                 </div>`; 
         }); 
     }
-    function togglePick(idx) { if(!currentSelections[currentCat]) currentSelections[currentCat] = []; const i = currentSelections[currentCat].findIndex(s => s.idx === idx); if(i > -1) currentSelections[currentCat].splice(i,1); else currentSelections[currentCat].push({idx, qty:1, isGift:false}); renderConfig(); renderModalList(); }
+    
+    // 核心修正：選取時立即凍結價格
+    function togglePick(idx) { 
+        if(!currentSelections[currentCat]) currentSelections[currentCat] = []; 
+        const i = currentSelections[currentCat].findIndex(s => s.idx === idx); 
+        if(i > -1) {
+            currentSelections[currentCat].splice(i,1); 
+        } else {
+            const target = (inv[currentCat] || [])[idx];
+            // 存入當下的 p(售價) 與 c(成本)，結案後就不會因品項庫變動而跑掉
+            currentSelections[currentCat].push({idx, qty:1, isGift:false, p: target.p, c: target.c}); 
+        }
+        renderConfig(); renderModalList(); 
+    }
+    
     function updateSubItem(idx, type, val) { const sel = currentSelections[currentCat].find(s => s.idx === idx); if(type==='qty') sel.qty = Math.max(1, sel.qty + val); renderConfig(); renderModalList(); }
     function toggleGift(idx) { const sel = currentSelections[currentCat].find(s => s.idx === idx); if(sel) { sel.isGift = !sel.isGift; renderConfig(); renderModalList(); } }
 
     function openShipmentModal(id) { const r = records.find(x => x.id === id); if(!r) return; const list = document.getElementById('shipmentList'); list.innerHTML = ''; const ns = r.notShipped || {}; catOrder.forEach(cat => { (r.selections[cat] || []).forEach((sel, idx) => { let target = sel.isTemp ? sel : (inv[cat] || [])[sel.idx]; if (target) { const isNS = ns[cat] && ns[cat].includes(idx); list.innerHTML += `<label class="flex items-center gap-3 p-4 border-2 rounded-xl bg-white ${isNS?'border-red-500 bg-red-50':'border-gray-100'}"><input type="checkbox" class="w-6 h-6" ${isNS?'checked':''} onchange="updateItemShipment(${id}, '${cat}', ${idx}, this.checked)"><div class="flex-1 text-sm font-bold">${target.name}</div><div class="text-[10px] font-black ${isNS?'text-red-500':'text-gray-300'}">${isNS?'尚未出貨':'已出貨'}</div></label>`; } }); }); document.getElementById('shipmentModal').classList.remove('hidden'); }
     function updateItemShipment(id, cat, idx, isNotShipped) { const r = records.find(x => x.id === id); if(!r) return; let ns = r.notShipped || {}; if(!ns[cat]) ns[cat] = []; if(isNotShipped) { if(!ns[cat].includes(idx)) ns[cat].push(idx); } else { ns[cat] = ns[cat].filter(i => i !== idx); if(ns[cat].length === 0) delete ns[cat]; } db.ref('records/' + id + '/notShipped').set(ns); }
 
-    // 重要修正：雲端庫存摺疊按鈕功能
     function renderInventoryEditor() { 
         const area = document.getElementById('inventoryEditor'); if (!area) return; 
         const scrollPos = window.scrollY; area.innerHTML = ''; 
         const head = document.getElementById('inventoryHeader'); 
-        
-        // 庫存管理頭部：新增全部收合/展開按鈕
         if(head) head.innerHTML = `
             <div class="flex justify-between items-center">
                 <h2 class="font-black text-lg text-gray-700">⚙️ 雲端品項管理</h2>
@@ -445,7 +470,6 @@
         requestAnimationFrame(() => { window.scrollTo(0, scrollPos); }); 
     }
 
-    // 全部收合/展開功能
     function toggleAllCats(shouldCollapse) {
         catOrder.forEach(cat => { collapsedCats[cat] = shouldCollapse; });
         renderInventoryEditor();
@@ -467,7 +491,11 @@
     db.ref('records').on('value', s => { records = []; if(s.exists()) { const data = s.val(); for(let id in data) records.push(data[id]); } renderRecords(); renderStats(); });
     db.ref('templates').on('value', s => { templates = s.exists() ? s.val() : {}; });
 
-    window.onload = () => { showTab('calc'); };
+    window.onload = () => { 
+        showTab('calc'); 
+        // 修正：網頁開啟後確保金額顯示邏輯正確
+        toggleAdminMode();
+    };
     </script>
 </body>
 </html>
