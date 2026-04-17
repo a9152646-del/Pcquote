@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.93</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.94</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -33,20 +33,20 @@
         .status-purple { background-color: #f3e8ff !important; color: #6b21a8 !important; }
         .status-green { background-color: #dcfce7 !important; color: #166534 !important; }
 
-        /* 拖拽手把：iPhone 觸控優化 */
+        /* 拖拽修正 */
         .drag-handle { cursor: grab; color: #cbd5e1; padding: 5px; font-size: 26px; user-select: none; display: flex; align-items: center; justify-content: center; touch-action: none; -webkit-user-select: none; }
         .drag-handle:active { cursor: grabbing; color: #3b82f6; }
 
         .item-row { padding: 16px !important; margin-bottom: 12px !important; background: #fff; border: 1px solid #f1f5f9 !important; border-radius: 12px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
 
-        /* 截圖模式專用 */
+        /* 截圖模式 */
         .screenshot-mode .item-row { padding: 2px 10px !important; margin-bottom: 0px !important; border-radius: 0px !important; border: none !important; border-bottom: 1px solid #f1f5f9 !important; box-shadow: none !important; }
         .screenshot-mode #configRows { gap: 0 !important; space-y: 0 !important; }
         .screenshot-mode .selected-badge { font-size: 10px !important; line-height: 1.1 !important; margin-bottom: 0px !important; }
         .screenshot-mode #screenshot-header { margin-bottom: 8px !important; padding-bottom: 4px !important; }
         .screenshot-mode #screenshot-footer { padding: 6px 12px !important; display: block !important; }
 
-        /* 品項庫整齊版面結構 */
+        /* 品項管理整齊版面 */
         .inv-item-row { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
         .inv-item-main { display: flex; align-items: center; gap: 10px; }
         .inv-name-area { flex: 1; min-width: 0; }
@@ -78,7 +78,7 @@
 
     <div class="no-screenshot fixed right-4 bottom-10 z-[2000] flex flex-col gap-3">
         <button id="floatingSaveBtn" onclick="saveInventory()" class="hidden bg-green-600 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">💾</button>
-        <button onclick="if(confirm('重新整理系統？')) { window.location.reload(); }" class="bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔄</button>
+        <button onclick="if(confirm('重新整理？')) { window.location.reload(); }" class="bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔄</button>
         <button onclick="goBack()" class="bg-black text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔙</button>
     </div>
 
@@ -172,14 +172,14 @@
         <div id="tab-inventory" class="page-content hidden"><div class="card p-4"><div id="inventoryHeader" class="flex flex-col gap-4 mb-4"></div><div id="inventoryEditor" class="space-y-4"></div></div></div>
 
         <div id="selectionModal" class="hidden fixed inset-0 bg-black/60 z-[20000] flex items-end">
-            <div class="bg-white w-full rounded-t-3xl p-6 max-h-[85vh] flex flex-col">
+            <div class="bg-white w-full rounded-t-3xl p-6 max-h-[85vh] flex flex-col shadow-2xl">
                 <div class="flex justify-between items-center mb-4">
                     <h3 id="modalTitle" class="text-xl font-black text-blue-600">🔍 選擇項目</h3>
-                    <button onclick="closeModal()" class="text-3xl text-gray-400">×</button>
+                    <button onclick="closeModal()" class="text-3xl text-gray-400 p-2">×</button>
                 </div>
                 <div id="modalList" class="space-y-2 overflow-y-auto flex-1 pb-4"></div>
                 <div class="pt-4 border-t">
-                    <button onclick="closeModal()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-lg shadow-lg">確定選擇</button>
+                    <button onclick="closeModal()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-lg shadow-xl">確定選擇並關閉</button>
                 </div>
             </div>
         </div>
@@ -196,7 +196,7 @@
     let inv = {}; let catOrder = []; let records = []; let templates = {}; let currentSelections = {}; let editingRecordId = null; let currentCat = "";
     let collapsedCats = {}; 
 
-    // 利潤計算邏輯
+    // 利潤計算核心
     function calculate() {
         try {
             let subP = 0, subC = 0, disc = parseFloat(document.getElementById('discountAmt')?.value || 0);
@@ -240,7 +240,7 @@
         calculate();
     }
 
-    // 拖拽初始化
+    // 拖拽初始化邏輯
     function initDragAndDrop() {
         const main = document.getElementById('inventoryEditor');
         if(main) {
@@ -254,7 +254,7 @@
         });
     }
 
-    // 渲染雲端庫管理介面：還原整齊版面
+    // 品項庫介面渲染
     function renderInventoryEditor() { 
         const area = document.getElementById('inventoryEditor'); if (!area) return; const scrollPos = window.scrollY; area.innerHTML = ''; 
         const head = document.getElementById('inventoryHeader'); 
@@ -277,18 +277,46 @@
         setTimeout(() => { initDragAndDrop(); window.scrollTo(0, scrollPos); }, 50);
     }
 
-    // 各種開關功能
+    // 控制面板功能
     function toggleAdminMode() { const i = document.getElementById('adminToggle').checked; if(i) document.getElementById('mainBody').classList.remove('hide-admin-box'); else document.getElementById('mainBody').classList.add('hide-admin-box'); }
     function toggleItemPriceMode() { const i = document.getElementById('itemPriceToggle').checked; if(i) document.getElementById('mainBody').classList.remove('hide-item-prices'); else document.getElementById('mainBody').classList.add('hide-item-prices'); }
     function toggleItemCostMode() { const i = document.getElementById('itemCostToggle').checked; if(i) document.getElementById('mainBody').classList.remove('hide-item-costs'); else document.getElementById('mainBody').classList.add('hide-item-costs'); }
 
-    // 系統核心：儲存與分頁
+    // 修復核心：儲存與編輯紀錄
     function saveRecord(st) { 
-        const id = editingRecordId || Date.now(); const oldR = records.find(x => String(x.id) === String(id));
+        // 如果是編輯模式，使用編輯中的 ID，否則產生新的 ID
+        const id = editingRecordId || Date.now(); 
+        const oldR = records.find(x => String(x.id) === String(id));
         const status = st === 'current' ? (oldR ? (oldR.status || 'draft') : 'draft') : st;
-        const rawData = { id, time: (oldR?oldR.time:new Date().toLocaleString()), name: document.getElementById('custName').value, custPhone: document.getElementById('custPhone').value, custAddr: document.getElementById('custAddr').value, custWarranty: document.getElementById('custWarranty').value, seller: document.getElementById('infoSeller').value, orderMemo: document.getElementById('orderMemo').value, selections: currentSelections, total: document.getElementById('ui-totalSale').innerText, discount: document.getElementById('discountAmt').value, noCard: document.getElementById('noCardTotal').value, manualTotal: document.getElementById('manualTotal').value, status, progress: (oldR?oldR.progress:"待處理"), notShipped: (oldR?oldR.notShipped:{}) }; 
-        db.ref('records/'+id).update(rawData).then(() => { alert('儲存成功'); resetForm(); showTab(status==='draft'?'drafts':(status==='order'?'orders':'completed')); });
+        
+        const rawData = { 
+            id: id, 
+            time: (oldR ? oldR.time : new Date().toLocaleString()), 
+            name: document.getElementById('custName').value || "", 
+            custPhone: document.getElementById('custPhone').value || "", 
+            custAddr: document.getElementById('custAddr').value || "", 
+            custWarranty: document.getElementById('custWarranty').value || "", 
+            seller: document.getElementById('infoSeller').value || "朱冠穎", 
+            orderMemo: document.getElementById('orderMemo').value || "", 
+            selections: currentSelections || {}, 
+            total: document.getElementById('ui-totalSale').innerText || "$0", 
+            discount: document.getElementById('discountAmt').value || 0, 
+            noCard: document.getElementById('noCardTotal').value || "", 
+            manualTotal: document.getElementById('manualTotal').value || "", 
+            status: status, 
+            progress: (oldR ? oldR.progress : "待處理"), 
+            notShipped: (oldR ? (oldR.notShipped || {}) : {}) 
+        }; 
+        
+        db.ref('records/' + id).update(rawData)
+            .then(() => { 
+                alert('💾 儲存成功！'); 
+                resetForm(); 
+                showTab(status === 'draft' ? 'drafts' : (status === 'order' ? 'orders' : 'completed')); 
+            })
+            .catch(err => alert("❌ 儲存失敗: " + err));
     }
+
     function renderRecords() {
         const lists = { 'draft': document.getElementById('draftList'), 'order': document.getElementById('orderList'), 'completed': document.getElementById('completedList') };
         Object.values(lists).forEach(l => { if(l) l.innerHTML = ''; });
@@ -301,6 +329,8 @@
             lists[status].appendChild(div);
         });
     }
+
+    // 其他基礎功能
     function renderStats() {
         const content = document.getElementById('statsContent'); if(!content) return; let monthlyData = {};
         records.forEach(r => { if(r.status === 'draft') return; const dateParts = r.time.split('/'); const monthKey = `${dateParts[0]}/${dateParts[1]}`; if(!monthlyData[monthKey]) monthlyData[monthKey] = { revenue: 0, cost: 0, profit: 0, count: 0 }; const rev = parseInt(r.total.replace(/[^0-9.-]+/g,"")) || 0; let itemCost = 0; for(let cat in r.selections) { r.selections[cat].forEach(s => { let c = (s.c !== undefined) ? Number(s.c) : 0; if(!s.c) { const item = (inv[cat] || [])[s.idx]; if(item) c = Number(item.c || 0); } itemCost += (c * (s.qty || 1)); }); } monthlyData[monthKey].revenue += rev; monthlyData[monthKey].cost += itemCost; monthlyData[monthKey].count += 1; });
