@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.85</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.86</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -170,6 +170,7 @@
     let inv = {}; let catOrder = []; let records = []; let templates = {}; let currentSelections = {}; let editingRecordId = null; let currentCat = "";
     let collapsedCats = {}; 
 
+    // 計算利潤邏輯 (凍結價格優先)
     function calculate() {
         try {
             let subP = 0, subC = 0, disc = parseFloat(document.getElementById('discountAmt')?.value || 0);
@@ -188,8 +189,10 @@
             let profit = baseTaxedTotal - subC; 
             if (noCard > 0) { profit = (noCard - baseTaxedTotal) + (baseTaxedTotal - subC); document.getElementById('ui-noCardVal').innerText = `$${noCard.toLocaleString()}`; document.getElementById('ui-noCardShow').classList.remove('hidden'); } else document.getElementById('ui-noCardShow').classList.add('hidden');
             const realProfit = profit - taxAmount;
-            document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`; document.getElementById('ui-totalProfit').innerText = `$${profit.toLocaleString()}`;
-            document.getElementById('ui-taxAmt').innerText = `-$${taxAmount.toLocaleString()}`; document.getElementById('ui-realProfit').innerText = `$${realProfit.toLocaleString()}`;
+            document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`; 
+            document.getElementById('ui-totalProfit').innerText = `$${profit.toLocaleString()}`;
+            document.getElementById('ui-taxAmt').innerText = `-$${taxAmount.toLocaleString()}`; 
+            document.getElementById('ui-realProfit').innerText = `$${realProfit.toLocaleString()}`;
         } catch(e) {}
     }
 
@@ -220,41 +223,53 @@
     }
 
     function togglePick(idx) { if(!currentSelections[currentCat]) currentSelections[currentCat] = []; const i = currentSelections[currentCat].findIndex(s => s.idx === idx); if(i > -1) { currentSelections[currentCat].splice(i,1); } else { const target = (inv[currentCat] || [])[idx]; currentSelections[currentCat].push({idx, qty:1, isGift:false, p: Number(target.p || 0), c: Number(target.c || 0)}); } renderConfig(); renderModalList(); }
-    
-    // 修復：拖拽排序邏輯完整實作
+
+    // 修復：拖拽排序完整邏輯
     function initDragAndDrop() {
-        const main = document.getElementById('inventoryEditor');
-        if(main) {
-            new Sortable(main, {
-                handle: '.cat-drag-handle',
-                animation: 200,
-                onEnd: function() {
-                    catOrder = Array.from(main.querySelectorAll('.category-drag-item')).map(el => el.dataset.catname);
-                }
-            });
-        }
-        document.querySelectorAll('.item-drag-container').forEach(c => {
-            const cat = c.dataset.cat;
-            new Sortable(c, {
+        const editor = document.getElementById('inventoryEditor');
+        if (!editor) return;
+
+        // 大項拖拽
+        new Sortable(editor, {
+            handle: '.cat-drag-handle',
+            animation: 200,
+            onEnd: function() {
+                const newOrder = Array.from(editor.querySelectorAll('.category-drag-item')).map(el => el.dataset.catname);
+                catOrder = newOrder;
+                // 注意：這裡只改本地，按下「同步數據」才會存到雲端
+            }
+        });
+
+        // 細項拖拽
+        document.querySelectorAll('.item-drag-container').forEach(container => {
+            const catName = container.dataset.cat;
+            new Sortable(container, {
                 handle: '.item-drag-handle',
                 animation: 200,
                 onEnd: function() {
-                    const rows = Array.from(c.querySelectorAll('.item-drag-row'));
-                    const old = [...(inv[cat] || [])];
-                    inv[cat] = rows.map(r => old[parseInt(r.dataset.originalidx)]);
-                    renderInventoryEditor(); // 刷新以確保數據索引正確
+                    const rows = Array.from(container.querySelectorAll('.item-drag-row'));
+                    const oldItems = [...(inv[catName] || [])];
+                    const newItems = rows.map(r => oldItems[parseInt(r.dataset.originalidx)]);
+                    inv[catName] = newItems;
+                    renderInventoryEditor(); // 重新渲染以更新 data-originalidx
                 }
             });
         });
     }
 
     function renderInventoryEditor() { 
-        const area = document.getElementById('inventoryEditor'); if (!area) return; area.innerHTML = ''; const head = document.getElementById('inventoryHeader'); 
+        const area = document.getElementById('inventoryEditor'); if (!area) return; 
+        const scrollPos = window.scrollY;
+        area.innerHTML = ''; 
+        const head = document.getElementById('inventoryHeader'); 
         if(head) head.innerHTML = `<div class="flex justify-between items-center"><h2 class="font-black text-lg text-gray-700">⚙️ 雲端品項管理</h2><div class="flex gap-2"><button onclick="addNewCategory()" class="bg-blue-500 text-white px-3 py-2 rounded-lg text-[10px]">+ 大項</button><button onclick="saveInventory()" class="bg-green-600 text-white px-3 py-2 rounded-lg text-[10px]">💾 同步數據</button></div></div><div class="flex gap-2"><button onclick="toggleAllCats(true)" class="flex-1 bg-gray-200 py-2 rounded-lg text-[10px] font-black">全部收合 ↑</button><button onclick="toggleAllCats(false)" class="flex-1 bg-gray-200 py-2 rounded-lg text-[10px] font-black">全部展開 ↓</button></div>`; 
+
         catOrder.forEach((cat, cIdx) => { 
-            const isCollapsed = collapsedCats[cat]; const sec = document.createElement('div'); sec.className = "bg-gray-100 p-3 rounded-xl border-2 mb-4 category-drag-item"; sec.dataset.catname = cat; 
+            const isCollapsed = collapsedCats[cat]; 
+            const sec = document.createElement('div'); sec.className = "bg-gray-100 p-3 rounded-xl border-2 mb-4 category-drag-item"; sec.dataset.catname = cat; 
             sec.innerHTML = `<div class="flex justify-between items-center ${isCollapsed?'':'mb-4'}"><div class="flex items-center gap-2"><span class="drag-handle cat-drag-handle">≡</span><input class="font-black text-base text-blue-700 border-none bg-transparent p-0 w-40" value="${cat}" onchange="renameCat(${cIdx}, this.value)"></div><div class="flex items-center gap-2"><button onclick="collapsedCats['${cat}']=!collapsedCats['${cat}'];renderInventoryEditor();" class="px-3 py-1 bg-white border rounded-lg font-black text-[10px] shadow-sm">${isCollapsed?'展開 +':'收合 -'}</button><button onclick="removeCat(${cIdx})" class="text-red-300 hover:text-red-500 text-2xl">×</button></div></div><div id="edit-${cat}" class="space-y-3 item-drag-container ${isCollapsed?'hidden':''}" data-cat="${cat}"></div><button onclick="addInvItem('${cat}')" class="w-full text-xs font-bold bg-white mt-4 py-3 rounded-xl border-2 border-dashed border-gray-300 text-gray-400 ${isCollapsed?'hidden':''}">+ 新增零件品項</button>`; 
             area.appendChild(sec); 
+            
             if(!isCollapsed) {
                 (inv[cat] || []).forEach((item, idx) => { 
                     const row = document.createElement('div'); row.className = `inv-item-row item-drag-row`; row.dataset.originalidx = idx; 
@@ -262,12 +277,13 @@
                     row.innerHTML = `<div class="inv-item-main"><span class="drag-handle item-drag-handle">≡</span><div class="inv-name-area"><textarea class="inv-name-input" rows="1">${item.name}</textarea></div><button onclick="removeInvItem('${cat}', ${idx})" class="text-red-500 text-2xl px-2 flex-shrink-0">×</button></div><div class="inv-control-bar"><div class="price-group"><div class="val-box"><span class="val-label">售</span><input type="number" class="val-input p-input" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div><div class="val-box"><span class="val-label">本</span><input type="number" class="val-input c-input" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div><div class="flex gap-1 mx-1">${supHtml}</div><button onclick="inv['${cat}'][${idx}].outOfStock=!inv['${cat}'][${idx}].outOfStock;renderInventoryEditor();" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button></div></div>`; 
                     document.getElementById(`edit-${cat}`).appendChild(row); 
                     const ta = row.querySelector('textarea'); 
-                    setTimeout(() => { ta.style.height = 'auto'; ta.style.height = (ta.scrollHeight) + 'px'; }, 50);
+                    setTimeout(() => { ta.style.height = 'auto'; ta.style.height = (ta.scrollHeight) + 'px'; }, 0);
                     ta.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; inv[cat][idx].name = this.value; });
                 });
             }
         }); 
-        initDragAndDrop(); // 渲染後重新綁定拖拽
+        initDragAndDrop(); 
+        window.scrollTo(0, scrollPos);
     }
 
     function renderRecords() {
@@ -290,6 +306,7 @@
         content.innerHTML = Object.keys(monthlyData).sort((a,b)=>b.localeCompare(a)).map(m => `<div class="stats-card"><div class="text-lg font-black text-gray-800 mb-2">${m} 績效 (稅後)</div><div class="grid grid-cols-3 gap-2"><div><div class="text-[10px] text-gray-400">營業額</div><div class="text-blue-600 font-bold">$${monthlyData[m].revenue.toLocaleString()}</div></div><div><div class="text-[10px] text-gray-400">成本</div><div class="text-red-500 font-bold">$${monthlyData[m].cost.toLocaleString()}</div></div><div><div class="text-[10px] text-gray-400">純利</div><div class="text-green-600 font-bold">$${monthlyData[m].profit.toLocaleString()}</div></div></div></div>`).join('');
     }
 
+    // 基礎切換功能
     function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); const fsBtn = document.getElementById('floatingSaveBtn'); if(t === 'inventory') { fsBtn.classList.remove('hidden'); fsBtn.style.display = 'flex'; renderInventoryEditor(); } else { fsBtn.classList.add('hidden'); fsBtn.style.display = 'none'; } renderRecords(); if(t==='stats') renderStats(); }
     function editRecord(id) { const r = records.find(x => String(x.id) === String(id)); if(!r) return; editingRecordId = id; currentSelections = JSON.parse(JSON.stringify(r.selections || {})); document.getElementById('custName').value = r.name || ''; document.getElementById('custPhone').value = r.custPhone || ''; document.getElementById('discountAmt').value = r.discount || 0; document.getElementById('manualTotal').value = r.manualTotal || ''; document.getElementById('noCardTotal').value = r.noCard || ''; document.getElementById('custAddr').value = r.custAddr || ''; document.getElementById('custWarranty').value = r.custWarranty || ''; document.getElementById('orderMemo').value = r.orderMemo || ''; renderConfig(); showTab('calc'); }
     function resetForm() { editingRecordId=null; currentSelections={}; document.querySelectorAll('#tab-calc input, #tab-calc textarea').forEach(i=>i.value=""); document.getElementById('discountAmt').value=0; renderConfig(); }
@@ -317,6 +334,8 @@
     function applyTemplate(id) { currentSelections = JSON.parse(JSON.stringify(templates[id].selections)); document.getElementById('discountAmt').value = templates[id].discount || 0; document.getElementById('manualTotal').value = templates[id].manualTotal || ''; renderConfig(); document.getElementById('templateModal').classList.add('hidden'); }
     function saveTemplate() { const name = prompt("範本名稱："); if (!name) return; db.ref('templates/' + Date.now()).update({ name, selections: currentSelections, discount: document.getElementById('discountAmt').value, manualTotal: document.getElementById('manualTotal').value }); }
     function addCustomSeller() { const n = prompt("業務名稱："); if(n) { const s = document.getElementById('infoSeller'); const o = document.createElement('option'); o.value=n; o.text=n; o.selected=true; s.add(o); } }
+    function copyQuoteAsText() { const text = generateTextQuote(currentSelections, document.getElementById('discountAmt').value, document.getElementById('ui-totalSale').innerText); navigator.clipboard.writeText(text).then(() => alert('📋 已複製文字報價！')); }
+    function generateTextQuote(recordSelections, discount, totalStr) { let text = `🐚【神奇海螺電競 | 專業報價】\n日期：${new Date().toLocaleDateString()}\n------------------------------\n`; catOrder.forEach(cat => { const items = recordSelections[cat] || []; items.forEach(sel => { let target = (inv[cat] || [])[sel.idx]; if (target) { text += `[${cat}] ${target.name}${sel.qty > 1 ? ` x ${sel.qty}` : ''}${sel.isGift?' (贈品)':''}\n`; } }); }); text += `------------------------------\n`; if (discount > 0) text += `折扣：-$${Number(discount).toLocaleString()}\n`; text += `總計：${totalStr} (含稅)`; return text; }
 
     db.ref('inventory').on('value', s => { if(s.exists()) inv = s.val(); renderConfig(); if(!document.getElementById('tab-inventory').classList.contains('hidden')) renderInventoryEditor(); });
     db.ref('catOrder').on('value', s => { if(s.exists()) catOrder = s.val(); renderConfig(); });
