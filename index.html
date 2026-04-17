@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.83</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.84</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -170,36 +170,26 @@
     let inv = {}; let catOrder = []; let records = []; let templates = {}; let currentSelections = {}; let editingRecordId = null; let currentCat = "";
     let collapsedCats = {}; 
 
-    // 徹底清理物件中的 undefined，避免 Firebase 儲存失敗
-    function cleanObject(obj) {
-        return JSON.parse(JSON.stringify(obj, (key, value) => value === undefined ? null : value));
-    }
-
     function calculate() {
         try {
             let subP = 0, subC = 0, disc = parseFloat(document.getElementById('discountAmt')?.value || 0);
             let noCard = parseFloat(document.getElementById('noCardTotal')?.value || 0);
             let manualVal = document.getElementById('manualTotal').value;
-
             catOrder.forEach(cat => {
                 (currentSelections[cat] || []).forEach(s => {
-                    let p = 0, c = 0; 
-                    if (s.p !== undefined && s.c !== undefined) { p = Number(s.p || 0); c = Number(s.c || 0); } 
+                    let p = 0, c = 0; if (s.p !== undefined && s.c !== undefined) { p = Number(s.p || 0); c = Number(s.c || 0); } 
                     else { const item = (inv[cat] || [])[s.idx]; if(item) { p = Number(item.p || 0); c = Number(item.c || 0); } }
                     if(!s.isGift) subP += (p * (s.qty || 1)); subC += (c * (s.qty || 1));
                 });
             });
-
             const baseTaxedTotal = (manualVal !== "" && !isNaN(parseFloat(manualVal))) ? parseFloat(manualVal) : (subP - disc);
             document.getElementById('ui-totalSale').innerText = `$${baseTaxedTotal.toLocaleString()}`;
             const taxAmount = Math.round(baseTaxedTotal - (baseTaxedTotal / 1.05));
             let profit = baseTaxedTotal - subC; 
             if (noCard > 0) { profit = (noCard - baseTaxedTotal) + (baseTaxedTotal - subC); document.getElementById('ui-noCardVal').innerText = `$${noCard.toLocaleString()}`; document.getElementById('ui-noCardShow').classList.remove('hidden'); } else document.getElementById('ui-noCardShow').classList.add('hidden');
             const realProfit = profit - taxAmount;
-            document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`; 
-            document.getElementById('ui-totalProfit').innerText = `$${profit.toLocaleString()}`;
-            document.getElementById('ui-taxAmt').innerText = `-$${taxAmount.toLocaleString()}`;
-            document.getElementById('ui-realProfit').innerText = `$${realProfit.toLocaleString()}`;
+            document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`; document.getElementById('ui-totalProfit').innerText = `$${profit.toLocaleString()}`;
+            document.getElementById('ui-taxAmt').innerText = `-$${taxAmount.toLocaleString()}`; document.getElementById('ui-realProfit').innerText = `$${realProfit.toLocaleString()}`;
         } catch(e) {}
     }
 
@@ -207,13 +197,12 @@
         const container = document.getElementById('configRows'); if(!container) return;
         const isSS = document.getElementById('mainBody').classList.contains('screenshot-mode'); 
         const showSSPrice = document.getElementById('ssPriceToggle').checked;
-        if(isSS && !showSSPrice) document.getElementById('mainBody').classList.add('ss-hide-prices');
-        else document.getElementById('mainBody').classList.remove('ss-hide-prices');
+        if(isSS && !showSSPrice) document.getElementById('mainBody').classList.add('ss-hide-prices'); else document.getElementById('mainBody').classList.remove('ss-hide-prices');
         container.innerHTML = '';
         catOrder.forEach(cat => {
             const items = currentSelections[cat] || []; if (isSS && items.length === 0) return;
             const badges = items.map((sel, sIdx) => {
-                let target = sel.isTemp ? sel : (inv[cat] || [])[sel.idx]; if(!target) return '';
+                let target = (inv[cat] || [])[sel.idx]; if(!target) return '';
                 const dispP = (sel.p !== undefined) ? sel.p : target.p;
                 return `<div class="selected-badge flex-col mb-2">${sel.isGift?'[贈] ':''}<div>${target.name}${sel.qty>1?`<span class="bg-blue-100 text-blue-600 px-2 rounded-full ml-1 text-xs">x${sel.qty}</span>`:''} <span class="price-tag">($${Number(dispP).toLocaleString()})</span></div></div>`;
             }).join('');
@@ -225,53 +214,18 @@
     function saveRecord(st) { 
         const id = editingRecordId || Date.now(); 
         const oldR = records.find(x => String(x.id) === String(id));
-        const status = st === 'current' ? (oldR ? oldR.status : 'draft') : st;
-
-        const rawData = { 
-            id: id, 
-            time: (oldR ? oldR.time : new Date().toLocaleString()), 
-            name: document.getElementById('custName').value, 
-            custPhone: document.getElementById('custPhone').value, 
-            custAddr: document.getElementById('custAddr').value, 
-            custWarranty: document.getElementById('custWarranty').value, 
-            seller: document.getElementById('infoSeller').value, 
-            orderMemo: document.getElementById('orderMemo').value, 
-            selections: currentSelections, 
-            total: document.getElementById('ui-totalSale').innerText, 
-            discount: document.getElementById('discountAmt').value, 
-            noCard: document.getElementById('noCardTotal').value, 
-            manualTotal: document.getElementById('manualTotal').value, 
-            status: status, 
-            progress: (oldR ? oldR.progress : "待處理"), 
-            notShipped: (oldR && oldR.notShipped ? oldR.notShipped : {}) 
-        }; 
-        
-        // 使用徹底清理過的資料存檔
-        db.ref('records/' + id).set(cleanObject(rawData)).then(() => { 
-            alert('儲存成功'); 
-            resetForm(); 
-            showTab(status === 'draft' ? 'drafts' : (status === 'order' ? 'orders' : 'completed')); 
-        }).catch(err => alert("儲存失敗: " + err));
+        const status = st === 'current' ? (oldR ? (oldR.status || 'draft') : 'draft') : st;
+        const rawData = { id: id, time: (oldR ? oldR.time : new Date().toLocaleString()), name: document.getElementById('custName').value || "", custPhone: document.getElementById('custPhone').value || "", custAddr: document.getElementById('custAddr').value || "", custWarranty: document.getElementById('custWarranty').value || "", seller: document.getElementById('infoSeller').value || "朱冠穎", orderMemo: document.getElementById('orderMemo').value || "", selections: currentSelections || {}, total: document.getElementById('ui-totalSale').innerText || "$0", discount: document.getElementById('discountAmt').value || 0, noCard: document.getElementById('noCardTotal').value || "", manualTotal: document.getElementById('manualTotal').value || "", status: status, progress: (oldR ? oldR.progress : "待處理"), notShipped: (oldR && oldR.notShipped ? oldR.notShipped : {}) }; 
+        db.ref('records/' + id).update(rawData).then(() => { alert('儲存成功'); resetForm(); showTab(status === 'draft' ? 'drafts' : (status === 'order' ? 'orders' : 'completed')); }).catch(err => alert("儲存失敗: " + err));
     }
 
-    function togglePick(idx) { 
-        if(!currentSelections[currentCat]) currentSelections[currentCat] = []; 
-        const i = currentSelections[currentCat].findIndex(s => s.idx === idx); 
-        if(i > -1) { currentSelections[currentCat].splice(i,1); } 
-        else {
-            const target = (inv[currentCat] || [])[idx];
-            currentSelections[currentCat].push({idx, qty:1, isGift:false, p: Number(target.p || 0), c: Number(target.c || 0)}); 
-        }
-        renderConfig(); renderModalList(); 
-    }
-
+    function togglePick(idx) { if(!currentSelections[currentCat]) currentSelections[currentCat] = []; const i = currentSelections[currentCat].findIndex(s => s.idx === idx); if(i > -1) { currentSelections[currentCat].splice(i,1); } else { const target = (inv[currentCat] || [])[idx]; currentSelections[currentCat].push({idx, qty:1, isGift:false, p: Number(target.p || 0), c: Number(target.c || 0)}); } renderConfig(); renderModalList(); }
+    
     function renderInventoryEditor() { 
-        const area = document.getElementById('inventoryEditor'); if (!area) return; area.innerHTML = ''; 
-        const head = document.getElementById('inventoryHeader'); 
+        const area = document.getElementById('inventoryEditor'); if (!area) return; area.innerHTML = ''; const head = document.getElementById('inventoryHeader'); 
         if(head) head.innerHTML = `<div class="flex justify-between items-center"><h2 class="font-black text-lg text-gray-700">⚙️ 雲端品項管理</h2><div class="flex gap-2"><button onclick="addNewCategory()" class="bg-blue-500 text-white px-3 py-2 rounded-lg text-[10px]">+ 大項</button><button onclick="saveInventory()" class="bg-green-600 text-white px-3 py-2 rounded-lg text-[10px]">💾 同步數據</button></div></div><div class="flex gap-2"><button onclick="toggleAllCats(true)" class="flex-1 bg-gray-200 py-2 rounded-lg text-[10px] font-black">全部收合 ↑</button><button onclick="toggleAllCats(false)" class="flex-1 bg-gray-200 py-2 rounded-lg text-[10px] font-black">全部展開 ↓</button></div>`; 
         catOrder.forEach((cat, cIdx) => { 
-            const isCollapsed = collapsedCats[cat];
-            const sec = document.createElement('div'); sec.className = "bg-gray-100 p-3 rounded-xl border-2 mb-4 category-drag-item"; sec.dataset.catname = cat; 
+            const isCollapsed = collapsedCats[cat]; const sec = document.createElement('div'); sec.className = "bg-gray-100 p-3 rounded-xl border-2 mb-4 category-drag-item"; sec.dataset.catname = cat; 
             sec.innerHTML = `<div class="flex justify-between items-center ${isCollapsed?'':'mb-4'}"><div class="flex items-center gap-2"><span class="drag-handle cat-drag-handle">≡</span><input class="font-black text-base text-blue-700 border-none bg-transparent p-0 w-40" value="${cat}" onchange="renameCat(${cIdx}, this.value)"></div><div class="flex items-center gap-2"><button onclick="collapsedCats['${cat}']=!collapsedCats['${cat}'];renderInventoryEditor();" class="px-3 py-1 bg-white border rounded-lg font-black text-[10px] shadow-sm">${isCollapsed?'展開 +':'收合 -'}</button><button onclick="removeCat(${cIdx})" class="text-red-300 hover:text-red-500 text-2xl">×</button></div></div><div id="edit-${cat}" class="space-y-3 item-drag-container ${isCollapsed?'hidden':''}" data-cat="${cat}"></div><button onclick="addInvItem('${cat}')" class="w-full text-xs font-bold bg-white mt-4 py-3 rounded-xl border-2 border-dashed border-gray-300 text-gray-400 ${isCollapsed?'hidden':''}">+ 新增零件品項</button>`; 
             area.appendChild(sec); 
             if(!isCollapsed) {
@@ -280,23 +234,18 @@
                     const sups = ['原', '速', '裕']; let supHtml = sups.map(s => `<button onclick="toggleSup('${cat}', ${idx}, '${s}')" class="sup-btn ${(item.sups||[]).includes(s)?'active':''}">${s}</button>`).join(''); 
                     row.innerHTML = `<div class="inv-item-main"><span class="drag-handle item-drag-handle">≡</span><div class="inv-name-area"><textarea class="inv-name-input" rows="1">${item.name}</textarea></div><button onclick="removeInvItem('${cat}', ${idx})" class="text-red-500 text-2xl px-2 flex-shrink-0">×</button></div><div class="inv-control-bar"><div class="price-group"><div class="val-box"><span class="val-label">售</span><input type="number" class="val-input p-input" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div><div class="val-box"><span class="val-label">本</span><input type="number" class="val-input c-input" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div><div class="flex gap-1 mx-1">${supHtml}</div><button onclick="inv['${cat}'][${idx}].outOfStock=!inv['${cat}'][${idx}].outOfStock;renderInventoryEditor();" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button></div></div>`; 
                     document.getElementById(`edit-${cat}`).appendChild(row); 
-                    const ta = row.querySelector('textarea');
-                    setTimeout(() => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; }, 10);
+                    const ta = row.querySelector('textarea'); setTimeout(() => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; }, 0);
                     ta.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'; inv[cat][idx].name = this.value; });
                 });
             }
-        }); 
-        initDragAndDrop(); 
+        }); initDragAndDrop(); 
     }
 
-    // --- 以下為系統核心函數，保持原樣不變動 ---
     function renderRecords() {
         const lists = { 'draft': document.getElementById('draftList'), 'order': document.getElementById('orderList'), 'completed': document.getElementById('completedList') };
-        const queries = { 'draft': (document.getElementById('search-drafts')?.value || "").toLowerCase(), 'order': (document.getElementById('search-orders')?.value || "").toLowerCase(), 'completed': (document.getElementById('search-completed')?.value || "").toLowerCase() };
         Object.values(lists).forEach(l => { if(l) l.innerHTML = ''; });
         records.sort((a,b)=>b.id-a.id).forEach(r => {
             const status = r.status || 'draft'; if (!lists[status]) return;
-            const q = queries[status]; if (q && !r.name?.toLowerCase().includes(q) && !r.custPhone?.toLowerCase().includes(q)) return;
             const pOpts = ["待處理", "組裝中", "測試中", "已完工", "已寄出"].map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
             const div = document.createElement('div'); div.className = "p-4 border-2 rounded-xl bg-white shadow-sm space-y-3";
             const shipmentBtn = (status === 'order' || status === 'completed') ? `<button onclick="openShipmentModal(${r.id})" class="flex-1 py-2 bg-gray-50 text-gray-500 text-[10px] rounded-lg font-black border">🚚 出貨管理</button>` : '';
@@ -306,17 +255,8 @@
     }
 
     function renderStats() {
-        const content = document.getElementById('statsContent'); if(!content) return;
-        let monthlyData = {};
-        records.forEach(r => {
-            if(r.status === 'draft') return;
-            const dateParts = r.time.split('/'); const monthKey = `${dateParts[0]}/${dateParts[1]}`;
-            if(!monthlyData[monthKey]) monthlyData[monthKey] = { revenue: 0, cost: 0, profit: 0, count: 0 };
-            const rev = parseInt(r.total.replace(/[^0-9.-]+/g,"")) || 0;
-            let itemCost = 0;
-            for(let cat in r.selections) { r.selections[cat].forEach(s => { let c = (s.c !== undefined) ? Number(s.c) : 0; if(!s.c) { const item = (inv[cat] || [])[s.idx]; if(item) c = Number(item.c || 0); } itemCost += (c * (s.qty || 1)); }); }
-            monthlyData[monthKey].revenue += rev; monthlyData[monthKey].cost += itemCost; monthlyData[monthKey].count += 1;
-        });
+        const content = document.getElementById('statsContent'); if(!content) return; let monthlyData = {};
+        records.forEach(r => { if(r.status === 'draft') return; const dateParts = r.time.split('/'); const monthKey = `${dateParts[0]}/${dateParts[1]}`; if(!monthlyData[monthKey]) monthlyData[monthKey] = { revenue: 0, cost: 0, profit: 0, count: 0 }; const rev = parseInt(r.total.replace(/[^0-9.-]+/g,"")) || 0; let itemCost = 0; for(let cat in r.selections) { r.selections[cat].forEach(s => { let c = (s.c !== undefined) ? Number(s.c) : 0; if(!s.c) { const item = (inv[cat] || [])[s.idx]; if(item) c = Number(item.c || 0); } itemCost += (c * (s.qty || 1)); }); } monthlyData[monthKey].revenue += rev; monthlyData[monthKey].cost += itemCost; monthlyData[monthKey].count += 1; });
         Object.keys(monthlyData).forEach(k => { monthlyData[k].profit = Math.round((monthlyData[k].revenue / 1.05) - monthlyData[k].cost); });
         content.innerHTML = Object.keys(monthlyData).sort((a,b)=>b.localeCompare(a)).map(m => `<div class="stats-card"><div class="text-lg font-black text-gray-800 mb-2">${m} 績效 (稅後)</div><div class="grid grid-cols-3 gap-2"><div><div class="text-[10px] text-gray-400">營業額</div><div class="text-blue-600 font-bold">$${monthlyData[m].revenue.toLocaleString()}</div></div><div><div class="text-[10px] text-gray-400">成本</div><div class="text-red-500 font-bold">$${monthlyData[m].cost.toLocaleString()}</div></div><div><div class="text-[10px] text-gray-400">純利</div><div class="text-green-600 font-bold">$${monthlyData[m].profit.toLocaleString()}</div></div></div></div>`).join('');
     }
@@ -346,8 +286,9 @@
     function updateItemShipment(id, cat, idx, isNotShipped) { const r = records.find(x => x.id === id); if(!r) return; let ns = r.notShipped || {}; if(!ns[cat]) ns[cat] = []; if(isNotShipped) { if(!ns[cat].includes(idx)) ns[cat].push(idx); } else { ns[cat] = ns[cat].filter(i => i !== idx); } db.ref('records/' + id + '/notShipped').set(ns); }
     function openTemplateModal() { const list = document.getElementById('templateList'); list.innerHTML = ''; Object.keys(templates).forEach(id => { const t = templates[id]; list.innerHTML += `<div class="p-4 border-2 rounded-xl mb-3 flex justify-between items-center bg-white shadow-sm" onclick="applyTemplate('${id}')"><div class="font-black text-gray-700 text-xs">${t.name}</div><div class="flex gap-2"><button class="bg-blue-600 text-white px-3 py-1 rounded-lg text-[10px]" onclick="applyTemplate('${id}')">套用</button><button class="bg-red-100 text-red-500 px-3 py-1 rounded-lg text-[10px]" onclick="event.stopPropagation(); db.ref('templates/'+'${id}').remove()">刪除</button></div></div>`; }); document.getElementById('templateModal').classList.remove('hidden'); }
     function applyTemplate(id) { currentSelections = JSON.parse(JSON.stringify(templates[id].selections)); document.getElementById('discountAmt').value = templates[id].discount || 0; document.getElementById('manualTotal').value = templates[id].manualTotal || ''; renderConfig(); document.getElementById('templateModal').classList.add('hidden'); }
-    function saveTemplate() { const name = prompt("範本名稱："); if (!name) return; db.ref('templates/' + Date.now()).set(cleanObject({ name, selections: currentSelections, discount: document.getElementById('discountAmt').value, manualTotal: document.getElementById('manualTotal').value })); }
+    function saveTemplate() { const name = prompt("範本名稱："); if (!name) return; db.ref('templates/' + Date.now()).update({ name, selections: currentSelections, discount: document.getElementById('discountAmt').value, manualTotal: document.getElementById('manualTotal').value }); }
     function addCustomSeller() { const n = prompt("業務名稱："); if(n) { const s = document.getElementById('infoSeller'); const o = document.createElement('option'); o.value=n; o.text=n; o.selected=true; s.add(o); } }
+    function generateTextQuote(recordSelections, discount, totalStr) { let text = `🐚【神奇海螺電競 | 專業報價】\n日期：${new Date().toLocaleDateString()}\n------------------------------\n`; catOrder.forEach(cat => { const items = recordSelections[cat] || []; items.forEach(sel => { let target = (inv[cat] || [])[sel.idx]; if (target) { text += `[${cat}] ${target.name}${sel.qty > 1 ? ` x ${sel.qty}` : ''}${sel.isGift?' (贈品)':''}\n`; } }); }); text += `------------------------------\n`; if (discount > 0) text += `折扣：-$${Number(discount).toLocaleString()}\n`; text += `總計：${totalStr} (含稅)`; return text; }
     function initDragAndDrop() { const main = document.getElementById('inventoryEditor'); if(main) new Sortable(main, { handle: '.cat-drag-handle', animation: 200, onEnd: function() { catOrder = Array.from(main.querySelectorAll('.category-drag-item')).map(el => el.dataset.catname); }}); document.querySelectorAll('.item-drag-container').forEach(c => { const cat = c.dataset.cat; new Sortable(c, { handle: '.item-drag-handle', animation: 200, onEnd: function() { const rows = Array.from(c.querySelectorAll('.item-drag-row')); const old = [...inv[cat]]; inv[cat] = rows.map(r => old[parseInt(r.dataset.originalidx)]); renderInventoryEditor(); }});}); }
     function copyQuoteAsText() { const text = generateTextQuote(currentSelections, document.getElementById('discountAmt').value, document.getElementById('ui-totalSale').innerText); navigator.clipboard.writeText(text).then(() => alert('📋 已複製文字報價！')); }
 
