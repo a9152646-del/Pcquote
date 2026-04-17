@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.80</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.81</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -65,7 +65,9 @@
         .stats-card { background: white; padding: 15px; border-radius: 15px; border-left: 5px solid #3b82f6; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
     </style>
 </head>
-<body class="p-2 md:p-4" id="mainBody"> <div class="no-screenshot fixed right-4 bottom-10 z-[2000] flex flex-col gap-3">
+<body class="p-2 md:p-4" id="mainBody">
+
+    <div class="no-screenshot fixed right-4 bottom-10 z-[2000] flex flex-col gap-3">
         <button id="floatingSaveBtn" onclick="saveInventory()" class="hidden bg-green-600 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl no-screenshot">💾</button>
         <button onclick="if(confirm('重新整理？')) { window.location.reload(); }" class="bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔄</button>
         <button onclick="goBack()" class="bg-black text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔙</button>
@@ -197,7 +199,7 @@
     let inv = {}; let catOrder = []; let records = []; let templates = {}; let currentSelections = {}; let editingRecordId = null; let currentCat = "";
     let collapsedCats = {}; 
 
-    // 核心修正：加入歷史價格優先邏輯
+    // 修正：計算邏輯優先使用凍結的歷史價格
     function calculate() {
         try {
             let subP = 0, subC = 0, disc = parseFloat(document.getElementById('discountAmt')?.value || 0);
@@ -207,11 +209,9 @@
             catOrder.forEach(cat => {
                 (currentSelections[cat] || []).forEach(s => {
                     let p = 0, c = 0; 
-                    // 修正點：若 selection 內存有歷史價格 (p, c)，優先使用歷史價格，不抓品項庫目前的價格
+                    // 優先使用凍結在訂單內的價格
                     if (s.p !== undefined && s.c !== undefined) {
                         p = Number(s.p || 0); c = Number(s.c || 0);
-                    } else if (s.isTemp) { 
-                        p = Number(s.p || 0); c = Number(s.c || 0); 
                     } else { 
                         const item = (inv[cat] || [])[s.idx]; if(item) { p = Number(item.p || 0); c = Number(item.c || 0); } 
                     }
@@ -247,7 +247,6 @@
             const items = currentSelections[cat] || []; if (isSS && items.length === 0) return;
             const badges = items.map((sel, sIdx) => {
                 let target = sel.isTemp ? sel : (inv[cat] || [])[sel.idx]; if(!target) return '';
-                // 顯示邏輯優先使用歷史儲存的價格標籤
                 const dispP = (sel.p !== undefined) ? sel.p : target.p;
                 return `<div class="selected-badge flex-col mb-2">${sel.isGift?'[贈] ':''}<div>${target.name}${sel.qty>1?`<span class="bg-blue-100 text-blue-600 px-2 rounded-full ml-1 text-xs">x${sel.qty}</span>`:''} <span class="price-tag">($${Number(dispP).toLocaleString()})</span></div></div>`;
             }).join('');
@@ -305,11 +304,8 @@
             let itemCost = 0;
             for(let cat in r.selections) {
                 r.selections[cat].forEach(s => {
-                    let c = 0; 
-                    // 統計頁面同步採用歷史成本優先邏輯
-                    if(s.c !== undefined) c = Number(s.c || 0);
-                    else if(s.isTemp) c = Number(s.c || 0);
-                    else { const item = (inv[cat] || [])[s.idx]; if(item) c = Number(item.c || 0); }
+                    let c = (s.c !== undefined) ? Number(s.c) : 0;
+                    if(!s.c) { const item = (inv[cat] || [])[s.idx]; if(item) c = Number(item.c || 0); }
                     itemCost += (c * (s.qty || 1));
                 });
             }
@@ -330,21 +326,14 @@
             </div>`).join('');
     }
 
-    // 核心修正：正式訂單編輯儲存後不會跳回草稿
+    // 修正：儲存時繼承原本的狀態，不跳回草稿
     function saveRecord(st) { 
         const id = editingRecordId || Date.now(); 
         const oldR = records.find(x => x.id === id);
-        
-        // 判斷狀態：若 st 是 current (點擊儲存按鈕)，優先繼承舊訂單狀態，沒舊訂單才叫 draft
         const status = st === 'current' ? (oldR ? oldR.status : 'draft') : st;
 
-        const r = { id, time: new Date().toLocaleString(), name: document.getElementById('custName').value, custPhone: document.getElementById('custPhone').value, custAddr: document.getElementById('custAddr').value, custWarranty: document.getElementById('custWarranty').value, seller: document.getElementById('infoSeller').value, orderMemo: document.getElementById('orderMemo').value, selections: currentSelections, total: document.getElementById('ui-totalSale').innerText, discount: document.getElementById('discountAmt').value, noCard: document.getElementById('noCardTotal').value, manualTotal: document.getElementById('manualTotal').value, status: status, progress: (oldR ? oldR.progress : "待處理"), notShipped: (oldR ? oldR.notShipped : {}) }; 
-        
-        db.ref('records/' + id).update(r).then(() => { 
-            alert('儲存成功'); 
-            resetForm(); 
-            showTab(status === 'draft' ? 'drafts' : (status === 'order' ? 'orders' : 'completed')); 
-        }); 
+        const r = { id, time: (oldR ? oldR.time : new Date().toLocaleString()), editTime: new Date().toLocaleString(), name: document.getElementById('custName').value, custPhone: document.getElementById('custPhone').value, custAddr: document.getElementById('custAddr').value, custWarranty: document.getElementById('custWarranty').value, seller: document.getElementById('infoSeller').value, orderMemo: document.getElementById('orderMemo').value, selections: currentSelections, total: document.getElementById('ui-totalSale').innerText, discount: document.getElementById('discountAmt').value, noCard: document.getElementById('noCardTotal').value, manualTotal: document.getElementById('manualTotal').value, status: status, progress: (oldR ? oldR.progress : "待處理"), notShipped: (oldR ? oldR.notShipped : {}) }; 
+        db.ref('records/' + id).update(r).then(() => { alert('儲存成功'); resetForm(); showTab(status === 'draft' ? 'drafts' : (status === 'order' ? 'orders' : 'completed')); }); 
     }
     
     function editRecord(id) { const r = records.find(x => x.id === id); if(!r) return; editingRecordId = id; currentSelections = r.selections || {}; document.getElementById('custName').value = r.name || ''; document.getElementById('custPhone').value = r.custPhone || ''; document.getElementById('discountAmt').value = r.discount || 0; document.getElementById('manualTotal').value = r.manualTotal || ''; document.getElementById('noCardTotal').value = r.noCard || ''; document.getElementById('custAddr').value = r.custAddr || ''; document.getElementById('custWarranty').value = r.custWarranty || ''; document.getElementById('orderMemo').value = r.orderMemo || ''; renderConfig(); showTab('calc'); }
@@ -398,15 +387,13 @@
         }); 
     }
     
-    // 核心修正：選取時立即凍結價格
     function togglePick(idx) { 
         if(!currentSelections[currentCat]) currentSelections[currentCat] = []; 
         const i = currentSelections[currentCat].findIndex(s => s.idx === idx); 
-        if(i > -1) {
-            currentSelections[currentCat].splice(i,1); 
-        } else {
+        if(i > -1) { currentSelections[currentCat].splice(i,1); } 
+        else {
             const target = (inv[currentCat] || [])[idx];
-            // 存入當下的 p(售價) 與 c(成本)，結案後就不會因品項庫變動而跑掉
+            // 選取時直接凍結價格
             currentSelections[currentCat].push({idx, qty:1, isGift:false, p: target.p, c: target.c}); 
         }
         renderConfig(); renderModalList(); 
@@ -420,20 +407,11 @@
 
     function renderInventoryEditor() { 
         const area = document.getElementById('inventoryEditor'); if (!area) return; 
-        const scrollPos = window.scrollY; area.innerHTML = ''; 
+        area.innerHTML = ''; 
         const head = document.getElementById('inventoryHeader'); 
         if(head) head.innerHTML = `
-            <div class="flex justify-between items-center">
-                <h2 class="font-black text-lg text-gray-700">⚙️ 雲端品項管理</h2>
-                <div class="flex gap-2">
-                    <button onclick="addNewCategory()" class="bg-blue-500 text-white px-3 py-2 rounded-lg text-[10px]">+ 大項</button>
-                    <button onclick="saveInventory()" class="bg-green-600 text-white px-3 py-2 rounded-lg text-[10px]">💾 同步數據</button>
-                </div>
-            </div>
-            <div class="flex gap-2">
-                <button onclick="toggleAllCats(true)" class="flex-1 bg-gray-200 py-2 rounded-lg text-[10px] font-black">全部收合 ↑</button>
-                <button onclick="toggleAllCats(false)" class="flex-1 bg-gray-200 py-2 rounded-lg text-[10px] font-black">全部展開 ↓</button>
-            </div>`; 
+            <div class="flex justify-between items-center"><h2 class="font-black text-lg text-gray-700">⚙️ 雲端品項管理</h2><div class="flex gap-2"><button onclick="addNewCategory()" class="bg-blue-500 text-white px-3 py-2 rounded-lg text-[10px]">+ 大項</button><button onclick="saveInventory()" class="bg-green-600 text-white px-3 py-2 rounded-lg text-[10px]">💾 同步數據</button></div></div>
+            <div class="flex gap-2"><button onclick="toggleAllCats(true)" class="flex-1 bg-gray-200 py-2 rounded-lg text-[10px] font-black">全部收合 ↑</button><button onclick="toggleAllCats(false)" class="flex-1 bg-gray-200 py-2 rounded-lg text-[10px] font-black">全部展開 ↓</button></div>`; 
 
         catOrder.forEach((cat, cIdx) => { 
             const isCollapsed = collapsedCats[cat];
@@ -442,10 +420,7 @@
             sec.dataset.catname = cat; 
             sec.innerHTML = `
                 <div class="flex justify-between items-center ${isCollapsed?'':'mb-4'}">
-                    <div class="flex items-center gap-2">
-                        <span class="drag-handle cat-drag-handle">≡</span>
-                        <input class="font-black text-base text-blue-700 border-none bg-transparent p-0 w-40" value="${cat}" onchange="renameCat(${cIdx}, this.value)">
-                    </div>
+                    <div class="flex items-center gap-2"><span class="drag-handle cat-drag-handle">≡</span><input class="font-black text-base text-blue-700 border-none bg-transparent p-0 w-40" value="${cat}" onchange="renameCat(${cIdx}, this.value)"></div>
                     <div class="flex items-center gap-2">
                         <button onclick="collapsedCats['${cat}']=!collapsedCats['${cat}'];renderInventoryEditor();" class="px-3 py-1 bg-white border rounded-lg font-black text-[10px] shadow-sm">${isCollapsed?'展開 +':'收合 -'}</button>
                         <button onclick="removeCat(${cIdx})" class="text-red-300 hover:text-red-500 text-2xl">×</button>
@@ -462,19 +437,13 @@
                     let supHtml = sups.map(s => { const active = (item.sups || []).includes(s); return `<button onclick="toggleSup('${cat}', ${idx}, '${s}')" class="sup-btn ${active?'active':''}">${s}</button>`; }).join(''); 
                     row.innerHTML = `<div class="inv-item-main"><span class="drag-handle item-drag-handle">≡</span><div class="inv-name-area"><textarea class="inv-name-input" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';inv['${cat}'][${idx}].name=this.value" rows="1">${item.name}</textarea></div><button onclick="removeInvItem('${cat}', ${idx})" class="text-red-500 text-2xl px-2 flex-shrink-0">×</button></div><div class="inv-control-bar"><div class="price-group"><div class="val-box"><span class="val-label">售</span><input type="number" class="val-input p-input" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div><div class="val-box"><span class="val-label">本</span><input type="number" class="val-input c-input" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div><div class="flex gap-1 mx-1">${supHtml}</div><button onclick="inv['${cat}'][${idx}].outOfStock=!inv['${cat}'][${idx}].outOfStock;renderInventoryEditor();" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button></div></div>`; 
                     document.getElementById(`edit-${cat}`).appendChild(row); 
-                    const ta = row.querySelector('textarea'); ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; 
                 });
             }
         }); 
         initDragAndDrop(); 
-        requestAnimationFrame(() => { window.scrollTo(0, scrollPos); }); 
     }
 
-    function toggleAllCats(shouldCollapse) {
-        catOrder.forEach(cat => { collapsedCats[cat] = shouldCollapse; });
-        renderInventoryEditor();
-    }
-    
+    function toggleAllCats(shouldCollapse) { catOrder.forEach(cat => { collapsedCats[cat] = shouldCollapse; }); renderInventoryEditor(); }
     function toggleSup(cat, idx, s) { if(!inv[cat][idx].sups) inv[cat][idx].sups = []; const i = inv[cat][idx].sups.indexOf(s); if(i > -1) inv[cat][idx].sups.splice(i, 1); else inv[cat][idx].sups.push(s); renderInventoryEditor(); }
     function renameCat(idx, newName) { const old = catOrder[idx]; inv[newName] = inv[old]; delete inv[old]; catOrder[idx] = newName; }
     function addNewCategory() { const n = prompt("大項名稱："); if(n) { catOrder.push(n); inv[n] = []; renderInventoryEditor(); } }
@@ -491,11 +460,7 @@
     db.ref('records').on('value', s => { records = []; if(s.exists()) { const data = s.val(); for(let id in data) records.push(data[id]); } renderRecords(); renderStats(); });
     db.ref('templates').on('value', s => { templates = s.exists() ? s.val() : {}; });
 
-    window.onload = () => { 
-        showTab('calc'); 
-        // 修正：網頁開啟後確保金額顯示邏輯正確
-        toggleAdminMode();
-    };
+    window.onload = () => { showTab('calc'); toggleAdminMode(); };
     </script>
 </body>
 </html>
