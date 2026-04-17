@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v9.91</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v9.92</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -17,15 +17,16 @@
         .hidden { display: none !important; }
         input, select, textarea { border: 1px solid #cbd5e1; border-radius: 5px; padding: 6px 10px; font-size: 14px; outline: none; }
         
-        /* 價格顯示控制 */
+        /* 價格與成本顯示控制 */
         .price-tag { color: #94a3b8; font-weight: 400; font-size: 12px; margin-left: 4px; }
-        .cost-tag { color: #f87171; font-weight: 600; font-size: 11px; margin-left: 6px; } /* 成本價樣式 */
+        .cost-tag { color: #ef4444; font-weight: 700; font-size: 11px; margin-left: 6px; }
         
-        body.hide-admin-prices #sellerBox { display: none !important; }
         body.hide-item-prices .price-tag { display: none !important; }
-        body.hide-item-costs .cost-tag { display: none !important; } /* 控制成本價顯示 */
+        body.hide-item-costs .cost-tag { display: none !important; }
+        body.hide-admin-box #sellerBox { display: none !important; }
         body.ss-hide-prices .price-tag, body.ss-hide-prices .cost-tag { display: none !important; }
         
+        /* 狀態顏色 */
         .status-red { background-color: #fee2e2 !important; color: #b91c1c !important; }
         .status-blue { background-color: #dbeafe !important; color: #1e40af !important; }
         .status-orange { background-color: #ffedd5 !important; color: #9a3412 !important; }
@@ -36,30 +37,40 @@
         .drag-handle { cursor: grab; color: #cbd5e1; padding: 5px; font-size: 26px; user-select: none; display: flex; align-items: center; justify-content: center; touch-action: none; -webkit-user-select: none; }
         .drag-handle:active { cursor: grabbing; color: #3b82f6; }
 
-        .sup-btn { font-size: 10px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 4px; border: 1px solid #e2e8f0; color: #cbd5e1; font-weight: 900; transition: all 0.2s; background: white; flex-shrink: 0; }
-        .sup-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
-
+        /* 報價項目列樣式 */
         .item-row { padding: 16px !important; margin-bottom: 12px !important; background: #fff; border: 1px solid #f1f5f9 !important; border-radius: 12px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
 
+        /* 截圖模式 */
         .screenshot-mode .item-row { padding: 2px 10px !important; margin-bottom: 0px !important; border-radius: 0px !important; border: none !important; border-bottom: 1px solid #f1f5f9 !important; box-shadow: none !important; }
         .screenshot-mode #configRows { gap: 0 !important; space-y: 0 !important; }
         .screenshot-mode .selected-badge { font-size: 10px !important; line-height: 1.1 !important; margin-bottom: 0px !important; }
         .screenshot-mode #screenshot-header { margin-bottom: 8px !important; padding-bottom: 4px !important; }
         .screenshot-mode #screenshot-footer { padding: 6px 12px !important; display: block !important; }
 
+        /* 品項庫管理版面 - 還原至 v9.88 穩健版 */
         .inv-item-row { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+        .inv-item-main { display: flex; align-items: center; gap: 10px; }
+        .inv-name-area { flex: 1; min-width: 0; }
         .inv-name-input { width: 100%; border: none !important; background: transparent !important; font-weight: 800; font-size: 15px; padding: 4px 0 !important; color: #1e293b; word-break: break-all; resize: none; min-height: 24px; overflow: hidden; display: block; line-height: 1.4; }
+        .inv-control-bar { display: flex; align-items: center; justify-content: space-between; padding-top: 8px; border-top: 1px solid #f1f5f9; }
+        .price-group { display: flex; gap: 6px; align-items: center; }
+        .val-box { display: flex; align-items: center; gap: 2px; background: #f8fafc; padding: 4px 6px; border-radius: 6px; border: 1px solid #e2e8f0; flex-shrink: 0; }
+        .val-label { font-size: 10px; font-weight: 900; color: #94a3b8; }
         .val-input { border: none !important; background: transparent !important; width: 45px; font-weight: 900; font-size: 13px; text-align: right; padding: 0 !important; }
         .p-input { color: #3b82f6; } 
         .c-input { color: #ef4444 !important; font-weight: 900 !important; } 
 
+        .sup-btn { font-size: 10px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 4px; border: 1px solid #e2e8f0; color: #cbd5e1; font-weight: 900; transition: all 0.2s; background: white; flex-shrink: 0; }
+        .sup-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
         .stock-btn { font-size: 11px; padding: 4px 8px; border-radius: 6px; font-weight: 900; border: 1px solid #e2e8f0; cursor: pointer; min-width: 50px; flex-shrink: 0; }
         .stock-btn.active { background: #22c55e; color: white; border-color: #22c55e; }
         .stock-btn.oos { background: #ef4444; color: white; border-color: #ef4444; }
 
+        .no-screenshot { display: block; }
         .screenshot-mode .no-screenshot { display: none !important; }
         #screenshotNav { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 50000; }
         
+        /* 控制面板 */
         #adminToggleContainer { position: fixed; bottom: 25px; left: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
         .floating-label { background: #fff; padding: 10px 16px; border-radius: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: 2px solid #e2e8f0; display: flex; align-items: center; gap: 8px; cursor: pointer; }
     </style>
@@ -67,22 +78,25 @@
 <body class="p-2 md:p-4" id="mainBody">
 
     <div class="no-screenshot fixed right-4 bottom-10 z-[2000] flex flex-col gap-3">
-        <button id="floatingSaveBtn" onclick="saveInventory()" class="hidden bg-green-600 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl no-screenshot">💾</button>
+        <button id="floatingSaveBtn" onclick="saveInventory()" class="hidden bg-green-600 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">💾</button>
         <button onclick="if(confirm('重新整理系統？')) { window.location.reload(); }" class="bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔄</button>
         <button onclick="goBack()" class="bg-black text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔙</button>
     </div>
 
     <div id="adminToggleContainer" class="no-screenshot">
-        <label class="floating-label"><span class="text-xs font-black text-gray-700">💰 總額/利潤開關</span><input type="checkbox" id="adminToggle" checked onchange="toggleAdminMode()" class="w-5 h-5 cursor-pointer"></label>
-        <label class="floating-label"><span class="text-xs font-black text-blue-600">💰 顯示細項單價</span><input type="checkbox" id="itemPriceToggle" checked onchange="toggleItemPriceMode()" class="w-5 h-5 cursor-pointer"></label>
+        <label class="floating-label"><span class="text-xs font-black text-blue-600">💰 顯示售價 (含毛利)</span><input type="checkbox" id="itemPriceToggle" checked onchange="toggleItemPriceMode()" class="w-5 h-5 cursor-pointer"></label>
         <label class="floating-label"><span class="text-xs font-black text-red-500">🔴 顯示各項成本</span><input type="checkbox" id="itemCostToggle" onchange="toggleItemCostMode()" class="w-5 h-5 cursor-pointer"></label>
+        <label class="floating-label"><span class="text-xs font-black text-gray-700">📊 利潤統計開關</span><input type="checkbox" id="adminToggle" checked onchange="toggleAdminMode()" class="w-5 h-5 cursor-pointer"></label>
         <label class="floating-label"><span class="text-xs font-black text-indigo-600">📸 截圖顯示單價</span><input type="checkbox" id="ssPriceToggle" checked class="w-5 h-5 cursor-pointer"></label>
     </div>
 
     <div id="screenshotNav" class="hidden"><button onclick="exitScreenshotMode()" class="bg-gray-800 text-white px-8 py-4 rounded-full font-black shadow-2xl">🔙 返回報價單</button></div>
 
     <div class="max-w-7xl mx-auto w-full px-1">
-        <div id="screenshot-header" style="display: none;" class="text-center border-b-4 border-blue-600 pb-2 mb-2"><div class="text-xl font-black text-blue-900 tracking-widest">《報價單》</div><div id="ss-time" class="text-[8px] text-gray-400 mt-1 font-mono font-bold"></div></div>
+        <div id="screenshot-header" style="display: none;" class="text-center border-b-4 border-blue-600 pb-2 mb-2">
+            <div class="text-xl font-black text-blue-900 tracking-widest">《報價單》</div>
+            <div id="ss-time" class="text-[8px] text-gray-400 mt-1 font-mono font-bold"></div>
+        </div>
         
         <div class="flex border-b-2 mb-4 no-screenshot overflow-x-auto bg-white sticky top-0 z-50 rounded-t">
             <button onclick="showTab('calc')" id="btn-calc" class="flex-1 px-4 py-3 tab-active whitespace-nowrap">🖥️ 報價</button>
@@ -136,9 +150,9 @@
                         </div>
 
                         <div id="sellerBox" class="bg-blue-50 p-3 rounded-lg">
-                            <div class="flex justify-between text-xs text-blue-500"><span>總成本</span><span id="ui-totalCost">$0</span></div>
-                            <div class="flex justify-between text-[10px] text-red-500 mt-1 font-bold"><span>預計稅金 (5%)</span><span id="ui-taxAmt">-$0</span></div>
-                            <div class="flex justify-between text-[10px] text-gray-400 mt-1 font-bold"><span>帳面毛利 (未扣稅)</span><span id="ui-totalProfit">$0</span></div>
+                            <div class="flex justify-between text-xs text-blue-500"><span>成本</span><span id="ui-totalCost">$0</span></div>
+                            <div class="flex justify-between text-[10px] text-red-500 mt-1 font-bold"><span>稅金 (5%)</span><span id="ui-taxAmt">-$0</span></div>
+                            <div class="flex justify-between text-[10px] text-gray-400 mt-1 font-bold"><span>帳面毛利</span><span id="ui-totalProfit">$0</span></div>
                             <div class="flex justify-between text-sm font-black text-green-600 border-t-2 border-blue-100 mt-2 pt-2"><span>稅後淨利 (實賺)</span><span id="ui-realProfit">$0</span></div>
                         </div>
 
@@ -159,7 +173,7 @@
         <div id="tab-inventory" class="page-content hidden"><div class="card p-4"><div id="inventoryHeader" class="flex flex-col gap-4 mb-4"></div><div id="inventoryEditor" class="space-y-4"></div></div></div>
 
         <div id="selectionModal" class="hidden fixed inset-0 bg-black/60 z-[20000] flex items-end"><div class="bg-white w-full rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto"><div class="flex justify-between items-center mb-4"><h3 id="modalTitle" class="text-xl font-black text-blue-600">🔍 選擇項目</h3><button onclick="closeModal()" class="text-3xl text-gray-400">×</button></div><div id="modalList" class="space-y-2"></div></div></div>
-        <div id="shipmentModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[10001] backdrop-blur-md"><div class="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl"><div class="p-5 border-b flex justify-between items-center bg-green-50"><h3 class="font-black text-green-700">🚚 零件出貨狀態</h3><button onclick="document.getElementById('shipmentModal').classList.add('hidden')" class="text-3xl">×</button></div><div id="shipmentList" class="overflow-y-auto flex-1 p-5 space-y-3"></div><div class="p-5 border-t"><button onclick="document.getElementById('shipmentModal').classList.add('hidden')" class="w-full bg-green-600 text-white py-4 rounded-xl font-black">確定</button></div></div></div>
+        <div id="shipmentModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[10001] backdrop-blur-md"><div class="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl"><div class="p-5 border-b flex justify-between items-center bg-green-50"><h3 class="font-black text-green-700">🚚 出貨管理</h3><button onclick="document.getElementById('shipmentModal').classList.add('hidden')" class="text-3xl">×</button></div><div id="shipmentList" class="overflow-y-auto flex-1 p-5 space-y-3"></div><div class="p-5 border-t"><button onclick="document.getElementById('shipmentModal').classList.add('hidden')" class="w-full bg-green-600 text-white py-4 rounded-xl font-black">確定</button></div></div></div>
         <div id="templateModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[10000] backdrop-blur-md"><div class="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl"><div class="p-5 border-b flex justify-between items-center bg-indigo-50"><h3 class="font-black text-indigo-700">📁 載入範本</h3><button onclick="document.getElementById('templateModal').classList.add('hidden')" class="text-3xl">×</button></div><div id="templateList" class="overflow-y-auto flex-1 p-5 space-y-3"></div></div></div>
     </div>
 
@@ -194,7 +208,6 @@
         } catch(e) {}
     }
 
-    // 渲染報價清單：補全成本顯示邏輯
     function renderConfig() {
         const container = document.getElementById('configRows'); if(!container) return;
         const isSS = document.getElementById('mainBody').classList.contains('screenshot-mode'); 
@@ -206,7 +219,7 @@
             const badges = items.map((sel, sIdx) => {
                 let target = (inv[cat] || [])[sel.idx]; if(!target) return '';
                 const dispP = (sel.p !== undefined) ? sel.p : target.p;
-                const dispC = (sel.c !== undefined) ? sel.c : (target.c || 0); // 獲取成本價
+                const dispC = (sel.c !== undefined) ? sel.c : (target.c || 0);
                 return `<div class="selected-badge flex-col mb-2">${sel.isGift?'[贈] ':''}<div>${target.name}${sel.qty>1?`<span class="bg-blue-100 text-blue-600 px-2 rounded-full ml-1 text-xs">x${sel.qty}</span>`:''} <span class="price-tag">($${Number(dispP).toLocaleString()})</span><span class="cost-tag">(本:$${Number(dispC).toLocaleString()})</span></div></div>`;
             }).join('');
             container.innerHTML += `<div class="item-row cursor-pointer" onclick="openSelection('${cat}')"><div class="text-[10px] font-black text-blue-400 uppercase mb-1">${cat}</div><div class="flex flex-col">${badges || '<span class="text-gray-300 italic text-sm">未選中項目...</span>'}</div></div>`;
@@ -214,7 +227,7 @@
         calculate();
     }
 
-    // 拖拽與庫存管理邏輯
+    // 拖拽與庫存管理
     function initDragAndDrop() {
         const main = document.getElementById('inventoryEditor');
         if(main) {
@@ -251,18 +264,17 @@
     }
 
     // 各種開關控制
-    function toggleAdminMode() { const isChecked = document.getElementById('adminToggle').checked; if(isChecked) document.getElementById('mainBody').classList.remove('hide-admin-prices'); else document.getElementById('mainBody').classList.add('hide-admin-prices'); }
-    function toggleItemPriceMode() { const isChecked = document.getElementById('itemPriceToggle').checked; if(isChecked) document.getElementById('mainBody').classList.remove('hide-item-prices'); else document.getElementById('mainBody').classList.add('hide-item-prices'); }
-    function toggleItemCostMode() { const isChecked = document.getElementById('itemCostToggle').checked; if(isChecked) document.getElementById('mainBody').classList.remove('hide-item-costs'); else document.getElementById('mainBody').classList.add('hide-item-costs'); }
+    function toggleAdminMode() { const i = document.getElementById('adminToggle').checked; if(i) document.getElementById('mainBody').classList.remove('hide-admin-box'); else document.getElementById('mainBody').classList.add('hide-admin-box'); }
+    function toggleItemPriceMode() { const i = document.getElementById('itemPriceToggle').checked; if(i) document.getElementById('mainBody').classList.remove('hide-item-prices'); else document.getElementById('mainBody').classList.add('hide-item-prices'); }
+    function toggleItemCostMode() { const i = document.getElementById('itemCostToggle').checked; if(i) document.getElementById('mainBody').classList.remove('hide-item-costs'); else document.getElementById('mainBody').classList.add('hide-item-costs'); }
 
-    // 訂單管理核心邏動
+    // 訂單管理核心
     function saveRecord(st) { 
         const id = editingRecordId || Date.now(); const oldR = records.find(x => String(x.id) === String(id));
         const status = st === 'current' ? (oldR ? (oldR.status || 'draft') : 'draft') : st;
         const rawData = { id, time: (oldR?oldR.time:new Date().toLocaleString()), name: document.getElementById('custName').value, custPhone: document.getElementById('custPhone').value, custAddr: document.getElementById('custAddr').value, custWarranty: document.getElementById('custWarranty').value, seller: document.getElementById('infoSeller').value, orderMemo: document.getElementById('orderMemo').value, selections: currentSelections, total: document.getElementById('ui-totalSale').innerText, discount: document.getElementById('discountAmt').value, noCard: document.getElementById('noCardTotal').value, manualTotal: document.getElementById('manualTotal').value, status, progress: (oldR?oldR.progress:"待處理"), notShipped: (oldR?oldR.notShipped:{}) }; 
         db.ref('records/'+id).update(rawData).then(() => { alert('儲存成功'); resetForm(); showTab(status==='draft'?'drafts':(status==='order'?'orders':'completed')); });
     }
-
     function renderRecords() {
         const lists = { 'draft': document.getElementById('draftList'), 'order': document.getElementById('orderList'), 'completed': document.getElementById('completedList') };
         Object.values(lists).forEach(l => { if(l) l.innerHTML = ''; });
@@ -275,14 +287,12 @@
             lists[status].appendChild(div);
         });
     }
-
     function renderStats() {
         const content = document.getElementById('statsContent'); if(!content) return; let monthlyData = {};
         records.forEach(r => { if(r.status === 'draft') return; const dateParts = r.time.split('/'); const monthKey = `${dateParts[0]}/${dateParts[1]}`; if(!monthlyData[monthKey]) monthlyData[monthKey] = { revenue: 0, cost: 0, profit: 0, count: 0 }; const rev = parseInt(r.total.replace(/[^0-9.-]+/g,"")) || 0; let itemCost = 0; for(let cat in r.selections) { r.selections[cat].forEach(s => { let c = (s.c !== undefined) ? Number(s.c) : 0; if(!s.c) { const item = (inv[cat] || [])[s.idx]; if(item) c = Number(item.c || 0); } itemCost += (c * (s.qty || 1)); }); } monthlyData[monthKey].revenue += rev; monthlyData[monthKey].cost += itemCost; monthlyData[monthKey].count += 1; });
         Object.keys(monthlyData).forEach(k => { monthlyData[k].profit = Math.round((monthlyData[k].revenue / 1.05) - monthlyData[k].cost); });
         content.innerHTML = Object.keys(monthlyData).sort((a,b)=>b.localeCompare(a)).map(m => `<div class="stats-card"><div class="text-lg font-black text-gray-800 mb-2">${m} 績效 (稅後)</div><div class="grid grid-cols-3 gap-2"><div><div class="text-[10px] text-gray-400">總額</div><div class="text-blue-600 font-bold">$${monthlyData[m].revenue.toLocaleString()}</div></div><div><div class="text-[10px] text-gray-400">成本</div><div class="text-red-500 font-bold">$${monthlyData[m].cost.toLocaleString()}</div></div><div><div class="text-[10px] text-gray-400">純利</div><div class="text-green-600 font-bold">$${monthlyData[m].profit.toLocaleString()}</div></div></div></div>`).join('');
     }
-
     function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); const fsBtn = document.getElementById('floatingSaveBtn'); if(t === 'inventory') { fsBtn.classList.remove('hidden'); fsBtn.style.display = 'flex'; renderInventoryEditor(); } else { fsBtn.classList.add('hidden'); fsBtn.style.display = 'none'; } renderRecords(); if(t==='stats') renderStats(); }
     function editRecord(id) { const r = records.find(x => String(x.id) === String(id)); if(!r) return; editingRecordId = id; currentSelections = JSON.parse(JSON.stringify(r.selections || {})); document.getElementById('custName').value = r.name || ''; document.getElementById('custPhone').value = r.custPhone || ''; document.getElementById('discountAmt').value = r.discount || 0; document.getElementById('manualTotal').value = r.manualTotal || ''; document.getElementById('noCardTotal').value = r.noCard || ''; document.getElementById('custAddr').value = r.custAddr || ''; document.getElementById('custWarranty').value = r.custWarranty || ''; document.getElementById('orderMemo').value = r.orderMemo || ''; renderConfig(); showTab('calc'); }
     function resetForm() { editingRecordId=null; currentSelections={}; document.querySelectorAll('#tab-calc input, #tab-calc textarea').forEach(i=>i.value=""); document.getElementById('discountAmt').value=0; renderConfig(); }
