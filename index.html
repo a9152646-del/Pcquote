@@ -12,7 +12,6 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        /* 完全保留原始間距設定，一個點都不動 */
         body { background-color: #f8fafc; font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; padding-top: 105px !important; padding-bottom: 300px !important; font-size: 14px; color: #334155; line-height: 1.5; }
         .tab-active { border-bottom: 3px solid #3b82f6; color: #3b82f6; font-weight: bold; }
         .card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
@@ -34,7 +33,6 @@
         .status-purple { background-color: #f3e8ff !important; color: #6b21a8 !important; }
         .status-green { background-color: #dcfce7 !important; color: #166534 !important; }
 
-        /* 增量：付款狀態配色 */
         .pay-unpaid { background-color: #fee2e2 !important; color: #b91c1c !important; }
         .pay-deposit { background-color: #ffedd5 !important; color: #9a3412 !important; }
         .pay-paid { background-color: #dcfce7 !important; color: #166534 !important; }
@@ -43,11 +41,12 @@
         .drag-handle:active { cursor: grabbing; color: #3b82f6; }
 
         .item-row { padding: 16px !important; margin-bottom: 12px !important; background: #fff; border: 1px solid #f1f5f9 !important; border-radius: 12px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .screenshot-mode .item-row { padding: 2px 10px !important; margin-bottom: 0px !important; border-radius: 0px !important; border: none !important; border-bottom: 1px solid #f1f5f9 !important; box-shadow: none !important; }
-        .screenshot-mode #configRows { gap: 0 !important; space-y: 0 !important; }
-        .screenshot-mode .selected-badge { font-size: 10px !important; line-height: 1.1 !important; margin-bottom: 0px !important; }
+        /* 優化：截圖模式下的排版穩定性 */
+        .screenshot-mode .item-row { padding: 8px 12px !important; margin-bottom: 0px !important; border-radius: 0px !important; border: none !important; border-bottom: 1px solid #f1f5f9 !important; box-shadow: none !important; width: 100% !important; display: block !important; }
+        .screenshot-mode #configRows { gap: 0 !important; space-y: 0 !important; display: block !important; }
+        .screenshot-mode .selected-badge { font-size: 11px !important; line-height: 1.2 !important; margin-bottom: 2px !important; }
         .screenshot-mode #screenshot-header { margin-bottom: 8px !important; padding-bottom: 4px !important; }
-        .screenshot-mode #screenshot-footer { padding: 6px 12px !important; display: block !important; }
+        .screenshot-mode #screenshot-footer { padding: 10px 12px !important; display: block !important; }
 
         .inv-item-row { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
         .inv-item-main { display: flex; align-items: center; gap: 10px; }
@@ -70,8 +69,8 @@
         .no-screenshot { display: block; }
         .screenshot-mode .no-screenshot { display: none !important; }
         
-        /* 完全保留原始右下角導航樣式 */
-        #screenshotNav { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 50000; display: flex; gap: 10px; }
+        /* 修正：截圖導航列改為更穩定的垂直佈局，避免按鈕重疊 */
+        #screenshotNav { position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%); z-index: 50000; display: flex; flex-direction: column; gap: 12px; width: 220px; }
         
         #adminToggleContainer { position: fixed; bottom: 25px; left: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
         .floating-label { background: #fff; padding: 10px 16px; border-radius: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: 2px solid #e2e8f0; display: flex; align-items: center; gap: 8px; cursor: pointer; }
@@ -95,8 +94,8 @@
     </div>
 
     <div id="screenshotNav" class="hidden">
-        <button onclick="downloadScreenshot()" class="bg-blue-600 text-white px-8 py-4 rounded-full font-black shadow-2xl">💾 存成圖片</button>
-        <button onclick="exitScreenshotMode()" class="bg-gray-800 text-white px-8 py-4 rounded-full font-black shadow-2xl">🔙 返回報價單</button>
+        <button onclick="downloadScreenshot()" class="bg-blue-600 text-white py-4 rounded-full font-black shadow-2xl w-full">💾 存成圖片保存</button>
+        <button onclick="exitScreenshotMode()" class="bg-gray-800 text-white py-4 rounded-full font-black shadow-2xl w-full">🔙 返回報價單</button>
     </div>
 
     <div class="max-w-7xl mx-auto w-full px-1" id="screenshotArea">
@@ -142,16 +141,6 @@
                             </div>
                             <input type="text" id="custAddr" placeholder="📦 地址 / 取貨方式" class="md:col-span-4">
                             <input type="text" id="custWarranty" placeholder="🛡️ 保固備註" class="md:col-span-4 font-bold text-blue-600">
-                            
-                            <div class="md:col-span-4 flex items-center gap-2">
-                                <label class="text-xs font-black text-gray-500">💵 付款狀態：</label>
-                                <select id="payStatus" class="flex-1 font-bold text-red-600 border-red-200">
-                                    <option value="未付款">❌ 未付款</option>
-                                    <option value="已付訂金">🔸 已付訂金</option>
-                                    <option value="已付清">✅ 已付清</option>
-                                </select>
-                            </div>
-
                             <textarea id="orderMemo" placeholder="📝 內部備註" class="md:col-span-4 h-20 w-full"></textarea>
                         </div>
                     </div>
@@ -214,7 +203,6 @@
     let inv = {}; let catOrder = []; let records = []; let templates = {}; let currentSelections = {}; let editingRecordId = null; let currentCat = "";
     let collapsedCats = {}; 
 
-    // 增量：圖片存檔
     function downloadScreenshot() {
         const area = document.getElementById('screenshotArea');
         html2canvas(area, { useCORS: true, scale: 2, backgroundColor: "#f8fafc" }).then(canvas => {
@@ -316,7 +304,7 @@
             custAddr: document.getElementById('custAddr').value || "", 
             custWarranty: document.getElementById('custWarranty').value || "", 
             seller: document.getElementById('infoSeller').value || "朱冠穎", 
-            payStatus: document.getElementById('payStatus').value || "未付款", // 增量：儲存付款
+            payStatus: (editingRecordId && oldR) ? (oldR.payStatus || "未付款") : "未付款",
             orderMemo: document.getElementById('orderMemo').value || "", 
             selections: currentSelections || {}, 
             total: document.getElementById('ui-totalSale').innerText || "$0", 
@@ -337,7 +325,7 @@
             const status = r.status || 'draft'; if (!lists[status]) return;
             const pOpts = ["待處理", "已叫貨", "組裝中", "測試中", "已完工", "已寄出"].map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
             
-            // 增量：列表顯示選單
+            // 修正：將付款選單移至進度下拉選單下面
             const payOpts = ["未付款", "已付訂金", "已付清"].map(pay => `<option value="${pay}" ${r.payStatus===pay?'selected':''}>${pay}</option>`).join('');
             const getPayClass = (p) => { if(p==='已付清') return 'pay-paid'; if(p==='已付訂金') return 'pay-deposit'; return 'pay-unpaid'; };
 
@@ -371,12 +359,12 @@
                     <div class="text-base font-black">${r.name || '無名氏'}</div>
                     <div class="text-blue-600 font-black text-lg">${r.total}</div>
                     ${noCardVal ? `<div class="text-[11px] text-orange-600 font-black mt-1">💳 無卡：$${noCardVal}</div>` : ''}
-                    <div class="mt-2"><select onchange="db.ref('records/'+${r.id}+'/payStatus').set(this.value)" class="text-[10px] font-black px-2 py-1 rounded ${getPayClass(r.payStatus)}">${payOpts}</select></div>
                     <div class="mt-1">${unshippedHtml}</div>
                 </div>
-                <div class="text-right">
+                <div class="text-right flex flex-col items-end gap-2">
                     <span class="bg-blue-100 text-blue-600 text-[10px] px-2 py-1 rounded-full">${r.seller||'業務'}</span>
-                    <div class="mt-2"><select onchange="db.ref('records/'+${r.id}+'/progress').set(this.value)" class="text-[10px] font-bold px-1 rounded ${getStatusClass(r.progress)}">${pOpts}</select></div>
+                    <select onchange="db.ref('records/'+${r.id}+'/progress').set(this.value)" class="text-[10px] font-bold px-1 rounded ${getStatusClass(r.progress)}">${pOpts}</select>
+                    <select onchange="db.ref('records/'+${r.id}+'/payStatus').set(this.value)" class="text-[10px] font-black px-2 py-1 rounded-lg ${getPayClass(r.payStatus)}">${payOpts}</select>
                 </div>
             </div>
             <div class="flex gap-1 pt-3 border-t">
@@ -426,31 +414,8 @@
     }
 
     function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); const fsBtn = document.getElementById('floatingSaveBtn'); if(t === 'inventory') { fsBtn.classList.remove('hidden'); fsBtn.style.display = 'flex'; renderInventoryEditor(); } else { fsBtn.classList.add('hidden'); fsBtn.style.display = 'none'; } renderRecords(); if(t==='stats') renderStats(); }
-    
-    function editRecord(id) { 
-        const r = records.find(x => String(x.id) === String(id)); if(!r) return; 
-        editingRecordId = id; 
-        currentSelections = JSON.parse(JSON.stringify(r.selections || {})); 
-        document.getElementById('custName').value = r.name || ''; 
-        document.getElementById('custPhone').value = r.custPhone || ''; 
-        document.getElementById('discountAmt').value = r.discount || 0; 
-        document.getElementById('manualTotal').value = r.manualTotal || ''; 
-        document.getElementById('noCardTotal').value = r.noCard || ''; 
-        document.getElementById('custAddr').value = r.custAddr || ''; 
-        document.getElementById('custWarranty').value = r.custWarranty || ''; 
-        document.getElementById('payStatus').value = r.payStatus || "未付款"; // 增量：讀取付款
-        document.getElementById('orderMemo').value = r.orderMemo || ''; 
-        renderConfig(); showTab('calc'); 
-    }
-
-    function resetForm() { 
-        editingRecordId=null; currentSelections={}; 
-        document.querySelectorAll('#tab-calc input, #tab-calc textarea').forEach(i=>i.value=""); 
-        document.getElementById('discountAmt').value=0; 
-        document.getElementById('payStatus').value = "未付款"; // 增量
-        renderConfig(); 
-    }
-
+    function editRecord(id) { const r = records.find(x => String(x.id) === String(id)); if(!r) return; editingRecordId = id; currentSelections = JSON.parse(JSON.stringify(r.selections || {})); document.getElementById('custName').value = r.name || ''; document.getElementById('custPhone').value = r.custPhone || ''; document.getElementById('discountAmt').value = r.discount || 0; document.getElementById('manualTotal').value = r.manualTotal || ''; document.getElementById('noCardTotal').value = r.noCard || ''; document.getElementById('custAddr').value = r.custAddr || ''; document.getElementById('custWarranty').value = r.custWarranty || ''; renderConfig(); showTab('calc'); }
+    function resetForm() { editingRecordId=null; currentSelections={}; document.querySelectorAll('#tab-calc input, #tab-calc textarea').forEach(i=>i.value=""); document.getElementById('discountAmt').value=0; renderConfig(); }
     function goBack() { resetForm(); showTab('calc'); }
     function enterScreenshotMode() { document.getElementById('ss-time').innerText = '日期：' + new Date().toLocaleString(); document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value).toLocaleString(); document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText; document.getElementById('ss-warranty-info').innerText = document.getElementById('custWarranty').value ? `🛡️ 保固：${document.getElementById('custWarranty').value}` : ''; document.getElementById('mainBody').classList.add('screenshot-mode'); document.getElementById('screenshot-header').style.display = 'block'; document.getElementById('screenshot-footer').style.display = 'block'; document.getElementById('screenshotNav').classList.remove('hidden'); renderConfig(); window.scrollTo(0,0); }
     function exitScreenshotMode() { document.getElementById('mainBody').classList.remove('screenshot-mode'); document.getElementById('screenshot-header').style.display = 'none'; document.getElementById('screenshot-footer').style.display = 'none'; document.getElementById('screenshotNav').classList.add('hidden'); renderConfig(); }
