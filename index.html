@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v10.00</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v10.0</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -17,16 +17,20 @@
         .hidden { display: none !important; }
         input, select, textarea { border: 1px solid #cbd5e1; border-radius: 5px; padding: 6px 10px; font-size: 14px; outline: none; }
         
+        /* 價格顯示邏輯：完全由開關控制，不分模式 */
         .price-tag { color: #94a3b8; font-weight: 400; font-size: 12px; margin-left: 4px; }
         .cost-tag { color: #ef4444; font-weight: 700; font-size: 11px; margin-left: 6px; }
         
         body.hide-item-prices .price-tag { display: none !important; }
         body.hide-item-costs .cost-tag { display: none !important; }
         body.hide-admin-box #sellerBox { display: none !important; }
+        
+        /* 修復：截圖總金額開關樣式 */
         body.ss-hide-totals .ss-total-row { display: none !important; }
         
+        /* 狀態顏色 */
         .status-red { background-color: #fee2e2 !important; color: #b91c1c !important; }
-        .status-yellow { background-color: #fef9c3 !important; color: #854d0e !important; } 
+        .status-yellow { background-color: #fef9c3 !important; color: #854d0e !important; } /* 已叫貨 */
         .status-blue { background-color: #dbeafe !important; color: #1e40af !important; }
         .status-orange { background-color: #ffedd5 !important; color: #9a3412 !important; }
         .status-purple { background-color: #f3e8ff !important; color: #6b21a8 !important; }
@@ -36,12 +40,15 @@
         .drag-handle:active { cursor: grabbing; color: #3b82f6; }
 
         .item-row { padding: 16px !important; margin-bottom: 12px !important; background: #fff; border: 1px solid #f1f5f9 !important; border-radius: 12px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+
+        /* 截圖模式專用樣式 */
         .screenshot-mode .item-row { padding: 2px 10px !important; margin-bottom: 0px !important; border-radius: 0px !important; border: none !important; border-bottom: 1px solid #f1f5f9 !important; box-shadow: none !important; }
         .screenshot-mode #configRows { gap: 0 !important; space-y: 0 !important; }
         .screenshot-mode .selected-badge { font-size: 10px !important; line-height: 1.1 !important; margin-bottom: 0px !important; }
         .screenshot-mode #screenshot-header { margin-bottom: 8px !important; padding-bottom: 4px !important; }
         .screenshot-mode #screenshot-footer { padding: 6px 12px !important; display: block !important; }
 
+        /* 品項管理整齊版面 (v9.88 樣式) */
         .inv-item-row { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
         .inv-item-main { display: flex; align-items: center; gap: 10px; }
         .inv-name-area { flex: 1; min-width: 0; }
@@ -64,11 +71,9 @@
         .screenshot-mode .no-screenshot { display: none !important; }
         #screenshotNav { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 50000; }
         
+        /* 控制面板浮動標籤 */
         #adminToggleContainer { position: fixed; bottom: 25px; left: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
         .floating-label { background: #fff; padding: 10px 16px; border-radius: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: 2px solid #e2e8f0; display: flex; align-items: center; gap: 8px; cursor: pointer; }
-        
-        /* 統計卡片樣式增強 */
-        .stats-card { background: white; padding: 16px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
     </style>
 </head>
 <body class="p-2 md:p-4" id="mainBody">
@@ -268,6 +273,7 @@
         setTimeout(() => { initDragAndDrop(); window.scrollTo(0, scrollPos); }, 50);
     }
 
+    // 四大開關邏輯
     function toggleItemPriceMode() { const i = document.getElementById('itemPriceToggle').checked; if(i) document.getElementById('mainBody').classList.remove('hide-item-prices'); else document.getElementById('mainBody').classList.add('hide-item-prices'); }
     function toggleItemCostMode() { const i = document.getElementById('itemCostToggle').checked; if(i) document.getElementById('mainBody').classList.remove('hide-item-costs'); else document.getElementById('mainBody').classList.add('hide-item-costs'); }
     function toggleAdminMode() { const i = document.getElementById('adminToggle').checked; if(i) document.getElementById('mainBody').classList.remove('hide-admin-box'); else document.getElementById('mainBody').classList.add('hide-admin-box'); }
@@ -315,17 +321,18 @@
             const div = document.createElement('div'); div.className = "p-4 border-2 rounded-xl bg-white shadow-sm space-y-3";
             const shipmentBtn = (status === 'order' || status === 'completed') ? `<button onclick="openShipmentModal(${r.id})" class="flex-1 py-2 bg-gray-50 text-gray-500 text-[10px] rounded-lg font-black border">🚚 出貨管理</button>` : '';
             const noCardVal = (r.noCard && r.noCard !== "") ? Number(r.noCard).toLocaleString() : null;
-            
-            // 修訂按鈕邏輯：增加回溯功能
-            let actionButtons = "";
+
+            // 針對你的需求，修改按鈕 logic 使其可回溯
+            let actionBtnHtml = "";
             if (status === 'draft') {
-                actionButtons = `<button onclick="if(confirm('轉正式訂單？')) db.ref('records/'+${r.id}+'/status').set('order')" class="bg-green-600 text-white px-2 rounded-lg text-[10px] font-bold">轉正式</button>`;
+                actionBtnHtml = `<button onclick="if(confirm('轉正式訂單？')) db.ref('records/'+${r.id}+'/status').set('order')" class="bg-green-600 text-white px-2 rounded-lg text-[10px] font-bold">轉正式</button>`;
             } else if (status === 'order') {
-                actionButtons = `
-                <button onclick="if(confirm('要將此訂單退回草稿嗎？')) db.ref('records/'+${r.id}+'/status').set('draft')" class="bg-amber-500 text-white px-2 rounded-lg text-[10px] font-bold">退回草稿</button>
-                <button onclick="if(confirm('結案？')) db.ref('records/'+${r.id}+'/status').set('completed')" class="bg-gray-600 text-white px-2 rounded-lg text-[10px] font-bold">結案</button>`;
+                actionBtnHtml = `
+                    <button onclick="if(confirm('退回草稿？')) db.ref('records/'+${r.id}+'/status').set('draft')" class="bg-orange-400 text-white px-2 rounded-lg text-[10px] font-bold">退回草稿</button>
+                    <button onclick="if(confirm('結案？')) db.ref('records/'+${r.id}+'/status').set('completed')" class="bg-gray-600 text-white px-2 rounded-lg text-[10px] font-bold">結案</button>
+                `;
             } else if (status === 'completed') {
-                actionButtons = `<button onclick="if(confirm('要退回正式訂單重新處理嗎？')) db.ref('records/'+${r.id}+'/status').set('order')" class="bg-blue-500 text-white px-2 rounded-lg text-[10px] font-bold">退回正式</button>`;
+                actionBtnHtml = `<button onclick="if(confirm('退回正式？')) db.ref('records/'+${r.id}+'/status').set('order')" class="bg-blue-400 text-white px-2 rounded-lg text-[10px] font-bold">退回正式</button>`;
             }
 
             div.innerHTML = `<div class="flex justify-between items-start">
@@ -344,7 +351,7 @@
             <div class="flex gap-1 pt-3 border-t">
                 <button onclick="editRecord(${r.id})" class="flex-1 py-2 bg-blue-600 text-white text-[10px] rounded-lg font-black">編輯</button>
                 ${shipmentBtn}
-                ${actionButtons}
+                ${actionBtnHtml}
                 <button onclick="if(confirm('確定刪除紀錄？')) db.ref('records/'+${r.id}).remove()" class="text-red-300 text-xl px-1">✕</button>
             </div>`;
             lists[status].appendChild(div);
@@ -357,11 +364,13 @@
             if(r.status === 'draft') return; 
             const dateParts = r.time.split('/'); 
             const monthKey = `${dateParts[0]}/${dateParts[1]}`; 
-            if(!monthlyData[monthKey]) monthlyData[monthKey] = { revenue: 0, cost: 0, taxTotal: 0, profit: 0, count: 0 }; 
-            
+            if(!monthlyData[monthKey]) monthlyData[monthKey] = { revenue: 0, cost: 0, profit: 0, count: 0, taxTotal: 0 }; 
             const rev = parseInt(r.total.replace(/[^0-9.-]+/g,"")) || 0; 
-            const tax = Math.round(rev - (rev / 1.05)); // 計算單筆訂單稅額
             
+            // 計算單筆稅金加總
+            const tax = Math.round(rev - (rev / 1.05));
+            monthlyData[monthKey].taxTotal += tax;
+
             let itemCost = 0; 
             for(let cat in r.selections) { 
                 r.selections[cat].forEach(s => { 
@@ -372,24 +381,18 @@
             } 
             monthlyData[monthKey].revenue += rev; 
             monthlyData[monthKey].cost += itemCost; 
-            monthlyData[monthKey].taxTotal += tax; // 累計稅額
             monthlyData[monthKey].count += 1; 
         });
-        
-        Object.keys(monthlyData).forEach(k => { 
-            monthlyData[k].profit = Math.round((monthlyData[k].revenue / 1.05) - monthlyData[k].cost); 
-        });
-        
+        Object.keys(monthlyData).forEach(k => { monthlyData[k].profit = Math.round((monthlyData[k].revenue / 1.05) - monthlyData[k].cost); });
         content.innerHTML = Object.keys(monthlyData).sort((a,b)=>b.localeCompare(a)).map(m => `
-            <div class="stats-card">
-                <div class="text-lg font-black text-gray-800 mb-2">${m} 績效彙整</div>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="card p-4">
+                <div class="text-lg font-black text-gray-800 mb-2">${m} 績效統計</div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
                     <div><div class="text-[10px] text-gray-400">含稅總額</div><div class="text-blue-600 font-bold">$${monthlyData[m].revenue.toLocaleString()}</div></div>
-                    <div><div class="text-[10px] text-gray-400">零件成本</div><div class="text-red-500 font-bold">$${monthlyData[m].cost.toLocaleString()}</div></div>
-                    <div><div class="text-[10px] text-gray-400">總稅金(5%)</div><div class="text-orange-600 font-bold">$${monthlyData[m].taxTotal.toLocaleString()}</div></div>
-                    <div><div class="text-[10px] text-gray-400">稅後純利</div><div class="text-green-600 font-bold font-black">$${monthlyData[m].profit.toLocaleString()}</div></div>
+                    <div><div class="text-[10px] text-gray-400">總成本</div><div class="text-red-500 font-bold">$${monthlyData[m].cost.toLocaleString()}</div></div>
+                    <div class="bg-orange-50 p-1 rounded"><div class="text-[10px] text-orange-400">總稅金(5%)</div><div class="text-orange-600 font-bold font-black">$${monthlyData[m].taxTotal.toLocaleString()}</div></div>
+                    <div><div class="text-[10px] text-gray-400">稅後淨利</div><div class="text-green-600 font-bold">$${monthlyData[m].profit.toLocaleString()}</div></div>
                 </div>
-                <div class="mt-2 text-[10px] text-gray-400 italic">※ 共 ${monthlyData[m].count} 筆正式/結案訂單</div>
             </div>`).join('');
     }
 
@@ -424,7 +427,7 @@
 
     db.ref('inventory').on('value', s => { if(s.exists()) inv = s.val(); renderConfig(); if(!document.getElementById('tab-inventory').classList.contains('hidden')) renderInventoryEditor(); });
     db.ref('catOrder').on('value', s => { if(s.exists()) catOrder = s.val(); renderConfig(); });
-    db.ref('records').on('value', s => { records = []; if(s.exists()) { const data = s.val(); for(let id in data) records.push(data[id]); } renderRecords(); if(!document.getElementById('tab-stats').classList.contains('hidden')) renderStats(); });
+    db.ref('records').on('value', s => { records = []; if(s.exists()) { const data = s.val(); for(let id in data) records.push(data[id]); } renderRecords(); });
     db.ref('templates').on('value', s => { templates = s.exists() ? s.val() : {}; });
 
     window.onload = () => { showTab('calc'); toggleAdminMode(); toggleItemPriceMode(); toggleItemCostMode(); toggleSSTotalMode(); };
