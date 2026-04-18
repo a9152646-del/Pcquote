@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v11.5</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v11.6</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -17,17 +17,36 @@
         .card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
         .hidden { display: none !important; }
         input, select, textarea { border: 1px solid #cbd5e1; border-radius: 5px; padding: 6px 10px; font-size: 14px; outline: none; }
+        
+        /* 數值標籤樣式 */
         .price-tag { color: #94a3b8; font-weight: 400; font-size: 12px; margin-left: 4px; }
         .cost-tag { color: #ef4444; font-weight: 700; font-size: 11px; margin-left: 6px; }
+        
+        /* 左下角開關對應的隱藏邏輯 */
         body.hide-item-prices .price-tag { display: none !important; }
         body.hide-item-costs .cost-tag { display: none !important; }
         body.hide-admin-box #sellerBox { display: none !important; }
         body.ss-hide-totals .ss-total-row { display: none !important; }
+        
+        .status-red { background-color: #fee2e2 !important; color: #b91c1c !important; }
+        .status-yellow { background-color: #fef9c3 !important; color: #854d0e !important; } 
+        .status-blue { background-color: #dbeafe !important; color: #1e40af !important; }
+        .status-orange { background-color: #ffedd5 !important; color: #9a3412 !important; }
+        .status-purple { background-color: #f3e8ff !important; color: #6b21a8 !important; }
+        .status-green { background-color: #dcfce7 !important; color: #166534 !important; }
+
         .drag-handle { cursor: grab; color: #cbd5e1; padding: 5px; font-size: 26px; user-select: none; display: flex; align-items: center; justify-content: center; touch-action: none; -webkit-user-select: none; }
         .item-row { padding: 16px !important; margin-bottom: 12px !important; background: #fff; border: 1px solid #f1f5f9 !important; border-radius: 12px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        
+        /* 截圖模式穩定器 */
         .screenshot-mode .item-row { padding: 4px 10px !important; margin-bottom: 0px !important; border-radius: 0px !important; border: none !important; border-bottom: 1px solid #f1f5f9 !important; box-shadow: none !important; width: 100% !important; }
+        .screenshot-mode .selected-badge { font-size: 11px !important; line-height: 1.2 !important; margin-bottom: 2px !important; display: block !important; width: 100% !important; }
         #screenshot-area { background: white; padding: 10px; border-radius: 12px; }
+
+        .no-screenshot { display: block; }
+        .screenshot-mode .no-screenshot { display: none !important; }
         #screenshotNav { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 50000; width: 90%; max-width: 450px; display: flex; gap: 10px; }
+        
         #adminToggleContainer { position: fixed; bottom: 25px; left: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
         .floating-label { background: #fff; padding: 10px 16px; border-radius: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: 2px solid #e2e8f0; display: flex; align-items: center; gap: 8px; cursor: pointer; }
     </style>
@@ -48,8 +67,8 @@
     </div>
 
     <div id="screenshotNav" class="hidden">
-        <button onclick="exitScreenshotMode()" class="flex-1 bg-gray-800 text-white py-4 rounded-xl font-black">🔙 返回</button>
-        <button onclick="downloadQuoteImage()" class="flex-[2] bg-blue-600 text-white py-4 rounded-xl font-black">📥 下載報價圖片</button>
+        <button onclick="exitScreenshotMode()" class="flex-1 bg-gray-800 text-white py-4 rounded-xl font-black shadow-2xl">🔙 返回</button>
+        <button onclick="downloadQuoteImage()" class="flex-[2] bg-blue-600 text-white py-4 rounded-xl font-black shadow-2xl">📥 下載報價圖片</button>
     </div>
 
     <div class="max-w-7xl mx-auto w-full px-1">
@@ -72,8 +91,8 @@
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
                     <div class="lg:col-span-3 space-y-3">
                         <div class="flex gap-2 no-screenshot mb-2">
-                            <button onclick="openTemplateModal()" class="flex-[2] bg-indigo-600 text-white py-3 rounded-xl font-black">📂 載入範本</button>
-                            <button onclick="copyQuoteAsText()" class="flex-[3] bg-cyan-500 text-white py-3 rounded-xl font-black">📋 複製文字</button>
+                            <button onclick="openTemplateModal()" class="flex-[2] bg-indigo-600 text-white py-3 rounded-xl font-black shadow-md">📂 載入範本</button>
+                            <button onclick="copyQuoteAsText()" class="flex-[3] bg-cyan-500 text-white py-3 rounded-xl font-black shadow-md">📋 複製 Line 文字報價</button>
                         </div>
                         <div class="card p-2 !bg-gray-100/50" id="quoteContainer">
                             <div id="configRows" class="space-y-3"></div>
@@ -82,30 +101,39 @@
                                 <div class="ss-total-row text-lg font-black text-blue-600">總計 (含稅)：<span id="ss-val-total"></span></div>
                             </div>
                         </div>
-                        <div class="card p-4 no-screenshot bg-gray-50/50 space-y-3">
+                        <div class="card p-4 no-screenshot bg-gray-50/50">
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                                 <input type="text" id="custName" placeholder="👤 客戶姓名" class="font-bold">
                                 <input type="text" id="custPhone" placeholder="📞 電話">
                                 <select id="custSource"><option value="FB">FB</option><option value="IG">IG</option><option value="Line">Line</option><option value="蝦皮">蝦皮</option></select>
-                                <select id="infoSeller" class="font-bold text-blue-600"><option value="朱冠穎">朱冠穎</option><option value="江苙翔">江苙翔</option><option value="江鈞宇">江鈞宇</option></select>
+                                <div class="flex gap-1">
+                                    <select id="infoSeller" class="flex-1 font-bold text-blue-600"><option value="朱冠穎">朱冠穎</option><option value="江苙翔">江苙翔</option><option value="江鈞宇">江鈞宇</option></select>
+                                    <button onclick="addCustomSeller()" class="bg-gray-200 px-3 rounded border">+</button>
+                                </div>
+                                <input type="text" id="custAddr" placeholder="📦 地址 / 取貨方式" class="md:col-span-4">
+                                <input type="text" id="custWarranty" placeholder="🛡️ 保固備註" class="md:col-span-4 font-bold text-blue-600">
+                                <div class="md:col-span-4 flex items-center gap-2 bg-white p-2 rounded border">
+                                    <span class="text-xs font-black text-gray-400 whitespace-nowrap">💵 金流狀態：</span>
+                                    <select id="infoPayment" class="flex-1 font-bold text-orange-600 border-none outline-none">
+                                        <option value="未付款">未付款</option><option value="已付訂金">已付訂金</option><option value="已付清">已付清</option>
+                                    </select>
+                                </div>
+                                <textarea id="orderMemo" placeholder="📝 內部備註" class="md:col-span-4 h-20 w-full"></textarea>
                             </div>
-                            <input type="text" id="custAddr" placeholder="📦 地址 / 取貨方式" class="w-full">
-                            <input type="text" id="custWarranty" placeholder="🛡️ 保固備註" class="w-full font-bold text-blue-600">
-                            <textarea id="orderMemo" placeholder="📝 內部備註" class="w-full h-20"></textarea>
                         </div>
                     </div>
                     <div class="lg:col-span-1 no-screenshot">
                         <div class="card p-4 sticky top-20 border-t-4 border-blue-500 space-y-4">
                             <div class="space-y-3">
-                                <div><label class="text-xs font-bold text-gray-400">折扣</label><input type="number" id="discountAmt" class="w-full text-red-500 font-black text-lg" value="0" oninput="calculate()"></div>
-                                <div><label class="text-xs font-bold text-blue-400">手動總額</label><input type="number" id="manualTotal" class="w-full border-blue-200 font-black text-blue-600" oninput="calculate()"></div>
-                                <div class="pt-1"><div class="text-xs font-bold text-blue-400">Total</div><div id="ui-totalSale" class="text-3xl font-black text-blue-600">$0</div></div>
+                                <div><label class="text-xs text-gray-400 font-bold tracking-widest">折扣</label><input type="number" id="discountAmt" class="w-full mt-1 text-red-500 font-black text-lg" value="0" oninput="calculate()"></div>
+                                <div><label class="text-xs text-blue-400 font-bold tracking-widest">手動總額 (Lock)</label><input type="number" id="manualTotal" class="w-full mt-1 border-blue-200 font-black text-lg text-blue-600" placeholder="修改總價..." oninput="calculate()"></div>
+                                <div class="pt-1"><div class="text-xs text-blue-400 font-bold tracking-widest">Total 含稅 ✏️</div><div id="ui-totalSale" class="text-3xl font-black text-blue-600">$0</div></div>
                                 <div id="ui-noCardShow" class="p-2 bg-orange-50 rounded hidden border-2 border-orange-200"><div id="ui-noCardVal" class="text-lg font-black text-orange-600">$0</div></div>
                                 <input type="number" id="noCardTotal" class="w-full border-orange-200 text-sm" placeholder="輸入無卡金額" oninput="calculate()">
                             </div>
                             <div id="sellerBox" class="bg-blue-50 p-3 rounded-lg">
-                                <div class="flex justify-between text-xs"><span>成本</span><span id="ui-totalCost">$0</span></div>
-                                <div class="flex justify-between text-sm font-black text-green-600 border-t pt-2 mt-2"><span>稅後利潤</span><span id="ui-realProfit">$0</span></div>
+                                <div class="flex justify-between text-xs text-blue-500"><span>成本</span><span id="ui-totalCost">$0</span></div>
+                                <div class="flex justify-between text-sm font-black text-green-600 border-t-2 border-blue-100 mt-2 pt-2"><span>稅後利潤</span><span id="ui-realProfit">$0</span></div>
                             </div>
                             <button onclick="saveRecord('current')" class="w-full bg-blue-600 text-white py-3 rounded-lg font-black shadow-lg">💾 儲存修訂</button>
                             <button onclick="enterScreenshotMode()" class="w-full bg-orange-500 text-white py-3 rounded-lg font-black">📸 截圖模式</button>
@@ -114,9 +142,9 @@
                 </div>
             </div>
 
-            <div id="tab-drafts" class="page-content hidden"><div id="draftList" class="grid gap-3"></div></div>
-            <div id="tab-orders" class="page-content hidden"><div id="orderList" class="grid gap-3"></div></div>
-            <div id="tab-completed" class="page-content hidden"><div id="completedList" class="grid gap-3"></div></div>
+            <div id="tab-drafts" class="page-content hidden"><div id="draftList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
+            <div id="tab-orders" class="page-content hidden"><div id="orderList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
+            <div id="tab-completed" class="page-content hidden"><div id="completedList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
             <div id="tab-stats" class="page-content hidden"><div id="statsContent" class="space-y-4"></div></div>
             <div id="tab-inventory" class="page-content hidden"><div id="inventoryEditor" class="space-y-4"></div></div>
         </div>
@@ -134,15 +162,15 @@
     let inv = {}; let catOrder = []; let records = []; let currentSelections = {}; let editingRecordId = null; let currentCat = "";
 
     function handleToggles() {
-        const b = document.getElementById('mainBody');
-        const p = document.getElementById('itemPriceToggle').checked;
-        const c = document.getElementById('itemCostToggle').checked;
-        const a = document.getElementById('adminToggle').checked;
-        const s = document.getElementById('ssTotalToggle').checked;
-        if(p) b.classList.remove('hide-item-prices'); else b.classList.add('hide-item-prices');
-        if(c) b.classList.remove('hide-item-costs'); else b.classList.add('hide-item-costs');
-        if(a) b.classList.remove('hide-admin-box'); else b.classList.add('hide-admin-box');
-        if(s) b.classList.remove('ss-hide-totals'); else b.classList.add('ss-hide-totals');
+        const body = document.getElementById('mainBody');
+        const price = document.getElementById('itemPriceToggle').checked;
+        const cost = document.getElementById('itemCostToggle').checked;
+        const admin = document.getElementById('adminToggle').checked;
+        const ss = document.getElementById('ssTotalToggle').checked;
+        if(price) body.classList.remove('hide-item-prices'); else body.classList.add('hide-item-prices');
+        if(cost) body.classList.remove('hide-item-costs'); else body.classList.add('hide-item-costs');
+        if(admin) body.classList.remove('hide-admin-box'); else body.classList.add('hide-admin-box');
+        if(ss) body.classList.remove('ss-hide-totals'); else body.classList.add('ss-hide-totals');
     }
 
     function calculate() {
@@ -177,35 +205,31 @@
                 const target = (inv[cat] || [])[sel.idx];
                 return `<div class="selected-badge mb-1">${sel.isGift?'<span class="text-red-500 font-bold">[贈] </span>':''}<b>${target.name}</b>${sel.qty>1?` (x${sel.qty})`:''} <span class="price-tag">($${Number(target.p).toLocaleString()})</span><span class="cost-tag">(本:$${Number(target.c).toLocaleString()})</span></div>`;
             }).join('');
-            container.innerHTML += `<div class="item-row" onclick="openSelection('${cat}')"><div class="text-[10px] font-black text-blue-400 mb-1">${cat}</div><div>${badges || '<span class="text-gray-300 italic">未選...</span>'}</div></div>`;
+            container.innerHTML += `<div class="item-row" onclick="openSelection('${cat}')"><div class="text-[10px] font-black text-blue-400 mb-1">${cat}</div><div>${badges || '<span class="text-gray-300 italic">未選中項目...</span>'}</div></div>`;
         });
         calculate();
     }
 
+    // 【贈品按鈕修復】在 Modal 列表內渲染
     function renderModalList() {
         const list = document.getElementById('modalList'); list.innerHTML = '';
         (inv[currentCat] || []).forEach((item, idx) => {
             const sel = (currentSelections[currentCat] || []).find(s => s.idx === idx);
             list.innerHTML += `<div class="p-3 border-2 rounded-xl flex justify-between items-center mb-2 ${sel?'border-blue-500 bg-blue-50':'border-gray-100'}" onclick="togglePick(${idx})">
-                <div class="flex-1 text-xs font-bold">${item.name}<div class="text-blue-600">$${item.p.toLocaleString()}</div></div>
+                <div class="flex-1 text-xs font-bold">${item.name}<div class="text-blue-600 font-black">$${item.p.toLocaleString()}</div></div>
                 ${sel ? `<div class="flex flex-col items-end gap-2" onclick="event.stopPropagation()">
-                    <div class="flex items-center gap-2"><button onclick="updateQty(${idx}, -1)" class="bg-gray-100 px-3 py-1 rounded">-</button><span class="font-bold">${sel.qty}</span><button onclick="updateQty(${idx}, 1)" class="bg-blue-100 px-3 py-1 rounded">+</button></div>
-                    <button onclick="toggleGift(${idx})" class="text-[10px] px-2 py-1 rounded ${sel.isGift?'bg-red-500 text-white':'bg-gray-200 text-gray-400'} font-bold">🎁 贈品</button>
+                    <div class="flex items-center gap-2"><button onclick="updateQty(${idx}, -1)" class="bg-gray-100 px-3 py-1 rounded font-black">-</button><span class="font-black">${sel.qty}</span><button onclick="updateQty(${idx}, 1)" class="bg-blue-100 px-3 py-1 rounded font-black">+</button></div>
+                    <button onclick="toggleGift(${idx})" class="text-[10px] px-2 py-1 rounded ${sel.isGift?'bg-red-500 text-white':'bg-gray-200 text-gray-400'} font-black">🎁 贈品</button>
                 </div>`:''}
             </div>`;
         });
     }
 
-    function togglePick(idx) {
-        if(!currentSelections[currentCat]) currentSelections[currentCat] = [];
-        const i = currentSelections[currentCat].findIndex(s => s.idx === idx);
-        if(i > -1) currentSelections[currentCat].splice(i, 1);
-        else currentSelections[currentCat].push({idx, qty:1, isGift:false});
-        renderConfig(); renderModalList();
-    }
+    function togglePick(idx) { if(!currentSelections[currentCat]) currentSelections[currentCat] = []; const i = currentSelections[currentCat].findIndex(s => s.idx === idx); if(i > -1) currentSelections[currentCat].splice(i, 1); else currentSelections[currentCat].push({idx, qty:1, isGift:false}); renderConfig(); renderModalList(); }
     function updateQty(idx, val) { const sel = currentSelections[currentCat].find(s => s.idx === idx); if(sel) { sel.qty = Math.max(1, sel.qty + val); renderConfig(); renderModalList(); } }
     function toggleGift(idx) { const sel = currentSelections[currentCat].find(s => s.idx === idx); if(sel) { sel.isGift = !sel.isGift; renderConfig(); renderModalList(); } }
 
+    // 【統計功能回歸】
     function renderStats() {
         const content = document.getElementById('statsContent'); if(!content) return; let monthly = {};
         records.forEach(r => {
@@ -216,12 +240,41 @@
             let cst = 0; for(let cat in r.selections) { r.selections[cat].forEach(s => { const item = (inv[cat] || [])[s.idx]; if(item) cst += (Number(item.c) * s.qty); }); }
             monthly[mKey].rev += rev; monthly[mKey].cost += cst; monthly[mKey].tax += tx;
         });
-        content.innerHTML = Object.keys(monthly).sort((a,b)=>b.localeCompare(a)).map(m => `
-            <div class="card p-4"><div class="font-black border-b mb-2 pb-1">${m} 績效</div><div class="grid grid-cols-2 gap-2 text-xs">
-                <div>營收: <b class="text-blue-600">$${monthly[m].rev.toLocaleString()}</b></div>
-                <div>成本: <b class="text-red-500">$${monthly[m].cost.toLocaleString()}</b></div>
-                <div>淨利: <b class="text-green-600">$${(monthly[m].rev - monthly[m].cost - monthly[m].tax).toLocaleString()}</b></div>
-            </div></div>`).join('');
+        content.innerHTML = Object.keys(monthly).sort((a,b)=>b.localeCompare(a)).map(m => `<div class="card p-4"><div class="font-black border-b mb-2 pb-1">${m} 績效</div><div class="grid grid-cols-2 gap-2 text-xs">營收: <b class="text-blue-600">$${monthly[m].rev.toLocaleString()}</b> | 成本: <b class="text-red-500">$${monthly[m].cost.toLocaleString()}</b> | 淨利: <b class="text-green-600">$${(monthly[m].rev - monthly[m].cost - monthly[m].tax).toLocaleString()}</b></div></div>`).join('');
+    }
+
+    // 【訂單列表渲染核心 - 包含無卡金額、未出貨、退回按鈕】
+    function renderRecords() {
+        const lists = { 'draft': document.getElementById('draftList'), 'order': document.getElementById('orderList'), 'completed': document.getElementById('completedList') };
+        Object.values(lists).forEach(l => { if(l) l.innerHTML = ''; });
+        records.sort((a,b)=>b.id-a.id).forEach(r => {
+            const l = lists[r.status || 'draft']; if(!l) return;
+            let unshippedHtml = "";
+            if (r.notShipped) { Object.keys(r.notShipped).forEach(cat => { (r.notShipped[cat] || []).forEach(idx => { const target = (inv[cat] || [])[idx]; if (target) unshippedHtml += `<div class="text-[10px] text-red-500 font-black mt-1">🔴 未出貨：[${cat}] ${target.name}</div>`; }); }); }
+            const noCardVal = (r.noCard && r.noCard !== "") ? Number(r.noCard).toLocaleString() : null;
+            
+            const div = document.createElement('div'); div.className = "card p-4 flex flex-col gap-2 shadow-sm";
+            div.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="text-[10px] text-gray-400">${r.time}</div>
+                        <div class="font-black text-base">${r.name||'未命名'}</div>
+                        <div class="text-blue-600 font-black text-lg">${r.total}</div>
+                        ${noCardVal ? `<div class="text-[11px] text-orange-600 font-black mt-1">💳 無卡：$${noCardVal}</div>` : ''}
+                        ${unshippedHtml}
+                    </div>
+                    <div class="text-right text-[10px]"><span class="bg-blue-100 text-blue-600 px-2 py-1 rounded-full">${r.seller}</span></div>
+                </div>
+                <div class="flex gap-1 pt-2 border-t">
+                    <button onclick="editRecord('${r.id}')" class="flex-1 py-2 bg-blue-600 text-white text-[10px] rounded font-black">編輯</button>
+                    <button onclick="openShipmentModal('${r.id}')" class="flex-1 py-2 bg-gray-50 text-gray-500 text-[10px] rounded border">🚚 出貨</button>
+                    ${r.status === 'draft' ? `<button onclick="db.ref('records/${r.id}/status').set('order')" class="bg-green-600 text-white px-2 rounded text-[10px] font-bold">轉正式</button>` : ''}
+                    ${r.status === 'order' ? `<button onclick="db.ref('records/${r.id}/status').set('draft')" class="bg-gray-400 text-white px-2 rounded text-[10px] font-bold">退回草稿</button><button onclick="db.ref('records/${r.id}/status').set('completed')" class="bg-gray-700 text-white px-2 rounded text-[10px] font-bold">結案</button>` : ''}
+                    ${r.status === 'completed' ? `<button onclick="db.ref('records/${r.id}/status').set('order')" class="bg-orange-500 text-white px-2 rounded text-[10px] font-bold">退回正式</button>` : ''}
+                    <button onclick="if(confirm('刪除？')) db.ref('records/${r.id}').remove()" class="text-red-300 px-1 font-bold">✕</button>
+                </div>`;
+            l.appendChild(div);
+        });
     }
 
     function saveRecord(st) {
@@ -244,40 +297,6 @@
             status, notShipped: oldR?.notShipped || {}
         };
         db.ref('records/'+id).update(raw).then(() => { alert('儲存成功'); resetForm(); showTab(status==='draft'?'drafts':(status==='order'?'orders':'completed')); });
-    }
-
-    // 【修復核心】渲染訂單清單，補齊提示與狀態按鈕
-    function renderRecords() {
-        const lists = { 'draft': document.getElementById('draftList'), 'order': document.getElementById('orderList'), 'completed': document.getElementById('completedList') };
-        Object.values(lists).forEach(l => { if(l) l.innerHTML = ''; });
-        records.sort((a,b)=>b.id-a.id).forEach(r => {
-            const l = lists[r.status || 'draft']; if(!l) return;
-            let unshippedHtml = "";
-            if (r.notShipped) { Object.keys(r.notShipped).forEach(cat => { (r.notShipped[cat] || []).forEach(idx => { const target = (inv[cat] || [])[idx]; if (target) unshippedHtml += `<div class="text-[10px] text-red-500 font-black mt-1">🔴 未出貨：[${cat}] ${target.name}</div>`; }); }); }
-            const noCardVal = (r.noCard && r.noCard !== "") ? Number(r.noCard).toLocaleString() : null;
-            
-            const div = document.createElement('div'); div.className = "card p-4 flex flex-col gap-2 shadow-sm";
-            div.innerHTML = `
-                <div class="flex justify-between items-start">
-                    <div>
-                        <div class="text-[10px] text-gray-400">${r.time}</div>
-                        <div class="font-black text-base">${r.name||'未命名'}</div>
-                        <div class="text-blue-600 font-bold">${r.total}</div>
-                        ${noCardVal ? `<div class="text-[11px] text-orange-600 font-black mt-1">💳 無卡：$${noCardVal}</div>` : ''}
-                        ${unshippedHtml}
-                    </div>
-                    <div class="text-right text-[10px]"><span class="bg-blue-100 text-blue-600 px-2 py-1 rounded-full">${r.seller}</span></div>
-                </div>
-                <div class="flex gap-1 pt-2 border-t">
-                    <button onclick="editRecord('${r.id}')" class="flex-1 py-2 bg-blue-600 text-white text-[10px] rounded font-black">編輯</button>
-                    <button onclick="openShipmentModal('${r.id}')" class="flex-1 py-2 bg-gray-50 text-gray-500 text-[10px] rounded border">🚚 出貨</button>
-                    ${r.status === 'draft' ? `<button onclick="db.ref('records/${r.id}/status').set('order')" class="bg-green-600 text-white px-2 rounded text-[10px] font-bold">轉正式</button>` : ''}
-                    ${r.status === 'order' ? `<button onclick="db.ref('records/${r.id}/status').set('draft')" class="bg-gray-400 text-white px-2 rounded text-[10px] font-bold">退回草稿</button><button onclick="db.ref('records/${r.id}/status').set('completed')" class="bg-gray-700 text-white px-2 rounded text-[10px] font-bold">結案</button>` : ''}
-                    ${r.status === 'completed' ? `<button onclick="db.ref('records/${r.id}/status').set('order')" class="bg-orange-500 text-white px-2 rounded text-[10px] font-bold">退回正式</button>` : ''}
-                    <button onclick="if(confirm('刪除？')) db.ref('records/${r.id}').remove()" class="text-red-300 px-1 font-bold">✕</button>
-                </div>`;
-            l.appendChild(div);
-        });
     }
 
     function editRecord(id) {
