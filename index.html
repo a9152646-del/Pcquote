@@ -3,189 +3,229 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pcquote 專業報價管理系統 - 完整版</title>
+    <title>Pcquote 專業報價與庫存系統</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
 
     <style>
-        /* 保持原本的專業風格，不縮減樣式 */
-        :root { --main-bg: #f8f9fa; --primary: #2c3e50; --accent: #3498db; }
-        body { font-family: "Segoe UI", "Microsoft JhengHei", sans-serif; background-color: var(--main-bg); margin: 0; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        
-        .header-section { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        h1 { color: var(--primary); margin: 0; font-size: 24px; border-left: 5px solid var(--accent); padding-left: 15px; }
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --bg: #f4f7f6;
+        }
 
-        /* 搜尋欄位 */
-        .search-area { margin: 20px 0; display: flex; gap: 10px; }
-        #searchInput { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; }
+        body { font-family: "Segoe UI", "Microsoft JhengHei", sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 1100px; margin: 0 auto; }
 
-        /* 資料卡片與收合邏輯樣式 */
-        .quote-card { background: white; border-radius: 8px; margin-bottom: 15px; border: 1px solid #e0e0e0; transition: all 0.3s ease; }
-        .quote-card:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
-        
-        /* 修正後的收合按鈕區塊 */
+        /* 頂部導航與搜尋 */
+        .header-panel { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .nav-btn { padding: 10px 20px; border: none; background: #ddd; cursor: pointer; border-radius: 5px; font-weight: bold; }
+        .nav-btn.active { background: var(--primary); color: white; }
+
+        /* 表單區塊 */
+        .form-section { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: none; }
+        .form-section.active { display: block; }
+        .input-group { margin-bottom: 15px; display: flex; gap: 10px; align-items: center; }
+        input, select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; flex: 1; }
+
+        /* 動態表格 */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
+        th, td { border: 1px solid #eee; padding: 12px; text-align: left; }
+        th { background: #f8f9fa; }
+
+        /* 收合卡片邏輯 - 修正後的樣式 */
+        .item-card { background: white; border-radius: 8px; margin-bottom: 10px; border: 1px solid #ddd; overflow: hidden; }
         .card-header { 
-            padding: 15px 20px; 
-            cursor: pointer; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            background: #fff;
-            border-radius: 8px;
+            padding: 15px 20px; cursor: pointer; display: flex; justify-content: space-between; 
+            align-items: center; background: #fff; transition: 0.3s;
         }
-        .card-header.active { background: #f0f7ff; border-bottom: 1px solid #d1e3f8; border-radius: 8px 8px 0 0; }
-        
-        .info-tag { font-size: 14px; color: #666; }
-        .price-tag { color: #e74c3c; font-weight: bold; font-size: 18px; }
-        .arrow-icon { transition: transform 0.3s; color: #999; font-size: 12px; }
-        .active .arrow-icon { transform: rotate(180deg); }
-
-        /* 收合內容區 */
-        .card-content { 
-            display: none; /* 預設完全不顯示 */
-            padding: 20px; 
-            background: #ffffff; 
-        }
+        .card-header:hover { background: #f0f7ff; }
+        .card-content { display: none; padding: 20px; border-top: 1px solid #eee; background: #fafafa; }
         .card-content.show { display: block; }
+        .arrow { transition: 0.3s; }
+        .active .arrow { transform: rotate(180deg); }
 
-        /* 表格樣式 - 確保所有細節都在 */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { background-color: #f1f3f5; color: #495057; padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6; }
-        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 15px; }
-        .total-row { text-align: right; padding-top: 15px; font-size: 1.1rem; }
-
-        /* 讀取中提示 */
-        #loader { text-align: center; padding: 50px; color: #666; }
+        /* 功能按鈕 */
+        .btn { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; }
+        .btn-add { background: var(--success); }
+        .btn-save { background: var(--accent); width: 100%; padding: 15px; margin-top: 10px; }
+        .btn-del { background: var(--danger); padding: 5px 10px; }
+        
+        @media print { .no-print { display: none; } }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header-section">
-        <h1>📦 Pcquote 專業報價與庫存管理系統</h1>
-        <div class="search-area">
-            <input type="text" id="searchInput" placeholder="🔍 搜尋客戶姓名、單號或產品..." onkeyup="handleSearch()">
+    <div class="header-panel no-print">
+        <h1>Pcquote 專業管理系統</h1>
+        <div class="nav-tabs">
+            <button class="nav-btn active" onclick="switchTab('list')">📋 報價單列表</button>
+            <button class="nav-btn" onclick="switchTab('create')">➕ 建立新報價</button>
         </div>
+        <input type="text" id="searchInput" placeholder="🔍 搜尋客戶、單號..." onkeyup="filterData()">
     </div>
 
-    <div id="data-list">
-        <div id="loader">🔄 正在連線至雲端資料庫，請稍候...</div>
+    <div id="tab-list" class="form-section active">
+        <div id="data-container">正在載入雲端資料...</div>
+    </div>
+
+    <div id="tab-create" class="form-section">
+        <h3>建立新報價單</h3>
+        <div class="input-group">
+            <input type="text" id="cusName" placeholder="客戶姓名">
+            <input type="date" id="docDate">
+        </div>
+        <table id="itemTable">
+            <thead>
+                <tr>
+                    <th>品項名稱</th>
+                    <th style="width:100px;">數量</th>
+                    <th style="width:150px;">單價</th>
+                    <th style="width:50px;"></th>
+                </tr>
+            </thead>
+            <tbody id="itemBody">
+                </tbody>
+        </table>
+        <button class="btn btn-add" style="margin-top:10px;" onclick="addRow()">＋ 新增品項</button>
+        <button class="btn btn-save" onclick="saveData()">💾 儲存報價單並同步雲端</button>
     </div>
 </div>
 
 <script>
-    // --- 2. 完整資料救援：Firebase 配置 (請在此填入你原本的密鑰) ---
+    // --- 1. Firebase 配置 (請在此填入你原本的金鑰) ---
     const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_PROJECT.firebaseapp.com",
-        databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-        projectId: "YOUR_PROJECT",
-        storageBucket: "YOUR_PROJECT.appspot.com",
-        messagingSenderId: "YOUR_ID",
-        appId: "YOUR_APP_ID"
+        apiKey: "你的APIKEY",
+        authDomain: "你的專案ID.firebaseapp.com",
+        databaseURL: "你的資料庫網址",
+        projectId: "你的專案ID",
+        storageBucket: "你的專案ID.appspot.com",
+        messagingSenderId: "發送ID",
+        appId: "APPID"
     };
 
-    // 初始化
     firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
+    const db = firebase.database();
 
-    // --- 3. 救回資料庫核心：指向正確的路徑 ---
-    // 注意：如果你的資料是存在 'orders' 或 'inventory'，請把下面引號內容改掉
-    const dbPath = 'quotes'; 
-    const quotesRef = database.ref(dbPath);
+    // --- 2. 切換分頁邏輯 ---
+    function switchTab(tab) {
+        document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
+        event.target.classList.add('active');
+    }
 
-    // 即時監聽資料
-    quotesRef.on('value', (snapshot) => {
+    // --- 3. 動態表格邏輯 (不減少功能) ---
+    function addRow() {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><input type="text" class="p-name" placeholder="產品名稱"></td>
+            <td><input type="number" class="p-qty" value="1"></td>
+            <td><input type="number" class="p-price" value="0"></td>
+            <td><button class="btn btn-del" onclick="this.parentElement.parentElement.remove()">✕</button></td>
+        `;
+        document.getElementById('itemBody').appendChild(row);
+    }
+
+    // --- 4. 儲存至資料庫 ---
+    function saveData() {
+        const name = document.getElementById('cusName').value;
+        const date = document.getElementById('docDate').value;
+        const rows = document.querySelectorAll('#itemBody tr');
+        let items = [];
+        let total = 0;
+
+        rows.forEach(row => {
+            const pName = row.querySelector('.p-name').value;
+            const pQty = parseInt(row.querySelector('.p-qty').value);
+            const pPrice = parseInt(row.querySelector('.p-price').value);
+            items.push({ name: pName, qty: pQty, price: pPrice });
+            total += (pQty * pPrice);
+        });
+
+        if(!name) return alert("請輸入客戶姓名");
+
+        const newRef = db.ref('quotes').push();
+        newRef.set({
+            customer: name,
+            date: date,
+            items: items,
+            total: total,
+            timestamp: Date.now()
+        }).then(() => {
+            alert("儲存成功！");
+            location.reload();
+        });
+    }
+
+    // --- 5. 讀取與收合按鈕修復 ---
+    db.ref('quotes').on('value', (snapshot) => {
         const data = snapshot.val();
-        if (data) {
-            renderQuotes(data);
-        } else {
-            document.getElementById('data-list').innerHTML = `
-                <div style="background:white; padding:40px; text-align:center; border-radius:10px;">
-                    <p style="color:#e74c3c; font-size:18px;">⚠️ 找不到資料！</p>
-                    <p>請檢查 Firebase 控制台中的路徑是否為 <b>"${dbPath}"</b>，<br>並確認 Rules 權限是否已開啟。</p>
-                </div>`;
-        }
-    }, (error) => {
-        console.error("讀取失敗：", error);
-        alert("資料庫讀取失敗，請檢查網路或 Firebase 規則設定。");
+        renderList(data);
     });
 
-    // --- 4. 完整的渲染邏輯 (不刪減任何資訊) ---
-    function renderQuotes(data) {
-        const listArea = document.getElementById('data-list');
+    function renderList(data) {
+        const container = document.getElementById('data-container');
+        if(!data) { container.innerHTML = "尚未有資料"; return; }
+
         let html = '';
-
-        // 將物件轉為陣列並由新到舊排序
-        const keys = Object.keys(data).reverse();
-
-        keys.forEach(key => {
-            const item = data[key];
-            const totalPrice = item.total || 0;
-            const customer = item.customer || '未載明客戶';
-            const date = item.date || '無日期';
-
+        Object.keys(data).reverse().forEach(id => {
+            const val = data[id];
             html += `
-                <div class="quote-card" id="card-${key}">
-                    <div class="card-header" onclick="toggleCard('${key}')">
+                <div class="item-card" id="card-${id}">
+                    <div class="card-header" onclick="toggleCard('${id}')">
                         <div>
-                            <span class="info-tag">#${key}</span>
-                            <strong style="margin-left:10px; font-size:17px;">${customer}</strong>
-                            <span class="info-tag" style="margin-left:15px;">📅 ${date}</span>
+                            <strong>#${id.slice(-5)}</strong> | 
+                            <span>${val.customer}</span> | 
+                            <small>${val.date}</small>
                         </div>
                         <div>
-                            <span class="price-tag">$${totalPrice.toLocaleString()}</span>
-                            <span class="arrow-icon" id="arrow-${key}" style="margin-left:15px;">▼</span>
+                            <span style="color:var(--danger); font-weight:bold;">$${val.total}</span>
+                            <span class="arrow" id="arrow-${id}">▼</span>
                         </div>
                     </div>
-                    <div class="card-content" id="content-${key}">
+                    <div class="card-content" id="content-${id}">
                         <table>
-                            <thead>
-                                <tr>
-                                    <th>產品項目</th>
-                                    <th style="width:80px;">數量</th>
-                                    <th style="width:120px;">單價</th>
-                                    <th style="width:120px;">小計</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>品項</th><th>數量</th><th>單價</th><th>小計</th></tr></thead>
                             <tbody>
-                                ${(item.items || []).map(prod => `
+                                ${val.items.map(i => `
                                     <tr>
-                                        <td>${prod.name || '不明產品'}</td>
-                                        <td>${prod.qty || 0}</td>
-                                        <td>$${(prod.price || 0).toLocaleString()}</td>
-                                        <td>$${((prod.qty || 0) * (prod.price || 0)).toLocaleString()}</td>
+                                        <td>${i.name}</td>
+                                        <td>${i.qty}</td>
+                                        <td>$${i.price}</td>
+                                        <td>$${i.qty * i.price}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
                         </table>
-                        <div class="total-row">
-                            <hr style="border:0; border-top:1px solid #eee;">
-                            <strong>總計： <span style="color:#e74c3c; font-size:20px;">$${totalPrice.toLocaleString()}</span></strong>
+                        <div style="margin-top:10px; text-align:right;">
+                            <button class="btn btn-save" style="width:auto;" onclick="window.print()">列印此單</button>
+                            <button class="btn btn-del" onclick="deleteData('${id}')">刪除紀錄</button>
                         </div>
                     </div>
                 </div>
             `;
         });
-        listArea.innerHTML = html;
+        container.innerHTML = html;
     }
 
-    // --- 5. 核心修復：絕對穩定的收合函數 ---
+    // 修復「奇怪收合」的核心代碼
     function toggleCard(id) {
         const content = document.getElementById(`content-${id}`);
         const header = document.querySelector(`#card-${id} .card-header`);
-        const arrow = document.getElementById(`arrow-${id}`);
+        
+        // 檢查是否已經打開
+        const isShow = content.classList.contains('show');
+        
+        // 先關閉所有其他的 (保持畫面整潔，若不想要此功能可註釋掉)
+        // document.querySelectorAll('.card-content').forEach(el => el.classList.remove('show'));
 
-        // 檢查目前是否已顯示
-        const isOpen = content.classList.contains('show');
-
-        // 先關閉所有其他的 (如果你想一次只開一個，可以解除下面註釋)
-        // document.querySelectorAll('.card-content').forEach(c => c.classList.remove('show'));
-        // document.querySelectorAll('.card-header').forEach(h => h.classList.remove('active'));
-
-        if (isOpen) {
+        if(isShow) {
             content.classList.remove('show');
             header.classList.remove('active');
         } else {
@@ -194,16 +234,21 @@
         }
     }
 
-    // --- 6. 搜尋功能 ---
-    function handleSearch() {
-        const term = document.getElementById('searchInput').value.toLowerCase();
-        const cards = document.querySelectorAll('.quote-card');
+    function deleteData(id) {
+        if(confirm("確定要刪除這筆雲端資料嗎？")) {
+            db.ref('quotes/' + id).remove();
+        }
+    }
 
-        cards.forEach(card => {
-            const text = card.innerText.toLowerCase();
-            card.style.display = text.includes(term) ? 'block' : 'none';
+    function filterData() {
+        const val = document.getElementById('searchInput').value.toLowerCase();
+        document.querySelectorAll('.item-card').forEach(card => {
+            card.style.display = card.innerText.toLowerCase().includes(val) ? "block" : "none";
         });
     }
+
+    // 預設跑一行
+    addRow();
 </script>
 
 </body>
