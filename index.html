@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v11.1</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v11.2</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -21,6 +21,7 @@
         .price-tag { color: #94a3b8; font-weight: 400; font-size: 12px; margin-left: 4px; }
         .cost-tag { color: #ef4444; font-weight: 700; font-size: 11px; margin-left: 6px; }
         
+        /* 控制開關對應的顯示隱藏 */
         body.hide-item-prices .price-tag { display: none !important; }
         body.hide-item-costs .cost-tag { display: none !important; }
         body.hide-admin-box #sellerBox { display: none !important; }
@@ -38,11 +39,8 @@
 
         .item-row { padding: 16px !important; margin-bottom: 12px !important; background: #fff; border: 1px solid #f1f5f9 !important; border-radius: 12px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
         .screenshot-mode .item-row { padding: 4px 10px !important; margin-bottom: 0px !important; border-radius: 0px !important; border: none !important; border-bottom: 1px solid #f1f5f9 !important; box-shadow: none !important; width: 100% !important; }
-        .screenshot-mode #configRows { gap: 0 !important; space-y: 0 !important; }
         .screenshot-mode .selected-badge { font-size: 11px !important; line-height: 1.2 !important; margin-bottom: 2px !important; display: block !important; width: 100% !important; }
-        .screenshot-mode #screenshot-header { margin-bottom: 8px !important; padding-bottom: 4px !important; }
-        .screenshot-mode #screenshot-footer { padding: 8px 12px !important; display: block !important; }
-
+        
         #screenshot-area { background: white; padding: 10px; border-radius: 12px; }
 
         .inv-item-row { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
@@ -56,12 +54,6 @@
         .val-input { border: none !important; background: transparent !important; width: 45px; font-weight: 900; font-size: 13px; text-align: right; padding: 0 !important; }
         .p-input { color: #3b82f6; } 
         .c-input { color: #ef4444 !important; font-weight: 900 !important; } 
-
-        .sup-btn { font-size: 10px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 4px; border: 1px solid #e2e8f0; color: #cbd5e1; font-weight: 900; transition: all 0.2s; background: white; flex-shrink: 0; }
-        .sup-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
-        .stock-btn { font-size: 11px; padding: 4px 8px; border-radius: 6px; font-weight: 900; border: 1px solid #e2e8f0; cursor: pointer; min-width: 50px; flex-shrink: 0; }
-        .stock-btn.active { background: #22c55e; color: white; border-color: #22c55e; }
-        .stock-btn.oos { background: #ef4444; color: white; border-color: #ef4444; }
 
         .no-screenshot { display: block; }
         .screenshot-mode .no-screenshot { display: none !important; }
@@ -174,9 +166,7 @@
         <div id="tab-drafts" class="page-content hidden"><input type="text" id="search-drafts" oninput="renderRecords()" placeholder="🔍 搜尋草稿" class="w-full mb-3 p-3 rounded-xl border-2"><div id="draftList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
         <div id="tab-orders" class="page-content hidden"><input type="text" id="search-orders" oninput="renderRecords()" placeholder="🔍 搜尋訂單" class="w-full mb-3 p-3 rounded-xl border-2"><div id="orderList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
         <div id="tab-completed" class="page-content hidden"><input type="text" id="search-completed" oninput="renderRecords()" placeholder="🔍 搜尋結案" class="w-full mb-3 p-3 rounded-xl border-2"><div id="completedList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
-        
         <div id="tab-stats" class="page-content hidden"><div id="statsContent" class="space-y-4"></div></div>
-        
         <div id="tab-inventory" class="page-content hidden">
             <div class="card p-4">
                 <div class="flex justify-between items-center mb-2">
@@ -292,22 +282,19 @@
             const pOpts = ["待處理", "已叫貨", "組裝中", "測試中", "已完工", "已寄出"].map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
             const payOpts = ["未付款", "已付訂金", "已付清"].map(p => `<option value="${p}" ${(r.paymentStatus||"未付款")===p?'selected':''}>${p}</option>`).join('');
             let unshippedHtml = ""; if (r.notShipped) { Object.keys(r.notShipped).forEach(cat => { (r.notShipped[cat] || []).forEach(idx => { const target = (inv[cat] || [])[idx]; if (target) unshippedHtml += `<div class="text-[10px] text-red-500 font-black mt-1">🔴 未出貨：[${cat}] ${target.name}</div>`; }); }); }
-            const noCardVal = (r.noCard && r.noCard !== "") ? Number(r.noCard).toLocaleString() : null;
             const div = document.createElement('div'); div.className = "p-4 border-2 rounded-xl bg-white shadow-sm space-y-3";
-            div.innerHTML = `<div class="flex justify-between items-start"><div><div class="text-[10px] text-gray-400">${r.time}</div><div class="text-base font-black">${r.name || '無名氏'}</div><div class="text-blue-600 font-black text-lg">${r.total}</div>${noCardVal ? `<div class="text-[11px] text-orange-600 font-black mt-1">💳 無卡：$${noCardVal}</div>` : ''}${unshippedHtml}</div><div class="text-right"><span class="bg-blue-100 text-blue-600 text-[10px] px-2 py-1 rounded-full">${r.seller}</span><div class="mt-2"><select onchange="db.ref('records/'+'${r.id}'+'/progress').set(this.value)" class="text-[10px] font-bold px-1 rounded ${getStatusClass(r.progress)}">${pOpts}</select></div><div class="mt-1"><select onchange="db.ref('records/'+'${r.id}'+'/paymentStatus').set(this.value)" class="text-[10px] font-bold px-1 rounded ${getPayClass(r.paymentStatus||'未付款')}">${payOpts}</select></div></div></div><div class="flex gap-1 pt-3 border-t"><button onclick="editRecord('${r.id}')" class="flex-1 py-2 bg-blue-600 text-white text-[10px] rounded-lg font-black">編輯</button><button onclick="openShipmentModal('${r.id}')" class="flex-1 py-2 bg-gray-50 text-gray-500 text-[10px] rounded-lg font-black border">🚚 出貨</button>${status === 'draft' ? `<button onclick="db.ref('records/'+'${r.id}'+'/status').set('order')" class="bg-green-600 text-white px-2 rounded-lg text-[10px] font-bold">轉正式</button>` : `<button onclick="db.ref('records/'+'${r.id}'+'/status').set('completed')" class="bg-gray-600 text-white px-2 rounded-lg text-[10px] font-bold">結案</button>`}<button onclick="if(confirm('刪除紀錄？')) db.ref('records/'+'${r.id}').remove()" class="text-red-300 text-xl px-1">✕</button></div>`;
+            div.innerHTML = `<div class="flex justify-between items-start"><div><div class="text-[10px] text-gray-400">${r.time}</div><div class="text-base font-black">${r.name || '無名氏'}</div><div class="text-blue-600 font-black text-lg">${r.total}</div></div><div class="text-right"><span class="bg-blue-100 text-blue-600 text-[10px] px-2 py-1 rounded-full">${r.seller}</span><div class="mt-2"><select onchange="db.ref('records/'+'${r.id}'+'/progress').set(this.value)" class="text-[10px] font-bold px-1 rounded ${getStatusClass(r.progress)}">${pOpts}</select></div><div class="mt-1"><select onchange="db.ref('records/'+'${r.id}'+'/paymentStatus').set(this.value)" class="text-[10px] font-bold px-1 rounded ${getPayClass(r.paymentStatus||'未付款')}">${payOpts}</select></div></div></div><div class="flex gap-1 pt-3 border-t"><button onclick="editRecord('${r.id}')" class="flex-1 py-2 bg-blue-600 text-white text-[10px] rounded-lg font-black">編輯</button><button onclick="openShipmentModal('${r.id}')" class="flex-1 py-2 bg-gray-50 text-gray-500 text-[10px] rounded-lg font-black border">🚚 出貨</button>${status === 'draft' ? `<button onclick="db.ref('records/'+'${r.id}'+'/status').set('order')" class="bg-green-600 text-white px-2 rounded-lg text-[10px] font-bold">轉正式</button>` : `<button onclick="db.ref('records/'+'${r.id}'+'/status').set('completed')" class="bg-gray-600 text-white px-2 rounded-lg text-[10px] font-bold">結案</button>`}<button onclick="if(confirm('刪除？')) db.ref('records/'+'${r.id}').remove()" class="text-red-300 text-xl px-1">✕</button></div>`;
             lists[status].appendChild(div);
         });
     }
 
-    // 【修復】重新加入統計函數
     function renderStats() {
         const content = document.getElementById('statsContent'); if(!content) return; let monthlyData = {};
         records.forEach(r => { 
             if(r.status === 'draft') return; 
             const dateParts = r.time.split('/'); const monthKey = `${dateParts[0]}/${dateParts[1]}`; 
             if(!monthlyData[monthKey]) monthlyData[monthKey] = { revenue: 0, cost: 0, profit: 0, count: 0, taxTotal: 0 }; 
-            const rev = parseInt(r.total.replace(/[^0-9.-]+/g,"")) || 0; 
-            const tax = Math.round(rev - (rev / 1.05));
+            const rev = parseInt(r.total.replace(/[^0-9.-]+/g,"")) || 0; const tax = Math.round(rev - (rev / 1.05));
             monthlyData[monthKey].taxTotal += tax;
             let itemCost = 0; 
             for(let cat in r.selections) { 
@@ -324,13 +311,11 @@
     }
 
     function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); if(t === 'inventory') renderInventoryEditor(); if(t === 'stats') renderStats(); renderRecords(); }
-    
     function editRecord(id) { const r = records.find(x => String(x.id) === String(id)); if(!r) return; editingRecordId = id; currentSelections = JSON.parse(JSON.stringify(r.selections || {})); 
-    document.getElementById('custName').value = r.name || ''; document.getElementById('discountAmt').value = r.discount || 0; document.getElementById('manualTotal').value = r.manualTotal || ''; document.getElementById('infoPayment').value = r.paymentStatus || '未付款'; renderConfig(); showTab('calc'); }
+    document.getElementById('custName').value = r.name || ''; document.getElementById('discountAmt').value = r.discount || 0; document.getElementById('manualTotal').value = r.manualTotal || ''; renderConfig(); showTab('calc'); }
     function resetForm() { editingRecordId=null; currentSelections={}; document.querySelectorAll('#tab-calc input, #tab-calc textarea').forEach(i=>i.value=""); renderConfig(); }
     function goBack() { resetForm(); showTab('calc'); }
-    
-    function enterScreenshotMode() { document.getElementById('ss-time').innerText = '日期：' + new Date().toLocaleString(); document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value).toLocaleString(); document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText; document.getElementById('ss-warranty-info').innerText = document.getElementById('custWarranty').value ? `🛡️ 保固：${document.getElementById('custWarranty').value}` : ''; document.getElementById('mainBody').classList.add('screenshot-mode'); document.getElementById('screenshot-header').style.display = 'block'; document.getElementById('screenshot-footer').style.display = 'block'; document.getElementById('screenshotNav').classList.remove('hidden'); renderConfig(); window.scrollTo(0,0); }
+    function enterScreenshotMode() { document.getElementById('ss-time').innerText = '日期：' + new Date().toLocaleString(); document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value).toLocaleString(); document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText; document.getElementById('mainBody').classList.add('screenshot-mode'); document.getElementById('screenshot-header').style.display = 'block'; document.getElementById('screenshot-footer').style.display = 'block'; document.getElementById('screenshotNav').classList.remove('hidden'); renderConfig(); window.scrollTo(0,0); }
     function exitScreenshotMode() { document.getElementById('mainBody').classList.remove('screenshot-mode'); document.getElementById('screenshot-header').style.display = 'none'; document.getElementById('screenshot-footer').style.display = 'none'; document.getElementById('screenshotNav').classList.add('hidden'); renderConfig(); }
     
     function downloadQuoteImage() {
@@ -357,18 +342,35 @@
     function saveInventory() { if(confirm('同步雲端？')) { db.ref('inventory').set(inv); db.ref('catOrder').set(catOrder); alert('成功'); } }
     function getStatusClass(p) { const map = {"待處理":"status-red", "已叫貨":"status-yellow", "組裝中":"status-blue", "測試中":"status-orange", "已完工":"status-purple", "已寄出":"status-green"}; return map[p] || ""; }
     function getPayClass(p) { const map = {"未付款":"status-red", "已付訂金":"status-orange", "已付清":"status-green"}; return map[p] || ""; }
+    
     function openSelection(cat) { currentCat = cat; document.getElementById('modalTitle').innerText = '🔍 ' + cat; document.getElementById('selectionModal').classList.remove('hidden'); renderModalList(); }
     function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
-    function renderModalList() { const list = document.getElementById('modalList'); list.innerHTML = ''; (inv[currentCat] || []).forEach((item, idx) => { const sel = (currentSelections[currentCat] || []).find(s => s.idx === idx); list.innerHTML += `<div class="p-3 border-2 rounded-xl flex justify-between items-center mb-2 ${sel?'border-blue-500 bg-blue-50':'border-gray-100'} ${item.outOfStock?'opacity-30 pointer-events-none':''}" onclick="togglePick(${idx})"><div class="flex-1"><div class="font-black text-gray-800 text-xs">${item.name}</div><div class="text-blue-600 font-black text-sm">$${item.p.toLocaleString()}</div></div>${sel ? `<div class="flex items-center gap-2" onclick="event.stopPropagation()"><button onclick="updateSubItem(${idx}, 'qty', -1)" class="bg-gray-100 px-3 py-1 rounded-lg">-</button><span>${sel.qty}</span><button onclick="updateSubItem(${idx}, 'qty', 1)" class="bg-blue-100 px-3 py-1 rounded-lg">+</button></div>`:''}</div>`; }); }
+    
+    // 【修復】加入贈品按鈕的列表渲染
+    function renderModalList() { 
+        const list = document.getElementById('modalList'); list.innerHTML = ''; 
+        (inv[currentCat] || []).forEach((item, idx) => { 
+            const sel = (currentSelections[currentCat] || []).find(s => s.idx === idx); 
+            list.innerHTML += `<div class="p-3 border-2 rounded-xl flex justify-between items-center mb-2 ${sel?'border-blue-500 bg-blue-50':'border-gray-100'} ${item.outOfStock?'opacity-30 pointer-events-none':''}" onclick="togglePick(${idx})"><div class="flex-1"><div class="font-black text-gray-800 text-xs">${item.name}</div><div class="text-blue-600 font-black text-sm">$${item.p.toLocaleString()}</div></div>${sel ? `<div class="flex flex-col items-end gap-2" onclick="event.stopPropagation()"><div class="flex items-center gap-2"><button onclick="updateSubItem(${idx}, 'qty', -1)" class="bg-gray-100 px-3 py-1 rounded-lg font-black text-lg">-</button><span class="text-sm font-black w-6 text-center">${sel.qty}</span><button onclick="updateSubItem(${idx}, 'qty', 1)" class="bg-blue-100 px-3 py-1 rounded-lg font-black text-lg">+</button></div><button onclick="toggleGift(${idx})" class="text-[10px] px-2 py-1 rounded ${sel.isGift?'bg-red-500 text-white':'bg-gray-200 text-gray-500'} font-black">🎁 贈品</button></div>`:''}</div>`; 
+        }); 
+    }
+    
     function togglePick(idx) { if(!currentSelections[currentCat]) currentSelections[currentCat] = []; const i = currentSelections[currentCat].findIndex(s => s.idx === idx); if(i > -1) currentSelections[currentCat].splice(i,1); else { const t = inv[currentCat][idx]; currentSelections[currentCat].push({idx, qty:1, isGift:false, p: t.p, c: t.c}); } renderConfig(); renderModalList(); }
     function updateSubItem(idx, type, val) { const sel = currentSelections[currentCat].find(s => s.idx === idx); if(type==='qty') sel.qty = Math.max(1, sel.qty + val); renderConfig(); renderModalList(); }
+    
+    // 【修復】贈品切換功能
+    function toggleGift(idx) { 
+        const sel = currentSelections[currentCat].find(s => s.idx === idx); 
+        if(sel) { sel.isGift = !sel.isGift; renderConfig(); renderModalList(); } 
+    }
+
     function openShipmentModal(id) { const r = records.find(x => String(x.id) === String(id)); if(!r) return; const list = document.getElementById('shipmentList'); list.innerHTML = ''; const ns = r.notShipped || {}; catOrder.forEach(cat => { (r.selections[cat] || []).forEach((sel, idx) => { let target = (inv[cat] || [])[sel.idx]; if (target) { const isNS = ns[cat] && ns[cat].includes(idx); list.innerHTML += `<label class="flex items-center gap-3 p-4 border-2 rounded-xl bg-white ${isNS?'border-red-500 bg-red-50':'border-gray-100'}"><input type="checkbox" ${isNS?'checked':''} onchange="updateItemShipment('${id}', '${cat}', ${idx}, this.checked)"><div class="flex-1 text-sm font-bold">${target.name}</div></label>`; } }); }); document.getElementById('shipmentModal').classList.remove('hidden'); }
     function updateItemShipment(id, cat, idx, isNS) { const r = records.find(x => String(x.id) === String(id)); if(!r) return; let ns = r.notShipped || {}; if(!ns[cat]) ns[cat] = []; if(isNS) { if(!ns[cat].includes(idx)) ns[cat].push(idx); } else { ns[cat] = ns[cat].filter(i => i !== idx); } db.ref('records/' + id + '/notShipped').set(ns); }
     function openTemplateModal() { const list = document.getElementById('templateList'); list.innerHTML = ''; Object.keys(templates).forEach(id => { const t = templates[id]; list.innerHTML += `<div class="p-4 border-2 rounded-xl mb-3 flex justify-between items-center bg-white shadow-sm" onclick="applyTemplate('${id}')"><div class="font-black text-xs">${t.name}</div><button class="bg-red-100 text-red-500 px-3 py-1 rounded-lg text-[10px]" onclick="event.stopPropagation(); db.ref('templates/'+'${id}').remove()">刪除</button></div>`; }); document.getElementById('templateModal').classList.remove('hidden'); }
     function applyTemplate(id) { currentSelections = JSON.parse(JSON.stringify(templates[id].selections)); renderConfig(); document.getElementById('templateModal').classList.add('hidden'); }
-    function saveTemplate() { const name = prompt("範本名稱："); if (name) db.ref('templates/' + Date.now()).set({ name, selections: currentSelections }); }
-    function addCustomSeller() { const n = prompt("業務姓名："); if(n) { const s = document.getElementById('infoSeller'); const o = document.createElement('option'); o.value=n; o.text=n; o.selected=true; s.add(o); } }
-    function copyQuoteAsText() { let text = `【神奇海螺報價單】\n`; catOrder.forEach(cat => { (currentSelections[cat] || []).forEach(sel => { let t = (inv[cat] || [])[sel.idx]; if (t) text += `[${cat}] ${t.name} x ${sel.qty}\n`; }); }); text += `總計：${document.getElementById('ui-totalSale').innerText}`; navigator.clipboard.writeText(text).then(() => alert('已複製文字！')); }
+    function saveTemplate() { const name = prompt("名稱："); if (name) db.ref('templates/' + Date.now()).set({ name, selections: currentSelections }); }
+    function addCustomSeller() { const n = prompt("姓名："); if(n) { const s = document.getElementById('infoSeller'); const o = document.createElement('option'); o.value=n; o.text=n; o.selected=true; s.add(o); } }
+    function copyQuoteAsText() { let text = `【神奇海螺報價單】\n`; catOrder.forEach(cat => { (currentSelections[cat] || []).forEach(sel => { let t = (inv[cat] || [])[sel.idx]; if (t) text += `[${cat}] ${t.name} x ${sel.qty}${sel.isGift?' (贈品)':''}\n`; }); }); text += `總計：${document.getElementById('ui-totalSale').innerText}`; navigator.clipboard.writeText(text).then(() => alert('已複製文字！')); }
 
     db.ref('inventory').on('value', s => { if(s.exists()) inv = s.val(); renderConfig(); if(!document.getElementById('tab-inventory').classList.contains('hidden')) renderInventoryEditor(); });
     db.ref('catOrder').on('value', s => { if(s.exists()) catOrder = s.val(); renderConfig(); });
