@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        /* 嚴格保留你原始的間距設定 */
+        /* 完全保留原始間距設定，一個點都不動 */
         body { background-color: #f8fafc; font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; padding-top: 105px !important; padding-bottom: 300px !important; font-size: 14px; color: #334155; line-height: 1.5; }
         .tab-active { border-bottom: 3px solid #3b82f6; color: #3b82f6; font-weight: bold; }
         .card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
@@ -70,7 +70,7 @@
         .no-screenshot { display: block; }
         .screenshot-mode .no-screenshot { display: none !important; }
         
-        /* 嚴格保留你原始按鈕選單樣式 */
+        /* 完全保留原始右下角導航樣式 */
         #screenshotNav { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 50000; display: flex; gap: 10px; }
         
         #adminToggleContainer { position: fixed; bottom: 25px; left: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
@@ -144,7 +144,7 @@
                             <input type="text" id="custWarranty" placeholder="🛡️ 保固備註" class="md:col-span-4 font-bold text-blue-600">
                             
                             <div class="md:col-span-4 flex items-center gap-2">
-                                <label class="text-xs font-black text-gray-500">💰 付款資訊：</label>
+                                <label class="text-xs font-black text-gray-500">💵 付款狀態：</label>
                                 <select id="payStatus" class="flex-1 font-bold text-red-600 border-red-200">
                                     <option value="未付款">❌ 未付款</option>
                                     <option value="已付訂金">🔸 已付訂金</option>
@@ -214,12 +214,12 @@
     let inv = {}; let catOrder = []; let records = []; let templates = {}; let currentSelections = {}; let editingRecordId = null; let currentCat = "";
     let collapsedCats = {}; 
 
-    // 增量：圖片保存功能
+    // 增量：圖片存檔
     function downloadScreenshot() {
         const area = document.getElementById('screenshotArea');
         html2canvas(area, { useCORS: true, scale: 2, backgroundColor: "#f8fafc" }).then(canvas => {
             const link = document.createElement('a');
-            link.download = `神奇海螺電競報價_${new Date().getTime()}.png`;
+            link.download = `神奇海螺報價單_${new Date().getTime()}.png`;
             link.href = canvas.toDataURL();
             link.click();
         });
@@ -316,7 +316,7 @@
             custAddr: document.getElementById('custAddr').value || "", 
             custWarranty: document.getElementById('custWarranty').value || "", 
             seller: document.getElementById('infoSeller').value || "朱冠穎", 
-            payStatus: document.getElementById('payStatus').value || "未付款", // 增量：儲存付款狀態
+            payStatus: document.getElementById('payStatus').value || "未付款", // 增量：儲存付款
             orderMemo: document.getElementById('orderMemo').value || "", 
             selections: currentSelections || {}, 
             total: document.getElementById('ui-totalSale').innerText || "$0", 
@@ -337,7 +337,7 @@
             const status = r.status || 'draft'; if (!lists[status]) return;
             const pOpts = ["待處理", "已叫貨", "組裝中", "測試中", "已完工", "已寄出"].map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
             
-            // 增量：付款狀態下拉選單
+            // 增量：列表顯示選單
             const payOpts = ["未付款", "已付訂金", "已付清"].map(pay => `<option value="${pay}" ${r.payStatus===pay?'selected':''}>${pay}</option>`).join('');
             const getPayClass = (p) => { if(p==='已付清') return 'pay-paid'; if(p==='已付訂金') return 'pay-deposit'; return 'pay-unpaid'; };
 
@@ -396,10 +396,8 @@
             const dateParts = r.time.split('/'); 
             const monthKey = `${dateParts[0]}/${dateParts[1]}`; 
             if(!monthlyData[monthKey]) monthlyData[monthKey] = { revenue: 0, cost: 0, taxTotal: 0, profit: 0, count: 0 }; 
-            
             const rev = parseInt(r.total.replace(/[^0-9.-]+/g,"")) || 0; 
             const tax = Math.round(rev - (rev / 1.05));
-            
             let itemCost = 0; 
             for(let cat in r.selections) { 
                 r.selections[cat].forEach(s => { 
@@ -413,11 +411,7 @@
             monthlyData[monthKey].taxTotal += tax; 
             monthlyData[monthKey].count += 1; 
         });
-        
-        Object.keys(monthlyData).forEach(k => { 
-            monthlyData[k].profit = Math.round((monthlyData[k].revenue / 1.05) - monthlyData[k].cost); 
-        });
-        
+        Object.keys(monthlyData).forEach(k => { monthlyData[k].profit = Math.round((monthlyData[k].revenue / 1.05) - monthlyData[k].cost); });
         content.innerHTML = Object.keys(monthlyData).sort((a,b)=>b.localeCompare(a)).map(m => `
             <div class="stats-card">
                 <div class="text-lg font-black text-gray-800 mb-2">${m} 績效彙整</div>
@@ -444,18 +438,16 @@
         document.getElementById('noCardTotal').value = r.noCard || ''; 
         document.getElementById('custAddr').value = r.custAddr || ''; 
         document.getElementById('custWarranty').value = r.custWarranty || ''; 
-        document.getElementById('payStatus').value = r.payStatus || '未付款'; // 增量：讀取狀態
+        document.getElementById('payStatus').value = r.payStatus || "未付款"; // 增量：讀取付款
         document.getElementById('orderMemo').value = r.orderMemo || ''; 
-        renderConfig(); 
-        showTab('calc'); 
+        renderConfig(); showTab('calc'); 
     }
 
     function resetForm() { 
-        editingRecordId=null; 
-        currentSelections={}; 
+        editingRecordId=null; currentSelections={}; 
         document.querySelectorAll('#tab-calc input, #tab-calc textarea').forEach(i=>i.value=""); 
         document.getElementById('discountAmt').value=0; 
-        document.getElementById('payStatus').value = '未付款'; // 增量：重置狀態
+        document.getElementById('payStatus').value = "未付款"; // 增量
         renderConfig(); 
     }
 
