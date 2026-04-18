@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v10.7</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v10.8</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -36,16 +36,31 @@
         .drag-handle { cursor: grab; color: #cbd5e1; padding: 5px; font-size: 26px; user-select: none; display: flex; align-items: center; justify-content: center; touch-action: none; -webkit-user-select: none; }
         .drag-handle:active { cursor: grabbing; color: #3b82f6; }
 
+        /* 報價單卡片樣式 */
         .item-row { padding: 16px !important; margin-bottom: 12px !important; background: #fff; border: 1px solid #f1f5f9 !important; border-radius: 12px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .screenshot-mode .item-row { padding: 4px 10px !important; margin-bottom: 0px !important; border-radius: 0px !important; border: none !important; border-bottom: 1px solid #f1f5f9 !important; box-shadow: none !important; width: 100% !important; }
-        .screenshot-mode #configRows { gap: 0 !important; space-y: 0 !important; }
-        .screenshot-mode .selected-badge { font-size: 11px !important; line-height: 1.2 !important; margin-bottom: 2px !important; display: block !important; width: 100% !important; }
-        .screenshot-mode #screenshot-header { margin-bottom: 8px !important; padding-bottom: 4px !important; }
-        .screenshot-mode #screenshot-footer { padding: 8px 12px !important; display: block !important; }
+        
+        /* 截圖模式下的細微調整 */
+        .screenshot-mode .item-row { 
+            padding: 6px 10px !important; 
+            margin-bottom: 0px !important; 
+            border-radius: 0px !important; 
+            border: none !important; 
+            border-bottom: 1px solid #f1f5f9 !important; 
+            box-shadow: none !important; 
+            width: 100% !important;
+            display: block !important;
+        }
+        .screenshot-mode .selected-badge { 
+            font-size: 12px !important; 
+            line-height: 1.4 !important; 
+            display: block !important; 
+            width: 100% !important;
+            word-wrap: break-word !important;
+        }
 
-        /* 讓截圖範圍更穩定 */
-        #screenshot-area { background: white; padding: 10px; border-radius: 12px; }
+        #screenshot-area { background: white; padding: 10px; }
 
+        /* 品項管理樣式 */
         .inv-item-row { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
         .inv-item-main { display: flex; align-items: center; gap: 10px; }
         .inv-name-area { flex: 1; min-width: 0; }
@@ -115,7 +130,7 @@
                             <button onclick="openTemplateModal()" class="flex-[2] bg-indigo-600 text-white py-3 rounded-xl font-black shadow-md">📂 載入範本</button>
                             <button onclick="copyQuoteAsText()" class="flex-[3] bg-cyan-500 text-white py-3 rounded-xl font-black shadow-md">📋 複製 Line 文字報價</button>
                         </div>
-                        <div class="card p-2 !bg-gray-100/50">
+                        <div class="card p-2 !bg-gray-100/50" id="quoteContainer">
                             <div id="configRows" class="space-y-3"></div>
                             <div id="screenshot-footer" class="text-right p-4 pt-2 border-t-2 border-gray-100 space-y-1" style="display: none;">
                                 <div id="ss-warranty-info" class="text-[9px] text-blue-500 font-bold mb-1"></div>
@@ -236,10 +251,9 @@
             const badges = items.map((sel, sIdx) => {
                 let target = (inv[cat] || [])[sel.idx]; if(!target) return '';
                 const dispP = (sel.p !== undefined) ? sel.p : target.p;
-                const dispC = (sel.c !== undefined) ? sel.c : (target.c || 0);
-                return `<div class="selected-badge flex-col mb-2">${sel.isGift?'[贈] ':''}<div>${target.name}${sel.qty>1?`<span class="bg-blue-100 text-blue-600 px-2 rounded-full ml-1 text-xs">x${sel.qty}</span>`:''} <span class="price-tag">($${Number(dispP).toLocaleString()})</span><span class="cost-tag">(本:$${Number(dispC).toLocaleString()})</span></div></div>`;
+                return `<div class="selected-badge mb-1">${sel.isGift?'[贈] ':''}<b>${target.name}</b>${sel.qty>1?` (x${sel.qty})`:''} <span class="price-tag">($${Number(dispP).toLocaleString()})</span></div>`;
             }).join('');
-            container.innerHTML += `<div class="item-row cursor-pointer" onclick="openSelection('${cat}')"><div class="text-[10px] font-black text-blue-400 uppercase mb-1">${cat}</div><div class="flex flex-col">${badges || '<span class="text-gray-300 italic text-sm">未選中項目...</span>'}</div></div>`;
+            container.innerHTML += `<div class="item-row" onclick="openSelection('${cat}')"><div class="text-[10px] font-black text-blue-400 uppercase mb-1">${cat}</div><div class="flex flex-col">${badges || '<span class="text-gray-300 italic text-xs">未選中...</span>'}</div></div>`;
         });
         calculate();
     }
@@ -282,33 +296,20 @@
             const status = r.status || 'draft'; if (!lists[status]) return;
             const pOpts = ["待處理", "已叫貨", "組裝中", "測試中", "已完工", "已寄出"].map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
             const payOpts = ["未付款", "已付訂金", "已付清"].map(p => `<option value="${p}" ${(r.paymentStatus||"未付款")===p?'selected':''}>${p}</option>`).join('');
-            let unshippedHtml = ""; if (r.notShipped) { Object.keys(r.notShipped).forEach(cat => { (r.notShipped[cat] || []).forEach(idx => { const target = (inv[cat] || [])[idx]; if (target) unshippedHtml += `<div class="text-[10px] text-red-500 font-black mt-1">🔴 未出貨：[${cat}] ${target.name}</div>`; }); }); }
             const div = document.createElement('div'); div.className = "p-4 border-2 rounded-xl bg-white shadow-sm space-y-3";
-            div.innerHTML = `<div class="flex justify-between items-start"><div><div class="text-[10px] text-gray-400">${r.time}</div><div class="text-base font-black">${r.name || '無名氏'}</div><div class="text-blue-600 font-black text-lg">${r.total}</div>${unshippedHtml}</div><div class="text-right"><span class="bg-blue-100 text-blue-600 text-[10px] px-2 py-1 rounded-full">${r.seller}</span><div class="mt-2"><select onchange="db.ref('records/'+'${r.id}'+'/progress').set(this.value)" class="text-[10px] font-bold px-1 rounded ${getStatusClass(r.progress)}">${pOpts}</select></div><div class="mt-1"><select onchange="db.ref('records/'+'${r.id}'+'/paymentStatus').set(this.value)" class="text-[10px] font-bold px-1 rounded ${getPayClass(r.paymentStatus||'未付款')}">${payOpts}</select></div></div></div><div class="flex gap-1 pt-3 border-t"><button onclick="editRecord('${r.id}')" class="flex-1 py-2 bg-blue-600 text-white text-[10px] rounded-lg font-black">編輯</button><button onclick="openShipmentModal('${r.id}')" class="flex-1 py-2 bg-gray-50 text-gray-500 text-[10px] rounded-lg font-black border">🚚 出貨</button>${status === 'draft' ? `<button onclick="db.ref('records/'+'${r.id}'+'/status').set('order')" class="bg-green-600 text-white px-2 rounded-lg text-[10px] font-bold">轉正式</button>` : `<button onclick="db.ref('records/'+'${r.id}'+'/status').set('completed')" class="bg-gray-600 text-white px-2 rounded-lg text-[10px] font-bold">結案</button>`}<button onclick="if(confirm('刪除？')) db.ref('records/'+'${r.id}').remove()" class="text-red-300 text-xl px-1">✕</button></div>`;
+            div.innerHTML = `<div class="flex justify-between items-start"><div><div class="text-[10px] text-gray-400">${r.time}</div><div class="text-base font-black">${r.name || '無名氏'}</div><div class="text-blue-600 font-black text-lg">${r.total}</div></div><div class="text-right"><span class="bg-blue-100 text-blue-600 text-[10px] px-2 py-1 rounded-full">${r.seller}</span><div class="mt-2"><select onchange="db.ref('records/'+'${r.id}'+'/progress').set(this.value)" class="text-[10px] font-bold px-1 rounded ${getStatusClass(r.progress)}">${pOpts}</select></div><div class="mt-1"><select onchange="db.ref('records/'+'${r.id}'+'/paymentStatus').set(this.value)" class="text-[10px] font-bold px-1 rounded ${getPayClass(r.paymentStatus||'未付款')}">${payOpts}</select></div></div></div><div class="flex gap-1 pt-3 border-t"><button onclick="editRecord('${r.id}')" class="flex-1 py-2 bg-blue-600 text-white text-[10px] rounded-lg font-black">編輯</button><button onclick="openShipmentModal('${r.id}')" class="flex-1 py-2 bg-gray-50 text-gray-500 text-[10px] rounded-lg font-black border">🚚 出貨</button>${status === 'draft' ? `<button onclick="db.ref('records/'+'${r.id}'+'/status').set('order')" class="bg-green-600 text-white px-2 rounded-lg text-[10px] font-bold">轉正式</button>` : `<button onclick="db.ref('records/'+'${r.id}'+'/status').set('completed')" class="bg-gray-600 text-white px-2 rounded-lg text-[10px] font-bold">結案</button>`}<button onclick="if(confirm('刪除？')) db.ref('records/'+'${r.id}').remove()" class="text-red-300 text-xl px-1">✕</button></div>`;
             lists[status].appendChild(div);
         });
     }
 
     function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); const fsBtn = document.getElementById('floatingSaveBtn'); if(t === 'inventory') { fsBtn.classList.remove('hidden'); fsBtn.style.display = 'flex'; renderInventoryEditor(); } else { fsBtn.classList.add('hidden'); fsBtn.style.display = 'none'; } renderRecords(); }
-    function editRecord(id) { const r = records.find(x => String(x.id) === String(id)); if(!r) return; editingRecordId = id; currentSelections = JSON.parse(JSON.stringify(r.selections || {})); document.getElementById('custName').value = r.name; document.getElementById('infoPayment').value = r.paymentStatus || '未付款'; renderConfig(); showTab('calc'); }
+    function editRecord(id) { const r = records.find(x => String(x.id) === String(id)); if(!r) return; editingRecordId = id; currentSelections = JSON.parse(JSON.stringify(r.selections || {})); document.getElementById('custName').value = r.name; renderConfig(); showTab('calc'); }
     function resetForm() { editingRecordId=null; currentSelections={}; document.querySelectorAll('#tab-calc input, #tab-calc textarea').forEach(i=>i.value=""); renderConfig(); }
     function goBack() { resetForm(); showTab('calc'); }
-    
-    function enterScreenshotMode() { 
-        document.getElementById('ss-time').innerText = '日期：' + new Date().toLocaleString(); 
-        document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value).toLocaleString(); 
-        document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText; 
-        document.getElementById('ss-warranty-info').innerText = document.getElementById('custWarranty').value ? `🛡️ 保固：${document.getElementById('custWarranty').value}` : ''; 
-        document.getElementById('mainBody').classList.add('screenshot-mode'); 
-        document.getElementById('screenshot-header').style.display = 'block'; 
-        document.getElementById('screenshot-footer').style.display = 'block'; 
-        document.getElementById('screenshotNav').classList.remove('hidden'); 
-        renderConfig(); window.scrollTo(0,0); 
-    }
-
+    function enterScreenshotMode() { document.getElementById('ss-time').innerText = '日期：' + new Date().toLocaleString(); document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value).toLocaleString(); document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText; document.getElementById('ss-warranty-info').innerText = document.getElementById('custWarranty').value ? `🛡️ 保固：${document.getElementById('custWarranty').value}` : ''; document.getElementById('mainBody').classList.add('screenshot-mode'); document.getElementById('screenshot-header').style.display = 'block'; document.getElementById('screenshot-footer').style.display = 'block'; document.getElementById('screenshotNav').classList.remove('hidden'); renderConfig(); window.scrollTo(0,0); }
     function exitScreenshotMode() { document.getElementById('mainBody').classList.remove('screenshot-mode'); document.getElementById('screenshot-header').style.display = 'none'; document.getElementById('screenshot-footer').style.display = 'none'; document.getElementById('screenshotNav').classList.add('hidden'); renderConfig(); }
-    
-    // 修正後的一鍵下載圖片：解決排版跑掉
+
+    // 下載圖片終極修復：強制克隆區域固定屬性
     function downloadQuoteImage() {
         const area = document.getElementById('screenshot-area');
         const custName = document.getElementById('custName').value || "未命名";
@@ -318,17 +319,27 @@
             useCORS: true,
             backgroundColor: "#ffffff",
             onclone: (clonedDoc) => {
-                // 在克隆的 DOM 中強制修正排版
                 const clonedArea = clonedDoc.getElementById('screenshot-area');
-                clonedArea.style.width = '380px'; // 強制 iPhone 適配寬度
-                clonedArea.style.padding = '15px';
+                // 強制穩定排版，防止 flex 溢出或縮放
+                clonedArea.style.width = '400px'; 
+                clonedArea.style.margin = '0';
+                clonedArea.style.padding = '20px';
                 
-                // 強制所有文字不自動縮放
-                clonedDoc.querySelectorAll('.selected-badge').forEach(el => {
-                    el.style.display = 'block';
-                    el.style.width = '100%';
-                    el.style.wordBreak = 'break-all';
-                    el.style.fontSize = '12px';
+                // 修正所有文字渲染屬性
+                clonedDoc.querySelectorAll('.item-row').forEach(row => {
+                    row.style.width = '100%';
+                    row.style.display = 'block';
+                    row.style.marginBottom = '0px';
+                    row.style.padding = '8px 0px';
+                    row.style.borderBottom = '1px solid #f1f5f9';
+                });
+                
+                clonedDoc.querySelectorAll('.selected-badge').forEach(badge => {
+                    badge.style.fontSize = '13px';
+                    badge.style.lineHeight = '1.6';
+                    badge.style.wordBreak = 'break-all';
+                    badge.style.display = 'block';
+                    badge.style.letterSpacing = '0.5px';
                 });
             }
         }).then(canvas => {
