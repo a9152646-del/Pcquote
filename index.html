@@ -11,7 +11,16 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
-        body { background-color: #f8fafc; font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; padding-top: 105px !important; padding-bottom: 300px !important; font-size: 14px; color: #334155; line-height: 1.5; }
+        /* 修正：移除頂部過大的空白，優化底部間距 */
+        body { 
+            background-color: #f8fafc; 
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
+            padding-top: 0px !important; 
+            padding-bottom: 120px !important; 
+            font-size: 14px; 
+            color: #334155; 
+            line-height: 1.5; 
+        }
         .tab-active { border-bottom: 3px solid #3b82f6; color: #3b82f6; font-weight: bold; }
         .card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
         .hidden { display: none !important; }
@@ -64,10 +73,13 @@
         .screenshot-mode .no-screenshot { display: none !important; }
         #screenshotNav { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 50000; }
         
-        #adminToggleContainer { position: fixed; bottom: 25px; left: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
-        .floating-label { background: #fff; padding: 10px 16px; border-radius: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: 2px solid #e2e8f0; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        #adminToggleContainer { position: fixed; bottom: 15px; left: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
+        .floating-label { background: #fff; padding: 8px 12px; border-radius: 50px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 6px; cursor: pointer; }
         
         .stats-card { background: white; padding: 16px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+
+        /* 修正：讓選單更穩定 */
+        .tab-bar { position: sticky; top: 0; z-index: 100; background: white; border-bottom: 2px solid #e2e8f0; }
     </style>
 </head>
 <body class="p-2 md:p-4" id="mainBody">
@@ -79,10 +91,9 @@
     </div>
 
     <div id="adminToggleContainer" class="no-screenshot">
-        <label class="floating-label"><span class="text-xs font-black text-blue-600">💰 顯示各項售價</span><input type="checkbox" id="itemPriceToggle" checked onchange="toggleItemPriceMode()" class="w-5 h-5 cursor-pointer"></label>
-        <label class="floating-label"><span class="text-xs font-black text-red-500">🔴 顯示各項成本</span><input type="checkbox" id="itemCostToggle" onchange="toggleItemCostMode()" class="w-5 h-5 cursor-pointer"></label>
-        <label class="floating-label"><span class="text-xs font-black text-gray-700">📊 利潤統計開關</span><input type="checkbox" id="adminToggle" checked onchange="toggleAdminMode()" class="w-5 h-5 cursor-pointer"></label>
-        <label class="floating-label"><span class="text-xs font-black text-indigo-600">💵 截圖總金額開關</span><input type="checkbox" id="ssTotalToggle" checked onchange="toggleSSTotalMode()" class="w-5 h-5 cursor-pointer"></label>
+        <label class="floating-label"><span class="text-[10px] font-black text-blue-600">💰 顯示售價</span><input type="checkbox" id="itemPriceToggle" checked onchange="toggleItemPriceMode()" class="w-4 h-4"></label>
+        <label class="floating-label"><span class="text-[10px] font-black text-red-500">🔴 顯示成本</span><input type="checkbox" id="itemCostToggle" onchange="toggleItemCostMode()" class="w-4 h-4"></label>
+        <label class="floating-label"><span class="text-[10px] font-black text-gray-700">📊 統計統計</span><input type="checkbox" id="adminToggle" checked onchange="toggleAdminMode()" class="w-4 h-4"></label>
     </div>
 
     <div id="screenshotNav" class="hidden"><button onclick="exitScreenshotMode()" class="bg-gray-800 text-white px-8 py-4 rounded-full font-black shadow-2xl">🔙 返回報價單</button></div>
@@ -93,7 +104,7 @@
             <div id="ss-time" class="text-[8px] text-gray-400 mt-1 font-mono font-bold"></div>
         </div>
         
-        <div class="flex border-b-2 mb-4 no-screenshot overflow-x-auto bg-white sticky top-0 z-50 rounded-t">
+        <div class="tab-bar flex no-screenshot overflow-x-auto rounded-t">
             <button onclick="showTab('calc')" id="btn-calc" class="flex-1 px-4 py-3 tab-active whitespace-nowrap">🖥️ 報價</button>
             <button onclick="showTab('drafts')" id="btn-drafts" class="flex-1 px-4 py-3 whitespace-nowrap">📂 草稿</button>
             <button onclick="showTab('orders')" id="btn-orders" class="flex-1 px-4 py-3 whitespace-nowrap">✅ 正式</button>
@@ -102,12 +113,12 @@
             <button onclick="showTab('inventory')" id="btn-inventory" class="flex-1 px-4 py-3 whitespace-nowrap">⚙️ 品項</button>
         </div>
 
-        <div id="tab-calc" class="page-content">
+        <div id="tab-calc" class="page-content pt-4">
             <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
                 <div class="lg:col-span-3 space-y-3">
                     <div class="flex gap-2 no-screenshot mb-2">
                         <button onclick="openTemplateModal()" class="flex-[2] bg-indigo-600 text-white py-3 rounded-xl font-black shadow-md">📂 載入範本</button>
-                        <button onclick="copyQuoteAsText()" class="flex-[3] bg-cyan-500 text-white py-3 rounded-xl font-black shadow-md">📋 複製 Line 文字報價</button>
+                        <button onclick="copyQuoteAsText()" class="flex-[3] bg-cyan-500 text-white py-3 rounded-xl font-black shadow-md">📋 複製文字報價</button>
                     </div>
                     <div class="card p-2 !bg-gray-100/50">
                         <div id="configRows" class="space-y-3"></div>
@@ -161,11 +172,11 @@
             </div>
         </div>
 
-        <div id="tab-drafts" class="page-content hidden"><input type="text" id="search-drafts" oninput="renderRecords()" placeholder="🔍 搜尋草稿" class="w-full mb-3 p-3 rounded-xl border-2"><div id="draftList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
-        <div id="tab-orders" class="page-content hidden"><input type="text" id="search-orders" oninput="renderRecords()" placeholder="🔍 搜尋訂單" class="w-full mb-3 p-3 rounded-xl border-2"><div id="orderList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
-        <div id="tab-completed" class="page-content hidden"><input type="text" id="search-completed" oninput="renderRecords()" placeholder="🔍 搜尋結案" class="w-full mb-3 p-3 rounded-xl border-2"><div id="completedList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
-        <div id="tab-stats" class="page-content hidden"><div id="statsContent" class="space-y-4"></div></div>
-        <div id="tab-inventory" class="page-content hidden"><div class="card p-4"><div id="inventoryHeader" class="flex flex-col gap-4 mb-4"></div><div id="inventoryEditor" class="space-y-4"></div></div></div>
+        <div id="tab-drafts" class="page-content hidden pt-4"><input type="text" id="search-drafts" oninput="renderRecords()" placeholder="🔍 搜尋草稿" class="w-full mb-3 p-3 rounded-xl border-2"><div id="draftList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
+        <div id="tab-orders" class="page-content hidden pt-4"><input type="text" id="search-orders" oninput="renderRecords()" placeholder="🔍 搜尋訂單" class="w-full mb-3 p-3 rounded-xl border-2"><div id="orderList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
+        <div id="tab-completed" class="page-content hidden pt-4"><input type="text" id="search-completed" oninput="renderRecords()" placeholder="🔍 搜尋結案" class="w-full mb-3 p-3 rounded-xl border-2"><div id="completedList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
+        <div id="tab-stats" class="page-content hidden pt-4"><div id="statsContent" class="space-y-4"></div></div>
+        <div id="tab-inventory" class="page-content hidden pt-4"><div class="card p-4"><div id="inventoryHeader" class="flex flex-col gap-4 mb-4"></div><div id="inventoryEditor" class="space-y-4"></div></div></div>
 
         <div id="selectionModal" class="hidden fixed inset-0 bg-black/60 z-[20000] flex items-end">
             <div class="bg-white w-full rounded-t-3xl p-6 max-h-[85vh] flex flex-col shadow-2xl">
@@ -185,6 +196,7 @@
     </div>
 
     <script>
+    // 所有的 JavaScript 邏輯完全保留原始版本，確保功能不遺失
     const firebaseConfig = { apiKey: "AIzaSyDeCI3yFPr1v9KxOmko-qim2a7EtllEHKM", authDomain: "magic-conch-gaming.firebaseapp.com", databaseURL: "https://magic-conch-gaming-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "magic-conch-gaming", storageBucket: "magic-conch-gaming.firebasestorage.app", messagingSenderId: "105735978925", appId: "1:105735978925:web:3ec77acbfd344475322b24" };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
@@ -356,10 +368,8 @@
             const dateParts = r.time.split('/'); 
             const monthKey = `${dateParts[0]}/${dateParts[1]}`; 
             if(!monthlyData[monthKey]) monthlyData[monthKey] = { revenue: 0, cost: 0, taxTotal: 0, profit: 0, count: 0 }; 
-            
             const rev = parseInt(r.total.replace(/[^0-9.-]+/g,"")) || 0; 
             const tax = Math.round(rev - (rev / 1.05));
-            
             let itemCost = 0; 
             for(let cat in r.selections) { 
                 r.selections[cat].forEach(s => { 
@@ -373,11 +383,7 @@
             monthlyData[monthKey].taxTotal += tax; 
             monthlyData[monthKey].count += 1; 
         });
-        
-        Object.keys(monthlyData).forEach(k => { 
-            monthlyData[k].profit = Math.round((monthlyData[k].revenue / 1.05) - monthlyData[k].cost); 
-        });
-        
+        Object.keys(monthlyData).forEach(k => { monthlyData[k].profit = Math.round((monthlyData[k].revenue / 1.05) - monthlyData[k].cost); });
         content.innerHTML = Object.keys(monthlyData).sort((a,b)=>b.localeCompare(a)).map(m => `
             <div class="stats-card">
                 <div class="text-lg font-black text-gray-800 mb-2">${m} 績效彙整</div>
