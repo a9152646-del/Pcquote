@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        /* 嚴格保留：你的 iPhone 專屬間距設定 */
+        /* 嚴格保留：iPhone 專屬間距設定 */
         body { background-color: #f8fafc; font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; padding-top: 105px !important; padding-bottom: 300px !important; font-size: 14px; color: #334155; line-height: 1.5; }
         .tab-active { border-bottom: 3px solid #3b82f6; color: #3b82f6; font-weight: bold; }
         .card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
@@ -327,13 +327,14 @@
             const payOpts = ["未付款", "已付訂金", "已付清"].map(pay => `<option value="${pay}" ${r.payStatus===pay?'selected':''}>${pay}</option>`).join('');
             const getPayClass = (p) => { if(p==='已付清') return 'pay-paid'; if(p==='已付訂金') return 'pay-deposit'; return 'pay-unpaid'; };
 
-            // 重要修正：列表顯示「未出貨」項目的正確邏輯
+            // 【精確修正點 1】：列表顯示紅色「未出貨」文字的對應邏輯
             let unshippedHtml = "";
             if (r.notShipped) {
                 Object.keys(r.notShipped).forEach(cat => {
-                    (r.notShipped[cat] || []).forEach(idxInSelections => {
-                        // idxInSelections 指的是該訂單該類別裡的第幾個選項
-                        const sel = (r.selections[cat] || [])[idxInSelections];
+                    const selectionsInCat = r.selections[cat] || [];
+                    (r.notShipped[cat] || []).forEach(idxInOrder => {
+                        // idxInOrder 是該訂單此類別中的第幾個項目
+                        const sel = selectionsInCat[idxInOrder];
                         if (sel) {
                             const target = (inv[cat] || [])[sel.idx];
                             if (target) unshippedHtml += `<div class="text-[10px] text-red-500 font-black mt-1">🔴 未出貨：[${cat}] ${target.name}</div>`;
@@ -449,6 +450,7 @@
     function updateSubItem(idx, type, val) { const sel = currentSelections[currentCat].find(s => s.idx === idx); if(type==='qty') sel.qty = Math.max(1, sel.qty + val); renderConfig(); renderModalList(); }
     function toggleGift(idx) { const sel = currentSelections[currentCat].find(s => s.idx === idx); if(sel) { sel.isGift = !sel.isGift; renderConfig(); renderModalList(); } }
 
+    // 【精確修正點 2】：出貨管理視窗內的勾選邏輯（使用訂單項目索引）
     function openShipmentModal(id) { 
         const r = records.find(x => String(x.id) === String(id)); 
         if(!r || !r.selections) return; 
@@ -456,21 +458,25 @@
         const ns = r.notShipped || {}; 
 
         catOrder.forEach(cat => { 
-            (r.selections[cat] || []).forEach((sel, idxInSelections) => { 
+            (r.selections[cat] || []).forEach((sel, idxInOrder) => { 
                 let target = (inv[cat] || [])[sel.idx]; 
                 if (target) { 
-                    const isNS = ns[cat] && ns[cat].includes(idxInSelections); 
-                    list.innerHTML += `<label class="flex items-center gap-3 p-4 border-2 rounded-xl bg-white ${isNS?'border-red-500 bg-red-50':'border-gray-100'}"><input type="checkbox" class="w-6 h-6" ${isNS?'checked':''} onchange="updateItemShipment('${id}', '${cat}', ${idxInSelections}, this.checked)"><div class="flex-1 text-sm font-bold">${target.name}</div></label>`; 
+                    const isNS = ns[cat] && ns[cat].includes(idxInOrder); 
+                    list.innerHTML += `<label class="flex items-center gap-3 p-4 border-2 rounded-xl bg-white ${isNS?'border-red-500 bg-red-50':'border-gray-100'}"><input type="checkbox" class="w-6 h-6" ${isNS?'checked':''} onchange="updateItemShipment('${id}', '${cat}', ${idxInOrder}, this.checked)"><div class="flex-1 text-sm font-bold">${target.name}</div></label>`; 
                 } 
             }); 
         }); 
         document.getElementById('shipmentModal').classList.remove('hidden'); 
     }
 
-    function updateItemShipment(id, cat, idxInSelections, isNotShipped) { 
+    function updateItemShipment(id, cat, idxInOrder, isNotShipped) { 
         const r = records.find(x => String(x.id) === String(id)); 
         if(!r) return; let ns = r.notShipped || {}; if(!ns[cat]) ns[cat] = []; 
-        if(isNotShipped) { if(!ns[cat].includes(idxInSelections)) ns[cat].push(idxInSelections); } else { ns[cat] = ns[cat].filter(i => i !== idxInSelections); } 
+        if(isNotShipped) { 
+            if(!ns[cat].includes(idxInOrder)) ns[cat].push(idxInOrder); 
+        } else { 
+            ns[cat] = ns[cat].filter(i => i !== idxInOrder); 
+        } 
         db.ref('records/' + id + '/notShipped').set(ns); 
     }
 
