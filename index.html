@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v10.6</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v10.7</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -17,27 +17,35 @@
         .card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
         .hidden { display: none !important; }
         input, select, textarea { border: 1px solid #cbd5e1; border-radius: 5px; padding: 6px 10px; font-size: 14px; outline: none; }
+        
         .price-tag { color: #94a3b8; font-weight: 400; font-size: 12px; margin-left: 4px; }
         .cost-tag { color: #ef4444; font-weight: 700; font-size: 11px; margin-left: 6px; }
+        
         body.hide-item-prices .price-tag { display: none !important; }
         body.hide-item-costs .cost-tag { display: none !important; }
         body.hide-admin-box #sellerBox { display: none !important; }
         body.ss-hide-totals .ss-total-row { display: none !important; }
+        
         .status-red { background-color: #fee2e2 !important; color: #b91c1c !important; }
         .status-yellow { background-color: #fef9c3 !important; color: #854d0e !important; } 
         .status-blue { background-color: #dbeafe !important; color: #1e40af !important; }
         .status-orange { background-color: #ffedd5 !important; color: #9a3412 !important; }
         .status-purple { background-color: #f3e8ff !important; color: #6b21a8 !important; }
         .status-green { background-color: #dcfce7 !important; color: #166534 !important; }
+
         .drag-handle { cursor: grab; color: #cbd5e1; padding: 5px; font-size: 26px; user-select: none; display: flex; align-items: center; justify-content: center; touch-action: none; -webkit-user-select: none; }
         .drag-handle:active { cursor: grabbing; color: #3b82f6; }
+
         .item-row { padding: 16px !important; margin-bottom: 12px !important; background: #fff; border: 1px solid #f1f5f9 !important; border-radius: 12px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .screenshot-mode .item-row { padding: 2px 10px !important; margin-bottom: 0px !important; border-radius: 0px !important; border: none !important; border-bottom: 1px solid #f1f5f9 !important; box-shadow: none !important; }
+        .screenshot-mode .item-row { padding: 4px 10px !important; margin-bottom: 0px !important; border-radius: 0px !important; border: none !important; border-bottom: 1px solid #f1f5f9 !important; box-shadow: none !important; width: 100% !important; }
         .screenshot-mode #configRows { gap: 0 !important; space-y: 0 !important; }
-        .screenshot-mode .selected-badge { font-size: 10px !important; line-height: 1.1 !important; margin-bottom: 0px !important; }
+        .screenshot-mode .selected-badge { font-size: 11px !important; line-height: 1.2 !important; margin-bottom: 2px !important; display: block !important; width: 100% !important; }
         .screenshot-mode #screenshot-header { margin-bottom: 8px !important; padding-bottom: 4px !important; }
-        .screenshot-mode #screenshot-footer { padding: 6px 12px !important; display: block !important; }
-        #screenshot-area { background: white; padding: 10px; border-radius: 8px; }
+        .screenshot-mode #screenshot-footer { padding: 8px 12px !important; display: block !important; }
+
+        /* 讓截圖範圍更穩定 */
+        #screenshot-area { background: white; padding: 10px; border-radius: 12px; }
+
         .inv-item-row { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
         .inv-item-main { display: flex; align-items: center; gap: 10px; }
         .inv-name-area { flex: 1; min-width: 0; }
@@ -49,14 +57,17 @@
         .val-input { border: none !important; background: transparent !important; width: 45px; font-weight: 900; font-size: 13px; text-align: right; padding: 0 !important; }
         .p-input { color: #3b82f6; } 
         .c-input { color: #ef4444 !important; font-weight: 900 !important; } 
+
         .sup-btn { font-size: 10px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 4px; border: 1px solid #e2e8f0; color: #cbd5e1; font-weight: 900; transition: all 0.2s; background: white; flex-shrink: 0; }
         .sup-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
         .stock-btn { font-size: 11px; padding: 4px 8px; border-radius: 6px; font-weight: 900; border: 1px solid #e2e8f0; cursor: pointer; min-width: 50px; flex-shrink: 0; }
         .stock-btn.active { background: #22c55e; color: white; border-color: #22c55e; }
         .stock-btn.oos { background: #ef4444; color: white; border-color: #ef4444; }
+
         .no-screenshot { display: block; }
         .screenshot-mode .no-screenshot { display: none !important; }
         #screenshotNav { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 50000; width: 90%; max-width: 450px; display: flex; gap: 10px; }
+        
         #adminToggleContainer { position: fixed; bottom: 25px; left: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
         .floating-label { background: #fff; padding: 10px 16px; border-radius: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: 2px solid #e2e8f0; display: flex; align-items: center; gap: 8px; cursor: pointer; }
     </style>
@@ -165,7 +176,6 @@
         <div id="tab-orders" class="page-content hidden"><input type="text" id="search-orders" oninput="renderRecords()" placeholder="🔍 搜尋訂單" class="w-full mb-3 p-3 rounded-xl border-2"><div id="orderList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
         <div id="tab-completed" class="page-content hidden"><input type="text" id="search-completed" oninput="renderRecords()" placeholder="🔍 搜尋結案" class="w-full mb-3 p-3 rounded-xl border-2"><div id="completedList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
         <div id="tab-stats" class="page-content hidden"><div id="statsContent" class="space-y-4"></div></div>
-        
         <div id="tab-inventory" class="page-content hidden">
             <div class="card p-4">
                 <div class="flex justify-between items-center mb-2">
@@ -234,26 +244,11 @@
         calculate();
     }
 
-    function initDragAndDrop() {
-        const main = document.getElementById('inventoryEditor');
-        if(main) {
-            if (main.sortableInstance) main.sortableInstance.destroy();
-            main.sortableInstance = new Sortable(main, { handle: '.cat-drag-handle', animation: 250, delay: 150, delayOnTouchOnly: true, forceFallback: true, onEnd: function() { catOrder = Array.from(main.querySelectorAll('.category-drag-item')).map(el => el.dataset.catname); }});
-        }
-        document.querySelectorAll('.item-drag-container').forEach(c => {
-            if (c.sortableInstance) c.sortableInstance.destroy();
-            const cat = c.dataset.cat;
-            c.sortableInstance = new Sortable(c, { handle: '.item-drag-handle', animation: 250, delay: 150, delayOnTouchOnly: true, forceFallback: true, onEnd: function() { const rows = Array.from(c.querySelectorAll('.item-drag-row')); const old = [...(inv[cat] || [])]; inv[cat] = rows.map(r => old[parseInt(r.dataset.originalidx)]); renderInventoryEditor(); }});
-        });
-    }
-
     function renderInventoryEditor() { 
         const area = document.getElementById('inventoryEditor'); if (!area) return; const scrollPos = window.scrollY; area.innerHTML = ''; 
         const query = (invSearchKeyword || "").toLowerCase();
         catOrder.forEach((cat, cIdx) => { 
-            const items = inv[cat] || [];
-            const catMatch = cat.toLowerCase().includes(query);
-            const filteredItems = items.filter(item => item.name.toLowerCase().includes(query));
+            const items = inv[cat] || []; const catMatch = cat.toLowerCase().includes(query); const filteredItems = items.filter(item => item.name.toLowerCase().includes(query));
             if (query && !catMatch && filteredItems.length === 0) return;
             const isCollapsed = collapsedCats[cat]; const sec = document.createElement('div'); sec.className = "bg-gray-100 p-3 rounded-xl border-2 mb-4 category-drag-item"; sec.dataset.catname = cat; 
             sec.innerHTML = `<div class="flex justify-between items-center ${isCollapsed?'':'mb-4'}"><div class="flex items-center gap-2"><span class="drag-handle cat-drag-handle">≡</span><input class="font-black text-base text-blue-700 border-none bg-transparent p-0 w-40" value="${cat}" onchange="renameCat(${cIdx}, this.value)"></div><div class="flex items-center gap-2"><button onclick="collapsedCats['${cat}']=!collapsedCats['${cat}'];renderInventoryEditor();" class="px-3 py-1 bg-white border rounded-lg font-black text-[10px] shadow-sm">${isCollapsed?'展開 +':'收合 -'}</button><button onclick="removeCat(${cIdx})" class="text-red-300 hover:text-red-500 text-2xl">×</button></div></div><div id="edit-${cat}" class="space-y-3 item-drag-container ${isCollapsed?'hidden':''}" data-cat="${cat}"></div><button onclick="addInvItem('${cat}')" class="w-full text-xs font-bold bg-white mt-4 py-3 rounded-xl border-2 border-dashed border-gray-300 text-gray-400 ${isCollapsed?'hidden':''}">+ 新增零件品項</button>`; 
@@ -273,17 +268,11 @@
         setTimeout(() => { initDragAndDrop(); window.scrollTo(0, scrollPos); }, 50);
     }
 
-    function toggleItemPriceMode() { const i = document.getElementById('itemPriceToggle').checked; if(i) document.getElementById('mainBody').classList.remove('hide-item-prices'); else document.getElementById('mainBody').classList.add('hide-item-prices'); }
-    function toggleItemCostMode() { const i = document.getElementById('itemCostToggle').checked; if(i) document.getElementById('mainBody').classList.remove('hide-item-costs'); else document.getElementById('mainBody').classList.add('hide-item-costs'); }
-    function toggleAdminMode() { const i = document.getElementById('adminToggle').checked; if(i) document.getElementById('mainBody').classList.remove('hide-admin-box'); else document.getElementById('mainBody').classList.add('hide-admin-box'); }
-    function toggleSSTotalMode() { const i = document.getElementById('ssTotalToggle').checked; if(i) document.getElementById('mainBody').classList.remove('ss-hide-totals'); else document.getElementById('mainBody').classList.add('ss-hide-totals'); }
-
     function saveRecord(st) { 
         const id = editingRecordId ? String(editingRecordId) : String(Date.now()); 
-        const oldR = records.find(x => String(x.id) === id);
-        const status = st === 'current' ? (oldR ? (oldR.status || 'draft') : 'draft') : st;
-        const rawData = { id, time: (oldR ? oldR.time : new Date().toLocaleString()), name: document.getElementById('custName').value || "", custPhone: document.getElementById('custPhone').value || "", custAddr: document.getElementById('custAddr').value || "", custWarranty: document.getElementById('custWarranty').value || "", seller: document.getElementById('infoSeller').value || "朱冠穎", orderMemo: document.getElementById('orderMemo').value || "", paymentStatus: document.getElementById('infoPayment').value || "未付款", selections: currentSelections || {}, total: document.getElementById('ui-totalSale').innerText || "$0", discount: document.getElementById('discountAmt').value || 0, noCard: document.getElementById('noCardTotal').value || "", manualTotal: document.getElementById('manualTotal').value || "", status, progress: (oldR ? oldR.progress : "待處理"), notShipped: (oldR ? (oldR.notShipped || {}) : {}) }; 
-        db.ref('records/' + id).update(rawData).then(() => { alert('💾 儲存修訂成功！'); resetForm(); showTab(status === 'draft' ? 'drafts' : (status === 'order' ? 'orders' : 'completed')); });
+        const oldR = records.find(x => String(x.id) === id); const status = st === 'current' ? (oldR ? (oldR.status || 'draft') : 'draft') : st;
+        const rawData = { id, time: (oldR ? oldR.time : new Date().toLocaleString()), name: document.getElementById('custName').value || "", custPhone: document.getElementById('custPhone').value || "", custAddr: document.getElementById('custAddr').value || "", custWarranty: document.getElementById('custWarranty').value || "", seller: document.getElementById('infoSeller').value || "江鈞宇", orderMemo: document.getElementById('orderMemo').value || "", paymentStatus: document.getElementById('infoPayment').value || "未付款", selections: currentSelections || {}, total: document.getElementById('ui-totalSale').innerText || "$0", discount: document.getElementById('discountAmt').value || 0, noCard: document.getElementById('noCardTotal').value || "", manualTotal: document.getElementById('manualTotal').value || "", status, progress: (oldR ? oldR.progress : "待處理"), notShipped: (oldR ? (oldR.notShipped || {}) : {}) }; 
+        db.ref('records/' + id).update(rawData).then(() => { alert('💾 儲存成功！'); resetForm(); showTab(status === 'draft' ? 'drafts' : (status === 'order' ? 'orders' : 'completed')); });
     }
 
     function renderRecords() {
@@ -293,31 +282,63 @@
             const status = r.status || 'draft'; if (!lists[status]) return;
             const pOpts = ["待處理", "已叫貨", "組裝中", "測試中", "已完工", "已寄出"].map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
             const payOpts = ["未付款", "已付訂金", "已付清"].map(p => `<option value="${p}" ${(r.paymentStatus||"未付款")===p?'selected':''}>${p}</option>`).join('');
-            let unshippedHtml = "";
-            if (r.notShipped) { Object.keys(r.notShipped).forEach(cat => { (r.notShipped[cat] || []).forEach(idx => { const target = (inv[cat] || [])[idx]; if (target) unshippedHtml += `<div class="text-[10px] text-red-500 font-black mt-1">🔴 未出貨：[${cat}] ${target.name}</div>`; }); }); }
+            let unshippedHtml = ""; if (r.notShipped) { Object.keys(r.notShipped).forEach(cat => { (r.notShipped[cat] || []).forEach(idx => { const target = (inv[cat] || [])[idx]; if (target) unshippedHtml += `<div class="text-[10px] text-red-500 font-black mt-1">🔴 未出貨：[${cat}] ${target.name}</div>`; }); }); }
             const div = document.createElement('div'); div.className = "p-4 border-2 rounded-xl bg-white shadow-sm space-y-3";
             div.innerHTML = `<div class="flex justify-between items-start"><div><div class="text-[10px] text-gray-400">${r.time}</div><div class="text-base font-black">${r.name || '無名氏'}</div><div class="text-blue-600 font-black text-lg">${r.total}</div>${unshippedHtml}</div><div class="text-right"><span class="bg-blue-100 text-blue-600 text-[10px] px-2 py-1 rounded-full">${r.seller}</span><div class="mt-2"><select onchange="db.ref('records/'+'${r.id}'+'/progress').set(this.value)" class="text-[10px] font-bold px-1 rounded ${getStatusClass(r.progress)}">${pOpts}</select></div><div class="mt-1"><select onchange="db.ref('records/'+'${r.id}'+'/paymentStatus').set(this.value)" class="text-[10px] font-bold px-1 rounded ${getPayClass(r.paymentStatus||'未付款')}">${payOpts}</select></div></div></div><div class="flex gap-1 pt-3 border-t"><button onclick="editRecord('${r.id}')" class="flex-1 py-2 bg-blue-600 text-white text-[10px] rounded-lg font-black">編輯</button><button onclick="openShipmentModal('${r.id}')" class="flex-1 py-2 bg-gray-50 text-gray-500 text-[10px] rounded-lg font-black border">🚚 出貨</button>${status === 'draft' ? `<button onclick="db.ref('records/'+'${r.id}'+'/status').set('order')" class="bg-green-600 text-white px-2 rounded-lg text-[10px] font-bold">轉正式</button>` : `<button onclick="db.ref('records/'+'${r.id}'+'/status').set('completed')" class="bg-gray-600 text-white px-2 rounded-lg text-[10px] font-bold">結案</button>`}<button onclick="if(confirm('刪除？')) db.ref('records/'+'${r.id}').remove()" class="text-red-300 text-xl px-1">✕</button></div>`;
             lists[status].appendChild(div);
         });
     }
 
-    function renderStats() {
-        const content = document.getElementById('statsContent'); if(!content) return; let monthlyData = {};
-        records.forEach(r => { if(r.status === 'draft') return; const dateParts = r.time.split('/'); const monthKey = `${dateParts[0]}/${dateParts[1]}`; if(!monthlyData[monthKey]) monthlyData[monthKey] = { revenue: 0, cost: 0, profit: 0, count: 0, taxTotal: 0 }; 
-        const rev = parseInt(r.total.replace(/[^0-9.-]+/g,"")) || 0; const tax = Math.round(rev - (rev / 1.05)); monthlyData[monthKey].taxTotal += tax;
-        let itemCost = 0; for(let cat in r.selections) { r.selections[cat].forEach(s => { let c = (s.c !== undefined) ? Number(s.c) : 0; if(!s.c) { const item = (inv[cat] || [])[s.idx]; if(item) c = Number(item.c || 0); } itemCost += (c * (s.qty || 1)); }); } 
-        monthlyData[monthKey].revenue += rev; monthlyData[monthKey].cost += itemCost; monthlyData[monthKey].count += 1; });
-        Object.keys(monthlyData).forEach(k => { monthlyData[k].profit = Math.round((monthlyData[k].revenue / 1.05) - monthlyData[k].cost); });
-        content.innerHTML = Object.keys(monthlyData).sort((a,b)=>b.localeCompare(a)).map(m => `<div class="card p-4"><div class="text-lg font-black text-gray-800 mb-2">${m} 績效統計</div><div class="grid grid-cols-2 md:grid-cols-4 gap-2"><div><div class="text-[10px] text-gray-400">總收</div><div class="text-blue-600 font-bold">$${monthlyData[m].revenue.toLocaleString()}</div></div><div><div class="text-[10px] text-gray-400">成本</div><div class="text-red-500 font-bold">$${monthlyData[m].cost.toLocaleString()}</div></div><div><div class="text-[10px] text-gray-400">稅金</div><div class="text-orange-600 font-bold">$${monthlyData[m].taxTotal.toLocaleString()}</div></div><div><div class="text-[10px] text-gray-400">淨利</div><div class="text-green-600 font-bold font-black">$${monthlyData[m].profit.toLocaleString()}</div></div></div></div>`).join('');
-    }
-
-    function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); const fsBtn = document.getElementById('floatingSaveBtn'); if(t === 'inventory') { fsBtn.classList.remove('hidden'); fsBtn.style.display = 'flex'; renderInventoryEditor(); } else { fsBtn.classList.add('hidden'); fsBtn.style.display = 'none'; } renderRecords(); if(t==='stats') renderStats(); }
+    function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); const fsBtn = document.getElementById('floatingSaveBtn'); if(t === 'inventory') { fsBtn.classList.remove('hidden'); fsBtn.style.display = 'flex'; renderInventoryEditor(); } else { fsBtn.classList.add('hidden'); fsBtn.style.display = 'none'; } renderRecords(); }
     function editRecord(id) { const r = records.find(x => String(x.id) === String(id)); if(!r) return; editingRecordId = id; currentSelections = JSON.parse(JSON.stringify(r.selections || {})); document.getElementById('custName').value = r.name; document.getElementById('infoPayment').value = r.paymentStatus || '未付款'; renderConfig(); showTab('calc'); }
     function resetForm() { editingRecordId=null; currentSelections={}; document.querySelectorAll('#tab-calc input, #tab-calc textarea').forEach(i=>i.value=""); renderConfig(); }
     function goBack() { resetForm(); showTab('calc'); }
-    function enterScreenshotMode() { document.getElementById('ss-time').innerText = '日期：' + new Date().toLocaleString(); document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value).toLocaleString(); document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText; document.getElementById('ss-warranty-info').innerText = document.getElementById('custWarranty').value ? `🛡️ 保固：${document.getElementById('custWarranty').value}` : ''; document.getElementById('mainBody').classList.add('screenshot-mode'); document.getElementById('screenshot-header').style.display = 'block'; document.getElementById('screenshot-footer').style.display = 'block'; document.getElementById('screenshotNav').classList.remove('hidden'); renderConfig(); window.scrollTo(0,0); }
+    
+    function enterScreenshotMode() { 
+        document.getElementById('ss-time').innerText = '日期：' + new Date().toLocaleString(); 
+        document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value).toLocaleString(); 
+        document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText; 
+        document.getElementById('ss-warranty-info').innerText = document.getElementById('custWarranty').value ? `🛡️ 保固：${document.getElementById('custWarranty').value}` : ''; 
+        document.getElementById('mainBody').classList.add('screenshot-mode'); 
+        document.getElementById('screenshot-header').style.display = 'block'; 
+        document.getElementById('screenshot-footer').style.display = 'block'; 
+        document.getElementById('screenshotNav').classList.remove('hidden'); 
+        renderConfig(); window.scrollTo(0,0); 
+    }
+
     function exitScreenshotMode() { document.getElementById('mainBody').classList.remove('screenshot-mode'); document.getElementById('screenshot-header').style.display = 'none'; document.getElementById('screenshot-footer').style.display = 'none'; document.getElementById('screenshotNav').classList.add('hidden'); renderConfig(); }
-    function downloadQuoteImage() { const area = document.getElementById('screenshot-area'); html2canvas(area, { scale: 2, useCORS: true, backgroundColor: "#ffffff" }).then(canvas => { const link = document.createElement('a'); link.download = `神奇海螺報價單_${document.getElementById('custName').value || '未命名'}.png`; link.href = canvas.toDataURL(); link.click(); }); }
+    
+    // 修正後的一鍵下載圖片：解決排版跑掉
+    function downloadQuoteImage() {
+        const area = document.getElementById('screenshot-area');
+        const custName = document.getElementById('custName').value || "未命名";
+        
+        html2canvas(area, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: "#ffffff",
+            onclone: (clonedDoc) => {
+                // 在克隆的 DOM 中強制修正排版
+                const clonedArea = clonedDoc.getElementById('screenshot-area');
+                clonedArea.style.width = '380px'; // 強制 iPhone 適配寬度
+                clonedArea.style.padding = '15px';
+                
+                // 強制所有文字不自動縮放
+                clonedDoc.querySelectorAll('.selected-badge').forEach(el => {
+                    el.style.display = 'block';
+                    el.style.width = '100%';
+                    el.style.wordBreak = 'break-all';
+                    el.style.fontSize = '12px';
+                });
+            }
+        }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `神奇海螺報價單_${custName}_${new Date().toLocaleDateString()}.png`;
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        });
+    }
+
     function toggleAllCats(s) { catOrder.forEach(c => { collapsedCats[c] = s; }); renderInventoryEditor(); }
     function toggleSup(cat, idx, s) { if(!inv[cat][idx].sups) inv[cat][idx].sups = []; const i = inv[cat][idx].sups.indexOf(s); if(i > -1) inv[cat][idx].sups.splice(i, 1); else inv[cat][idx].sups.push(s); renderInventoryEditor(); }
     function renameCat(idx, n) { const o = catOrder[idx]; inv[n] = inv[o]; delete inv[o]; catOrder[idx] = n; }
