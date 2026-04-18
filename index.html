@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        /* 絕對保留原始間距設定 */
+        /* 嚴格保留：你的 iPhone 專屬間距設定 */
         body { background-color: #f8fafc; font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; padding-top: 105px !important; padding-bottom: 300px !important; font-size: 14px; color: #334155; line-height: 1.5; }
         .tab-active { border-bottom: 3px solid #3b82f6; color: #3b82f6; font-weight: bold; }
         .card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
@@ -338,19 +338,19 @@
             }
             const div = document.createElement('div'); div.className = "p-4 border-2 rounded-xl bg-white shadow-sm space-y-3";
             
-            // 重要修正：將 openShipmentModal 的 ID 包裹在引號內，防止過長 ID 跑掉
+            // 關鍵修正：確保所有 onclick 傳入的 ID 都有用單引號引起來
             const shipmentBtn = (status === 'order' || status === 'completed') ? `<button onclick="openShipmentModal('${r.id}')" class="flex-1 py-2 bg-gray-50 text-gray-500 text-[10px] rounded-lg font-black border">🚚 出貨管理</button>` : '';
             const noCardVal = (r.noCard && r.noCard !== "") ? Number(r.noCard).toLocaleString() : null;
             
             let actionButtons = "";
             if (status === 'draft') {
-                actionButtons = `<button onclick="if(confirm('轉正式訂單？')) db.ref('records/'+'${r.id}'+'/status').set('order')" class="bg-green-600 text-white px-2 rounded-lg text-[10px] font-bold">轉正式</button>`;
+                actionButtons = `<button onclick="if(confirm('轉正式訂單？')) db.ref('records/' + '${r.id}' + '/status').set('order')" class="bg-green-600 text-white px-2 rounded-lg text-[10px] font-bold">轉正式</button>`;
             } else if (status === 'order') {
                 actionButtons = `
-                <button onclick="if(confirm('要將此訂單退回草稿嗎？')) db.ref('records/'+'${r.id}'+'/status').set('draft')" class="bg-amber-500 text-white px-2 rounded-lg text-[10px] font-bold">退回草稿</button>
-                <button onclick="if(confirm('結案？')) db.ref('records/'+'${r.id}'+'/status').set('completed')" class="bg-gray-600 text-white px-2 rounded-lg text-[10px] font-bold">結案</button>`;
+                <button onclick="if(confirm('要將此訂單退回草稿嗎？')) db.ref('records/' + '${r.id}' + '/status').set('draft')" class="bg-amber-500 text-white px-2 rounded-lg text-[10px] font-bold">退回草稿</button>
+                <button onclick="if(confirm('結案？')) db.ref('records/' + '${r.id}' + '/status').set('completed')" class="bg-gray-600 text-white px-2 rounded-lg text-[10px] font-bold">結案</button>`;
             } else if (status === 'completed') {
-                actionButtons = `<button onclick="if(confirm('要退回正式訂單重新處理嗎？')) db.ref('records/'+'${r.id}'+'/status').set('order')" class="bg-blue-500 text-white px-2 rounded-lg text-[10px] font-bold">退回正式</button>`;
+                actionButtons = `<button onclick="if(confirm('要退回正式訂單重新處理嗎？')) db.ref('records/' + '${r.id}' + '/status').set('order')" class="bg-blue-500 text-white px-2 rounded-lg text-[10px] font-bold">退回正式</button>`;
             }
 
             div.innerHTML = `<div class="flex justify-between items-start">
@@ -363,15 +363,15 @@
                 </div>
                 <div class="text-right flex flex-col items-end gap-2">
                     <span class="bg-blue-100 text-blue-600 text-[10px] px-2 py-1 rounded-full">${r.seller||'業務'}</span>
-                    <select onchange="db.ref('records/'+'${r.id}'+'/progress').set(this.value)" class="text-[10px] font-bold px-1 rounded ${getStatusClass(r.progress)}">${pOpts}</select>
-                    <select onchange="db.ref('records/'+'${r.id}'+'/payStatus').set(this.value)" class="text-[10px] font-black px-2 py-1 rounded-lg ${getPayClass(r.payStatus)}">${payOpts}</select>
+                    <select onchange="db.ref('records/' + '${r.id}' + '/progress').set(this.value)" class="text-[10px] font-bold px-1 rounded ${getStatusClass(r.progress)}">${pOpts}</select>
+                    <select onchange="db.ref('records/' + '${r.id}' + '/payStatus').set(this.value)" class="text-[10px] font-black px-2 py-1 rounded-lg ${getPayClass(r.payStatus)}">${payOpts}</select>
                 </div>
             </div>
             <div class="flex gap-1 pt-3 border-t">
                 <button onclick="editRecord('${r.id}')" class="flex-1 py-2 bg-blue-600 text-white text-[10px] rounded-lg font-black">編輯</button>
                 ${shipmentBtn}
                 ${actionButtons}
-                <button onclick="if(confirm('確定刪除紀錄？')) db.ref('records/'+'${r.id}').remove()" class="text-red-300 text-xl px-1">✕</button>
+                <button onclick="if(confirm('確定刪除紀錄？')) db.ref('records/' + '${r.id}').remove()" class="text-red-300 text-xl px-1">✕</button>
             </div>`;
             lists[status].appendChild(div);
         });
@@ -415,9 +415,10 @@
 
     function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); const fsBtn = document.getElementById('floatingSaveBtn'); if(t === 'inventory') { fsBtn.classList.remove('hidden'); fsBtn.style.display = 'flex'; renderInventoryEditor(); } else { fsBtn.classList.add('hidden'); fsBtn.style.display = 'none'; } renderRecords(); if(t==='stats') renderStats(); }
     
-    // 重要修正：使用 String() 包裹 ID
+    // 修正：增加對 id 的類型轉換防護
     function editRecord(id) { 
-        const r = records.find(x => String(x.id) === String(id)); if(!r) return; 
+        const r = records.find(x => String(x.id) === String(id)); 
+        if(!r) { alert('找不到該筆紀錄，請重新整理頁面。'); return; }
         editingRecordId = id; currentSelections = JSON.parse(JSON.stringify(r.selections || {})); 
         document.getElementById('custName').value = r.name || ''; document.getElementById('custPhone').value = r.custPhone || ''; 
         document.getElementById('discountAmt').value = r.discount || 0; document.getElementById('manualTotal').value = r.manualTotal || ''; 
@@ -445,13 +446,25 @@
     function updateSubItem(idx, type, val) { const sel = currentSelections[currentCat].find(s => s.idx === idx); if(type==='qty') sel.qty = Math.max(1, sel.qty + val); renderConfig(); renderModalList(); }
     function toggleGift(idx) { const sel = currentSelections[currentCat].find(s => s.idx === idx); if(sel) { sel.isGift = !sel.isGift; renderConfig(); renderModalList(); } }
 
-    // 重要修正：使用 String() 強制轉型比對，確保過長 ID 不會遺失
+    // 關鍵修正：強化 ID 匹配邏輯
     function openShipmentModal(id) { 
         const r = records.find(x => String(x.id) === String(id)); 
-        if(!r) return; 
+        if(!r) { alert('找不到訂單資訊。'); return; } 
         const list = document.getElementById('shipmentList'); list.innerHTML = ''; 
         const ns = r.notShipped || {}; 
-        catOrder.forEach(cat => { (r.selections[cat] || []).forEach((sel, idx) => { let target = (inv[cat] || [])[sel.idx]; if (target) { const isNS = ns[cat] && ns[cat].includes(idx); list.innerHTML += `<label class="flex items-center gap-3 p-4 border-2 rounded-xl bg-white ${isNS?'border-red-500 bg-red-50':'border-gray-100'}"><input type="checkbox" class="w-6 h-6" ${isNS?'checked':''} onchange="updateItemShipment('${id}', '${cat}', ${idx}, this.checked)"><div class="flex-1 text-sm font-bold">${target.name}</div></label>`; } }); }); 
+        
+        // 增強防呆：確保 selections 存在
+        if (!r.selections) { alert('該訂單沒有任何選取項目。'); return; }
+
+        catOrder.forEach(cat => { 
+            (r.selections[cat] || []).forEach((sel, idx) => { 
+                let target = (inv[cat] || [])[sel.idx]; 
+                if (target) { 
+                    const isNS = ns[cat] && ns[cat].includes(idx); 
+                    list.innerHTML += `<label class="flex items-center gap-3 p-4 border-2 rounded-xl bg-white ${isNS?'border-red-500 bg-red-50':'border-gray-100'}"><input type="checkbox" class="w-6 h-6" ${isNS?'checked':''} onchange="updateItemShipment('${id}', '${cat}', ${idx}, this.checked)"><div class="flex-1 text-sm font-bold">${target.name}</div></label>`; 
+                } 
+            }); 
+        }); 
         document.getElementById('shipmentModal').classList.remove('hidden'); 
     }
 
