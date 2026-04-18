@@ -67,7 +67,6 @@
         #adminToggleContainer { position: fixed; bottom: 25px; left: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
         .floating-label { background: #fff; padding: 10px 16px; border-radius: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: 2px solid #e2e8f0; display: flex; align-items: center; gap: 8px; cursor: pointer; }
         
-        /* 統計卡片樣式增強 */
         .stats-card { background: white; padding: 16px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
     </style>
 </head>
@@ -316,7 +315,6 @@
             const shipmentBtn = (status === 'order' || status === 'completed') ? `<button onclick="openShipmentModal(${r.id})" class="flex-1 py-2 bg-gray-50 text-gray-500 text-[10px] rounded-lg font-black border">🚚 出貨管理</button>` : '';
             const noCardVal = (r.noCard && r.noCard !== "") ? Number(r.noCard).toLocaleString() : null;
             
-            // 修訂按鈕邏輯：增加回溯功能
             let actionButtons = "";
             if (status === 'draft') {
                 actionButtons = `<button onclick="if(confirm('轉正式訂單？')) db.ref('records/'+${r.id}+'/status').set('order')" class="bg-green-600 text-white px-2 rounded-lg text-[10px] font-bold">轉正式</button>`;
@@ -360,7 +358,7 @@
             if(!monthlyData[monthKey]) monthlyData[monthKey] = { revenue: 0, cost: 0, taxTotal: 0, profit: 0, count: 0 }; 
             
             const rev = parseInt(r.total.replace(/[^0-9.-]+/g,"")) || 0; 
-            const tax = Math.round(rev - (rev / 1.05)); // 計算單筆訂單稅額
+            const tax = Math.round(rev - (rev / 1.05));
             
             let itemCost = 0; 
             for(let cat in r.selections) { 
@@ -372,7 +370,7 @@
             } 
             monthlyData[monthKey].revenue += rev; 
             monthlyData[monthKey].cost += itemCost; 
-            monthlyData[monthKey].taxTotal += tax; // 累計稅額
+            monthlyData[monthKey].taxTotal += tax; 
             monthlyData[monthKey].count += 1; 
         });
         
