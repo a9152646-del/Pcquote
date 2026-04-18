@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v11.0</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v11.1</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -21,7 +21,6 @@
         .price-tag { color: #94a3b8; font-weight: 400; font-size: 12px; margin-left: 4px; }
         .cost-tag { color: #ef4444; font-weight: 700; font-size: 11px; margin-left: 6px; }
         
-        /* 控制顯示隱藏的 CSS */
         body.hide-item-prices .price-tag { display: none !important; }
         body.hide-item-costs .cost-tag { display: none !important; }
         body.hide-admin-box #sellerBox { display: none !important; }
@@ -175,7 +174,9 @@
         <div id="tab-drafts" class="page-content hidden"><input type="text" id="search-drafts" oninput="renderRecords()" placeholder="🔍 搜尋草稿" class="w-full mb-3 p-3 rounded-xl border-2"><div id="draftList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
         <div id="tab-orders" class="page-content hidden"><input type="text" id="search-orders" oninput="renderRecords()" placeholder="🔍 搜尋訂單" class="w-full mb-3 p-3 rounded-xl border-2"><div id="orderList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
         <div id="tab-completed" class="page-content hidden"><input type="text" id="search-completed" oninput="renderRecords()" placeholder="🔍 搜尋結案" class="w-full mb-3 p-3 rounded-xl border-2"><div id="completedList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div></div>
+        
         <div id="tab-stats" class="page-content hidden"><div id="statsContent" class="space-y-4"></div></div>
+        
         <div id="tab-inventory" class="page-content hidden">
             <div class="card p-4">
                 <div class="flex justify-between items-center mb-2">
@@ -200,14 +201,12 @@
     let inv = {}; let catOrder = []; let records = []; let templates = {}; let currentSelections = {}; let editingRecordId = null; let currentCat = "";
     let collapsedCats = {}; let invSearchKeyword = "";
 
-    // 【修復核心】暴力同步開關狀態
     function handleToggles() {
         const body = document.getElementById('mainBody');
         const price = document.getElementById('itemPriceToggle').checked;
         const cost = document.getElementById('itemCostToggle').checked;
         const admin = document.getElementById('adminToggle').checked;
         const ssTotal = document.getElementById('ssTotalToggle').checked;
-
         if(price) body.classList.remove('hide-item-prices'); else body.classList.add('hide-item-prices');
         if(cost) body.classList.remove('hide-item-costs'); else body.classList.add('hide-item-costs');
         if(admin) body.classList.remove('hide-admin-box'); else body.classList.add('hide-admin-box');
@@ -300,13 +299,38 @@
         });
     }
 
-    function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); if(t === 'inventory') renderInventoryEditor(); renderRecords(); }
+    // 【修復】重新加入統計函數
+    function renderStats() {
+        const content = document.getElementById('statsContent'); if(!content) return; let monthlyData = {};
+        records.forEach(r => { 
+            if(r.status === 'draft') return; 
+            const dateParts = r.time.split('/'); const monthKey = `${dateParts[0]}/${dateParts[1]}`; 
+            if(!monthlyData[monthKey]) monthlyData[monthKey] = { revenue: 0, cost: 0, profit: 0, count: 0, taxTotal: 0 }; 
+            const rev = parseInt(r.total.replace(/[^0-9.-]+/g,"")) || 0; 
+            const tax = Math.round(rev - (rev / 1.05));
+            monthlyData[monthKey].taxTotal += tax;
+            let itemCost = 0; 
+            for(let cat in r.selections) { 
+                r.selections[cat].forEach(s => { 
+                    let c = (s.c !== undefined) ? Number(s.c) : 0; 
+                    if(!s.c) { const item = (inv[cat] || [])[s.idx]; if(item) c = Number(item.c || 0); } 
+                    itemCost += (c * (s.qty || 1)); 
+                }); 
+            } 
+            monthlyData[monthKey].revenue += rev; monthlyData[monthKey].cost += itemCost; monthlyData[monthKey].count += 1; 
+        });
+        Object.keys(monthlyData).forEach(k => { monthlyData[k].profit = Math.round((monthlyData[k].revenue / 1.05) - monthlyData[k].cost); });
+        content.innerHTML = Object.keys(monthlyData).sort((a,b)=>b.localeCompare(a)).map(m => `<div class="card p-4"><div class="text-lg font-black text-gray-800 mb-2">${m} 績效統計</div><div class="grid grid-cols-2 md:grid-cols-4 gap-2"><div><div class="text-[10px] text-gray-400">總收</div><div class="text-blue-600 font-bold">$${monthlyData[m].revenue.toLocaleString()}</div></div><div><div class="text-[10px] text-gray-400">成本</div><div class="text-red-500 font-bold">$${monthlyData[m].cost.toLocaleString()}</div></div><div><div class="text-[10px] text-gray-400">稅金</div><div class="text-orange-600 font-bold">$${monthlyData[m].taxTotal.toLocaleString()}</div></div><div><div class="text-[10px] text-gray-400">淨利</div><div class="text-green-600 font-bold font-black">$${monthlyData[m].profit.toLocaleString()}</div></div></div></div>`).join('');
+    }
+
+    function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); if(t === 'inventory') renderInventoryEditor(); if(t === 'stats') renderStats(); renderRecords(); }
+    
     function editRecord(id) { const r = records.find(x => String(x.id) === String(id)); if(!r) return; editingRecordId = id; currentSelections = JSON.parse(JSON.stringify(r.selections || {})); 
     document.getElementById('custName').value = r.name || ''; document.getElementById('discountAmt').value = r.discount || 0; document.getElementById('manualTotal').value = r.manualTotal || ''; document.getElementById('infoPayment').value = r.paymentStatus || '未付款'; renderConfig(); showTab('calc'); }
     function resetForm() { editingRecordId=null; currentSelections={}; document.querySelectorAll('#tab-calc input, #tab-calc textarea').forEach(i=>i.value=""); renderConfig(); }
     function goBack() { resetForm(); showTab('calc'); }
     
-    function enterScreenshotMode() { document.getElementById('ss-time').innerText = '日期：' + new Date().toLocaleString(); document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value).toLocaleString(); document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText; document.getElementById('mainBody').classList.add('screenshot-mode'); document.getElementById('screenshot-header').style.display = 'block'; document.getElementById('screenshot-footer').style.display = 'block'; document.getElementById('screenshotNav').classList.remove('hidden'); renderConfig(); window.scrollTo(0,0); }
+    function enterScreenshotMode() { document.getElementById('ss-time').innerText = '日期：' + new Date().toLocaleString(); document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value).toLocaleString(); document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText; document.getElementById('ss-warranty-info').innerText = document.getElementById('custWarranty').value ? `🛡️ 保固：${document.getElementById('custWarranty').value}` : ''; document.getElementById('mainBody').classList.add('screenshot-mode'); document.getElementById('screenshot-header').style.display = 'block'; document.getElementById('screenshot-footer').style.display = 'block'; document.getElementById('screenshotNav').classList.remove('hidden'); renderConfig(); window.scrollTo(0,0); }
     function exitScreenshotMode() { document.getElementById('mainBody').classList.remove('screenshot-mode'); document.getElementById('screenshot-header').style.display = 'none'; document.getElementById('screenshot-footer').style.display = 'none'; document.getElementById('screenshotNav').classList.add('hidden'); renderConfig(); }
     
     function downloadQuoteImage() {
