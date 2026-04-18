@@ -327,18 +327,22 @@
             const payOpts = ["未付款", "已付訂金", "已付清"].map(pay => `<option value="${pay}" ${r.payStatus===pay?'selected':''}>${pay}</option>`).join('');
             const getPayClass = (p) => { if(p==='已付清') return 'pay-paid'; if(p==='已付訂金') return 'pay-deposit'; return 'pay-unpaid'; };
 
+            // 重要修正：列表顯示「未出貨」項目的正確邏輯
             let unshippedHtml = "";
             if (r.notShipped) {
                 Object.keys(r.notShipped).forEach(cat => {
-                    (r.notShipped[cat] || []).forEach(idx => {
-                        const target = (inv[cat] || [])[idx];
-                        if (target) unshippedHtml += `<div class="text-[10px] text-red-500 font-black mt-1">🔴 未出貨：[${cat}] ${target.name}</div>`;
+                    (r.notShipped[cat] || []).forEach(idxInSelections => {
+                        // idxInSelections 指的是該訂單該類別裡的第幾個選項
+                        const sel = (r.selections[cat] || [])[idxInSelections];
+                        if (sel) {
+                            const target = (inv[cat] || [])[sel.idx];
+                            if (target) unshippedHtml += `<div class="text-[10px] text-red-500 font-black mt-1">🔴 未出貨：[${cat}] ${target.name}</div>`;
+                        }
                     });
                 });
             }
-            const div = document.createElement('div'); div.className = "p-4 border-2 rounded-xl bg-white shadow-sm space-y-3";
             
-            // 關鍵修正：確保所有 onclick 傳入的 ID 都有用單引號引起來
+            const div = document.createElement('div'); div.className = "p-4 border-2 rounded-xl bg-white shadow-sm space-y-3";
             const shipmentBtn = (status === 'order' || status === 'completed') ? `<button onclick="openShipmentModal('${r.id}')" class="flex-1 py-2 bg-gray-50 text-gray-500 text-[10px] rounded-lg font-black border">🚚 出貨管理</button>` : '';
             const noCardVal = (r.noCard && r.noCard !== "") ? Number(r.noCard).toLocaleString() : null;
             
@@ -415,7 +419,6 @@
 
     function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); const fsBtn = document.getElementById('floatingSaveBtn'); if(t === 'inventory') { fsBtn.classList.remove('hidden'); fsBtn.style.display = 'flex'; renderInventoryEditor(); } else { fsBtn.classList.add('hidden'); fsBtn.style.display = 'none'; } renderRecords(); if(t==='stats') renderStats(); }
     
-    // 修正：增加對 id 的類型轉換防護
     function editRecord(id) { 
         const r = records.find(x => String(x.id) === String(id)); 
         if(!r) { alert('找不到該筆紀錄，請重新整理頁面。'); return; }
@@ -446,32 +449,28 @@
     function updateSubItem(idx, type, val) { const sel = currentSelections[currentCat].find(s => s.idx === idx); if(type==='qty') sel.qty = Math.max(1, sel.qty + val); renderConfig(); renderModalList(); }
     function toggleGift(idx) { const sel = currentSelections[currentCat].find(s => s.idx === idx); if(sel) { sel.isGift = !sel.isGift; renderConfig(); renderModalList(); } }
 
-    // 關鍵修正：強化 ID 匹配邏輯
     function openShipmentModal(id) { 
         const r = records.find(x => String(x.id) === String(id)); 
-        if(!r) { alert('找不到訂單資訊。'); return; } 
+        if(!r || !r.selections) return; 
         const list = document.getElementById('shipmentList'); list.innerHTML = ''; 
         const ns = r.notShipped || {}; 
-        
-        // 增強防呆：確保 selections 存在
-        if (!r.selections) { alert('該訂單沒有任何選取項目。'); return; }
 
         catOrder.forEach(cat => { 
-            (r.selections[cat] || []).forEach((sel, idx) => { 
+            (r.selections[cat] || []).forEach((sel, idxInSelections) => { 
                 let target = (inv[cat] || [])[sel.idx]; 
                 if (target) { 
-                    const isNS = ns[cat] && ns[cat].includes(idx); 
-                    list.innerHTML += `<label class="flex items-center gap-3 p-4 border-2 rounded-xl bg-white ${isNS?'border-red-500 bg-red-50':'border-gray-100'}"><input type="checkbox" class="w-6 h-6" ${isNS?'checked':''} onchange="updateItemShipment('${id}', '${cat}', ${idx}, this.checked)"><div class="flex-1 text-sm font-bold">${target.name}</div></label>`; 
+                    const isNS = ns[cat] && ns[cat].includes(idxInSelections); 
+                    list.innerHTML += `<label class="flex items-center gap-3 p-4 border-2 rounded-xl bg-white ${isNS?'border-red-500 bg-red-50':'border-gray-100'}"><input type="checkbox" class="w-6 h-6" ${isNS?'checked':''} onchange="updateItemShipment('${id}', '${cat}', ${idxInSelections}, this.checked)"><div class="flex-1 text-sm font-bold">${target.name}</div></label>`; 
                 } 
             }); 
         }); 
         document.getElementById('shipmentModal').classList.remove('hidden'); 
     }
 
-    function updateItemShipment(id, cat, idx, isNotShipped) { 
+    function updateItemShipment(id, cat, idxInSelections, isNotShipped) { 
         const r = records.find(x => String(x.id) === String(id)); 
         if(!r) return; let ns = r.notShipped || {}; if(!ns[cat]) ns[cat] = []; 
-        if(isNotShipped) { if(!ns[cat].includes(idx)) ns[cat].push(idx); } else { ns[cat] = ns[cat].filter(i => i !== idx); } 
+        if(isNotShipped) { if(!ns[cat].includes(idxInSelections)) ns[cat].push(idxInSelections); } else { ns[cat] = ns[cat].filter(i => i !== idxInSelections); } 
         db.ref('records/' + id + '/notShipped').set(ns); 
     }
 
