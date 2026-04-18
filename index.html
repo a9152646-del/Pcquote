@@ -10,8 +10,8 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        /* 修正：移除頂部過大的空白，優化底部間距 */
         body { 
             background-color: #f8fafc; 
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
@@ -34,6 +34,11 @@
         body.hide-admin-box #sellerBox { display: none !important; }
         body.ss-hide-totals .ss-total-row { display: none !important; }
         
+        /* 付款狀態顏色 */
+        .pay-unpaid { background-color: #fee2e2 !important; color: #b91c1c !important; } /* 紅色 */
+        .pay-deposit { background-color: #ffedd5 !important; color: #9a3412 !important; } /* 橘色 */
+        .pay-paid { background-color: #dcfce7 !important; color: #166534 !important; }    /* 綠色 */
+
         .status-red { background-color: #fee2e2 !important; color: #b91c1c !important; }
         .status-yellow { background-color: #fef9c3 !important; color: #854d0e !important; } 
         .status-blue { background-color: #dbeafe !important; color: #1e40af !important; }
@@ -71,14 +76,14 @@
 
         .no-screenshot { display: block; }
         .screenshot-mode .no-screenshot { display: none !important; }
-        #screenshotNav { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 50000; }
+        
+        /* 修正：截圖選單樣式 */
+        #screenshotNav { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 50000; display: flex; gap: 10px; }
         
         #adminToggleContainer { position: fixed; bottom: 15px; left: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
         .floating-label { background: #fff; padding: 8px 12px; border-radius: 50px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 6px; cursor: pointer; }
         
         .stats-card { background: white; padding: 16px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-
-        /* 修正：讓選單更穩定 */
         .tab-bar { position: sticky; top: 0; z-index: 100; background: white; border-bottom: 2px solid #e2e8f0; }
     </style>
 </head>
@@ -93,12 +98,15 @@
     <div id="adminToggleContainer" class="no-screenshot">
         <label class="floating-label"><span class="text-[10px] font-black text-blue-600">💰 顯示售價</span><input type="checkbox" id="itemPriceToggle" checked onchange="toggleItemPriceMode()" class="w-4 h-4"></label>
         <label class="floating-label"><span class="text-[10px] font-black text-red-500">🔴 顯示成本</span><input type="checkbox" id="itemCostToggle" onchange="toggleItemCostMode()" class="w-4 h-4"></label>
-        <label class="floating-label"><span class="text-[10px] font-black text-gray-700">📊 統計統計</span><input type="checkbox" id="adminToggle" checked onchange="toggleAdminMode()" class="w-4 h-4"></label>
+        <label class="floating-label"><span class="text-[10px] font-black text-gray-700">📊 獲利統計</span><input type="checkbox" id="adminToggle" checked onchange="toggleAdminMode()" class="w-4 h-4"></label>
     </div>
 
-    <div id="screenshotNav" class="hidden"><button onclick="exitScreenshotMode()" class="bg-gray-800 text-white px-8 py-4 rounded-full font-black shadow-2xl">🔙 返回報價單</button></div>
+    <div id="screenshotNav" class="hidden">
+        <button onclick="downloadScreenshot()" class="bg-blue-600 text-white px-6 py-4 rounded-full font-black shadow-2xl">💾 存成圖片</button>
+        <button onclick="exitScreenshotMode()" class="bg-gray-800 text-white px-6 py-4 rounded-full font-black shadow-2xl">🔙 返回</button>
+    </div>
 
-    <div class="max-w-7xl mx-auto w-full px-1">
+    <div class="max-w-7xl mx-auto w-full px-1" id="captureArea">
         <div id="screenshot-header" style="display: none;" class="text-center border-b-4 border-blue-600 pb-2 mb-2">
             <div class="text-xl font-black text-blue-900 tracking-widest">《報價單》</div>
             <div id="ss-time" class="text-[8px] text-gray-400 mt-1 font-mono font-bold"></div>
@@ -141,6 +149,14 @@
                             </div>
                             <input type="text" id="custAddr" placeholder="📦 地址 / 取貨方式" class="md:col-span-4">
                             <input type="text" id="custWarranty" placeholder="🛡️ 保固備註" class="md:col-span-4 font-bold text-blue-600">
+                            <div class="md:col-span-4 flex items-center gap-2">
+                                <label class="text-xs font-black text-gray-500">💵 付款狀態：</label>
+                                <select id="payStatus" class="flex-1 font-bold">
+                                    <option value="未付款">❌ 未付款</option>
+                                    <option value="已付訂金">🔸 已付訂金</option>
+                                    <option value="已付清">✅ 已付清</option>
+                                </select>
+                            </div>
                             <textarea id="orderMemo" placeholder="📝 內部備註" class="md:col-span-4 h-20 w-full"></textarea>
                         </div>
                     </div>
@@ -196,7 +212,6 @@
     </div>
 
     <script>
-    // 所有的 JavaScript 邏輯完全保留原始版本，確保功能不遺失
     const firebaseConfig = { apiKey: "AIzaSyDeCI3yFPr1v9KxOmko-qim2a7EtllEHKM", authDomain: "magic-conch-gaming.firebaseapp.com", databaseURL: "https://magic-conch-gaming-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "magic-conch-gaming", storageBucket: "magic-conch-gaming.firebasestorage.app", messagingSenderId: "105735978925", appId: "1:105735978925:web:3ec77acbfd344475322b24" };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
@@ -242,6 +257,25 @@
             container.innerHTML += `<div class="item-row cursor-pointer" onclick="openSelection('${cat}')"><div class="text-[10px] font-black text-blue-400 uppercase mb-1">${cat}</div><div class="flex flex-col">${badges || '<span class="text-gray-300 italic text-sm">未選中項目...</span>'}</div></div>`;
         });
         calculate();
+    }
+
+    // --- 新增：截圖存檔邏輯 ---
+    function downloadScreenshot() {
+        const captureArea = document.getElementById('captureArea');
+        const nav = document.getElementById('screenshotNav');
+        nav.style.display = 'none'; // 隱藏按鈕避免入鏡
+
+        html2canvas(captureArea, {
+            useCORS: true,
+            scale: 2, // 提高解析度
+            backgroundColor: "#f8fafc"
+        }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `神奇海螺電競報價_${new Date().getTime()}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+            nav.style.display = 'flex'; // 恢復顯示
+        });
     }
 
     function initDragAndDrop() {
@@ -296,6 +330,7 @@
             custWarranty: document.getElementById('custWarranty').value || "", 
             seller: document.getElementById('infoSeller').value || "朱冠穎", 
             orderMemo: document.getElementById('orderMemo').value || "", 
+            payStatus: document.getElementById('payStatus').value || "未付款", // 新增：存儲付款狀態
             selections: currentSelections || {}, 
             total: document.getElementById('ui-totalSale').innerText || "$0", 
             discount: document.getElementById('discountAmt').value || 0, 
@@ -314,6 +349,11 @@
         records.sort((a,b)=>b.id-a.id).forEach(r => {
             const status = r.status || 'draft'; if (!lists[status]) return;
             const pOpts = ["待處理", "已叫貨", "組裝中", "測試中", "已完工", "已寄出"].map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
+            
+            // --- 新增：付款狀態選單邏輯 ---
+            const payOpts = ["未付款", "已付訂金", "已付清"].map(pay => `<option value="${pay}" ${r.payStatus===pay?'selected':''}>${pay}</option>`).join('');
+            const getPayClass = (p) => { if(p==='已付清') return 'pay-paid'; if(p==='已付訂金') return 'pay-deposit'; return 'pay-unpaid'; };
+
             let unshippedHtml = "";
             if (r.notShipped) {
                 Object.keys(r.notShipped).forEach(cat => {
@@ -331,9 +371,7 @@
             if (status === 'draft') {
                 actionButtons = `<button onclick="if(confirm('轉正式訂單？')) db.ref('records/'+${r.id}+'/status').set('order')" class="bg-green-600 text-white px-2 rounded-lg text-[10px] font-bold">轉正式</button>`;
             } else if (status === 'order') {
-                actionButtons = `
-                <button onclick="if(confirm('要將此訂單退回草稿嗎？')) db.ref('records/'+${r.id}+'/status').set('draft')" class="bg-amber-500 text-white px-2 rounded-lg text-[10px] font-bold">退回草稿</button>
-                <button onclick="if(confirm('結案？')) db.ref('records/'+${r.id}+'/status').set('completed')" class="bg-gray-600 text-white px-2 rounded-lg text-[10px] font-bold">結案</button>`;
+                actionButtons = `<button onclick="if(confirm('要將此訂單退回草稿嗎？')) db.ref('records/'+${r.id}+'/status').set('draft')" class="bg-amber-500 text-white px-2 rounded-lg text-[10px] font-bold">退回草稿</button><button onclick="if(confirm('結案？')) db.ref('records/'+${r.id}+'/status').set('completed')" class="bg-gray-600 text-white px-2 rounded-lg text-[10px] font-bold">結案</button>`;
             } else if (status === 'completed') {
                 actionButtons = `<button onclick="if(confirm('要退回正式訂單重新處理嗎？')) db.ref('records/'+${r.id}+'/status').set('order')" class="bg-blue-500 text-white px-2 rounded-lg text-[10px] font-bold">退回正式</button>`;
             }
@@ -344,6 +382,7 @@
                     <div class="text-base font-black">${r.name || '無名氏'}</div>
                     <div class="text-blue-600 font-black text-lg">${r.total}</div>
                     ${noCardVal ? `<div class="text-[11px] text-orange-600 font-black mt-1">💳 無卡：$${noCardVal}</div>` : ''}
+                    <div class="mt-2"><select onchange="db.ref('records/'+${r.id}+'/payStatus').set(this.value)" class="text-[10px] font-black px-2 py-1 rounded-lg ${getPayClass(r.payStatus)}">${payOpts}</select></div>
                     <div class="mt-1">${unshippedHtml}</div>
                 </div>
                 <div class="text-right">
@@ -398,8 +437,34 @@
     }
 
     function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); const fsBtn = document.getElementById('floatingSaveBtn'); if(t === 'inventory') { fsBtn.classList.remove('hidden'); fsBtn.style.display = 'flex'; renderInventoryEditor(); } else { fsBtn.classList.add('hidden'); fsBtn.style.display = 'none'; } renderRecords(); if(t==='stats') renderStats(); }
-    function editRecord(id) { const r = records.find(x => String(x.id) === String(id)); if(!r) return; editingRecordId = id; currentSelections = JSON.parse(JSON.stringify(r.selections || {})); document.getElementById('custName').value = r.name || ''; document.getElementById('custPhone').value = r.custPhone || ''; document.getElementById('discountAmt').value = r.discount || 0; document.getElementById('manualTotal').value = r.manualTotal || ''; document.getElementById('noCardTotal').value = r.noCard || ''; document.getElementById('custAddr').value = r.custAddr || ''; document.getElementById('custWarranty').value = r.custWarranty || ''; document.getElementById('orderMemo').value = r.orderMemo || ''; renderConfig(); showTab('calc'); }
-    function resetForm() { editingRecordId=null; currentSelections={}; document.querySelectorAll('#tab-calc input, #tab-calc textarea').forEach(i=>i.value=""); document.getElementById('discountAmt').value=0; renderConfig(); }
+    
+    function editRecord(id) { 
+        const r = records.find(x => String(x.id) === String(id)); 
+        if(!r) return; 
+        editingRecordId = id; 
+        currentSelections = JSON.parse(JSON.stringify(r.selections || {})); 
+        document.getElementById('custName').value = r.name || ''; 
+        document.getElementById('custPhone').value = r.custPhone || ''; 
+        document.getElementById('discountAmt').value = r.discount || 0; 
+        document.getElementById('manualTotal').value = r.manualTotal || ''; 
+        document.getElementById('noCardTotal').value = r.noCard || ''; 
+        document.getElementById('custAddr').value = r.custAddr || ''; 
+        document.getElementById('custWarranty').value = r.custWarranty || ''; 
+        document.getElementById('orderMemo').value = r.orderMemo || ''; 
+        document.getElementById('payStatus').value = r.payStatus || "未付款"; // 新增：編輯時讀取付款狀態
+        renderConfig(); 
+        showTab('calc'); 
+    }
+
+    function resetForm() { 
+        editingRecordId=null; 
+        currentSelections={}; 
+        document.querySelectorAll('#tab-calc input, #tab-calc textarea').forEach(i=>i.value=""); 
+        document.getElementById('discountAmt').value=0; 
+        document.getElementById('payStatus').value = "未付款"; // 新增：重置時回到預設
+        renderConfig(); 
+    }
+
     function goBack() { resetForm(); showTab('calc'); }
     function enterScreenshotMode() { document.getElementById('ss-time').innerText = '日期：' + new Date().toLocaleString(); document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value).toLocaleString(); document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText; document.getElementById('ss-warranty-info').innerText = document.getElementById('custWarranty').value ? `🛡️ 保固：${document.getElementById('custWarranty').value}` : ''; document.getElementById('mainBody').classList.add('screenshot-mode'); document.getElementById('screenshot-header').style.display = 'block'; document.getElementById('screenshot-footer').style.display = 'block'; document.getElementById('screenshotNav').classList.remove('hidden'); renderConfig(); window.scrollTo(0,0); }
     function exitScreenshotMode() { document.getElementById('mainBody').classList.remove('screenshot-mode'); document.getElementById('screenshot-header').style.display = 'none'; document.getElementById('screenshot-footer').style.display = 'none'; document.getElementById('screenshotNav').classList.add('hidden'); renderConfig(); }
