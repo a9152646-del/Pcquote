@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v10.4</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v10.5</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -172,10 +172,17 @@
         
         <div id="tab-inventory" class="page-content hidden">
             <div class="card p-4">
-                <div id="inventoryHeader" class="flex flex-col gap-4 mb-4">
-                    <div class="flex justify-between items-center"><h2 class="font-black text-lg text-gray-700">⚙️ 雲端品項管理</h2><div class="flex gap-2"><button onclick="addNewCategory()" class="bg-blue-500 text-white px-3 py-2 rounded-lg text-[10px]">+ 大項</button><button onclick="saveInventory()" class="bg-green-600 text-white px-3 py-2 rounded-lg text-[10px]">💾 同步數據</button></div></div>
-                    <input type="text" id="inv-search-input" oninput="invSearchKeyword=this.value;renderInventoryEditor();" placeholder="🔍 搜尋零件或大項名稱..." class="w-full p-3 rounded-xl border-2 font-bold mt-2">
-                    <div class="flex gap-2 mt-2"><button onclick="toggleAllCats(true)" class="flex-1 bg-gray-200 py-2 rounded-lg text-[10px] font-black">全部收合 ↑</button><button onclick="toggleAllCats(false)" class="flex-1 bg-gray-200 py-2 rounded-lg text-[10px] font-black">全部展開 ↓</button></div>
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="font-black text-lg text-gray-700">⚙️ 雲端品項管理</h2>
+                    <div class="flex gap-2">
+                        <button onclick="addNewCategory()" class="bg-blue-500 text-white px-3 py-2 rounded-lg text-[10px]">+ 大項</button>
+                        <button onclick="saveInventory()" class="bg-green-600 text-white px-3 py-2 rounded-lg text-[10px]">💾 同步數據</button>
+                    </div>
+                </div>
+                <input type="text" id="inv-search-input" oninput="invSearchKeyword=this.value;renderInventoryEditor();" placeholder="🔍 搜尋零件或大項名稱..." class="w-full p-3 rounded-xl border-2 font-bold mb-3">
+                <div class="flex gap-2 mb-4">
+                    <button onclick="toggleAllCats(true)" class="flex-1 bg-gray-200 py-2 rounded-lg text-[10px] font-black">全部收合 ↑</button>
+                    <button onclick="toggleAllCats(false)" class="flex-1 bg-gray-200 py-2 rounded-lg text-[10px] font-black">全部展開 ↓</button>
                 </div>
                 <div id="inventoryEditor" class="space-y-4"></div>
             </div>
@@ -382,10 +389,23 @@
 
     function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); const fsBtn = document.getElementById('floatingSaveBtn'); if(t === 'inventory') { fsBtn.classList.remove('hidden'); fsBtn.style.display = 'flex'; renderInventoryEditor(); } else { fsBtn.classList.add('hidden'); fsBtn.style.display = 'none'; } renderRecords(); if(t==='stats') renderStats(); }
     
-    function editRecord(id) { const r = records.find(x => String(x.id) === String(id)); if(!r) return; editingRecordId = id; currentSelections = JSON.parse(JSON.stringify(r.selections || {})); 
-    document.getElementById('custName').value = r.name || ''; document.getElementById('custPhone').value = r.custPhone || ''; document.getElementById('discountAmt').value = r.discount || 0; document.getElementById('manualTotal').value = r.manualTotal || ''; document.getElementById('noCardTotal').value = r.noCard || ''; document.getElementById('custAddr').value = r.custAddr || ''; document.getElementById('custWarranty').value = r.custWarranty || ''; document.getElementById('orderMemo').value = r.orderMemo || ''; 
-    document.getElementById('infoPayment').value = r.paymentStatus || '未付款';
-    renderConfig(); showTab('calc'); }
+    function editRecord(id) { 
+        const r = records.find(x => String(x.id) === String(id)); 
+        if(!r) return; 
+        editingRecordId = id; 
+        currentSelections = JSON.parse(JSON.stringify(r.selections || {})); 
+        document.getElementById('custName').value = r.name || ''; 
+        document.getElementById('custPhone').value = r.custPhone || ''; 
+        document.getElementById('discountAmt').value = r.discount || 0; 
+        document.getElementById('manualTotal').value = r.manualTotal || ''; 
+        document.getElementById('noCardTotal').value = r.noCard || ''; 
+        document.getElementById('custAddr').value = r.custAddr || ''; 
+        document.getElementById('custWarranty').value = r.custWarranty || ''; 
+        document.getElementById('orderMemo').value = r.orderMemo || ''; 
+        document.getElementById('infoPayment').value = r.paymentStatus || '未付款';
+        renderConfig(); 
+        showTab('calc'); 
+    }
 
     function resetForm() { editingRecordId=null; currentSelections={}; document.querySelectorAll('#tab-calc input, #tab-calc textarea').forEach(i=>i.value=""); document.getElementById('discountAmt').value=0; document.getElementById('infoPayment').value="未付款"; renderConfig(); }
     function goBack() { resetForm(); showTab('calc'); }
@@ -412,7 +432,7 @@
     
     function openShipmentModal(id) { 
         const r = records.find(x => String(x.id) === String(id)); 
-        if(!r) { alert("找不到該筆紀錄，請重新整理試試"); return; }
+        if(!r) { alert("找不到該筆紀錄！ID:" + id); return; }
         const list = document.getElementById('shipmentList'); list.innerHTML = ''; 
         const ns = r.notShipped || {}; 
         catOrder.forEach(cat => { 
