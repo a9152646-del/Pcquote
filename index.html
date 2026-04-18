@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v12.9</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v13.0</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -36,13 +36,11 @@
         .drag-handle { cursor: grab; color: #cbd5e1; padding: 5px; font-size: 26px; user-select: none; display: flex; align-items: center; justify-content: center; touch-action: none; -webkit-user-select: none; }
 
         .item-row { padding: 16px !important; margin-bottom: 12px !important; background: #fff; border: 1px solid #f1f5f9 !important; border-radius: 12px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        /* 截圖模式優化 */
         .screenshot-mode .item-row { padding: 4px 10px !important; margin-bottom: 0px !important; border-radius: 0px !important; border: none !important; border-bottom: 1px solid #f1f5f9 !important; box-shadow: none !important; width: 100% !important; background: white !important; }
         
+        /* 截圖區塊設定 */
         #screenshot-area { background: white; padding: 0px; border-radius: 8px; width: 100%; max-width: 500px; margin: 0 auto; }
-        
-        /* 強制顯示下載導覽列 */
-        #screenshotNav { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 999999 !important; width: 90%; max-width: 500px; display: none; gap: 10px; }
+        #screenshotNav { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 99999; width: 90%; max-width: 500px; display: none; gap: 10px; }
         
         #adminToggleContainer { position: fixed; bottom: 25px; left: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
         .floating-label { background: #fff; padding: 10px 16px; border-radius: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: 2px solid #e2e8f0; display: flex; align-items: center; gap: 8px; cursor: pointer; }
@@ -79,19 +77,19 @@
 
     <div class="max-w-7xl mx-auto w-full px-1">
         
+        <div class="flex border-b-2 mb-4 no-screenshot overflow-x-auto bg-white sticky top-0 z-50 rounded-t">
+            <button onclick="showTab('calc')" id="btn-calc" class="flex-1 px-4 py-3 tab-active whitespace-nowrap">🖥️ 報價</button>
+            <button onclick="showTab('drafts')" id="btn-drafts" class="flex-1 px-4 py-3 whitespace-nowrap">📂 草稿</button>
+            <button onclick="showTab('orders')" id="btn-orders" class="flex-1 px-4 py-3 whitespace-nowrap">✅ 正式</button>
+            <button onclick="showTab('completed')" id="btn-completed" class="flex-1 px-4 py-3 whitespace-nowrap">🏁 結案</button>
+            <button onclick="showTab('stats')" id="btn-stats" class="flex-1 px-4 py-3 whitespace-nowrap">📊 統計</button>
+            <button onclick="showTab('inventory')" id="btn-inventory" class="flex-1 px-4 py-3 whitespace-nowrap">⚙️ 品項</button>
+        </div>
+
         <div id="screenshot-area">
             <div id="screenshot-header" style="display: none;" class="text-center border-b-4 border-blue-600 pb-2 mb-2 bg-white">
                 <div class="text-xl font-black text-blue-900 tracking-widest">《報價單》</div>
                 <div id="ss-time" class="text-[8px] text-gray-400 mt-1 font-mono font-bold"></div>
-            </div>
-            
-            <div class="flex border-b-2 mb-4 no-screenshot overflow-x-auto bg-white sticky top-0 z-50 rounded-t">
-                <button onclick="showTab('calc')" id="btn-calc" class="flex-1 px-4 py-3 tab-active whitespace-nowrap">🖥️ 報價</button>
-                <button onclick="showTab('drafts')" id="btn-drafts" class="flex-1 px-4 py-3 whitespace-nowrap">📂 草稿</button>
-                <button onclick="showTab('orders')" id="btn-orders" class="flex-1 px-4 py-3 whitespace-nowrap">✅ 正式</button>
-                <button onclick="showTab('completed')" id="btn-completed" class="flex-1 px-4 py-3 whitespace-nowrap">🏁 結案</button>
-                <button onclick="showTab('stats')" id="btn-stats" class="flex-1 px-4 py-3 whitespace-nowrap">📊 統計</button>
-                <button onclick="showTab('inventory')" id="btn-inventory" class="flex-1 px-4 py-3 whitespace-nowrap">⚙️ 品項</button>
             </div>
 
             <div id="tab-calc" class="page-content">
@@ -117,9 +115,7 @@
                                 <input type="text" id="custPhone" placeholder="📞 電話">
                                 <select id="custSource"><option value="FB">FB</option><option value="IG">IG</option><option value="Line">Line</option><option value="蝦皮">蝦皮</option></select>
                                 <div class="flex gap-1">
-                                    <select id="infoSeller" class="flex-1 font-bold text-blue-600">
-                                        <option value="朱冠穎">朱冠穎</option><option value="江苙翔">江苙翔</option><option value="江鈞宇">江鈞宇</option>
-                                    </select>
+                                    <select id="infoSeller" class="flex-1 font-bold text-blue-600"><option value="朱冠穎">朱冠穎</option><option value="江苙翔">江苙翔</option><option value="江鈞宇">江鈞宇</option></select>
                                     <button onclick="addCustomSeller()" class="bg-gray-200 px-3 rounded border">+</button>
                                 </div>
                             </div>
@@ -156,17 +152,15 @@
         <div id="tab-stats" class="page-content hidden"><div id="statsContent" class="space-y-4"></div></div>
         <div id="tab-inventory" class="page-content hidden">
             <div class="card p-4">
-                <div id="inventoryHeader" class="flex justify-between items-center mb-4">
+                <div class="flex justify-between items-center mb-4">
                     <h2 class="font-black text-lg text-gray-700">⚙️ 雲端品項管理</h2>
-                    <div class="flex gap-2">
-                        <button onclick="addNewCategory()" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-[10px]">+ 大項</button>
-                        <button onclick="saveInventory()" class="bg-green-600 text-white px-3 py-1 rounded-lg text-[10px]">💾 同步數據</button>
-                    </div>
+                    <div class="flex gap-2"><button onclick="addNewCategory()" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-[10px]">+ 大項</button><button onclick="saveInventory()" class="bg-green-600 text-white px-3 py-1 rounded-lg text-[10px]">💾 同步數據</button></div>
                 </div>
                 <input type="text" id="inv-search" oninput="renderInventoryEditor()" placeholder="🔍 搜尋零件或大項名稱..." class="w-full p-3 rounded-xl border-2 mb-4 font-bold">
                 <div id="inventoryEditor" class="space-y-4"></div>
             </div>
         </div>
+
     </div>
 
     <div id="selectionModal" class="hidden fixed inset-0 bg-black/60 z-[20000] flex items-end"><div class="bg-white w-full rounded-t-3xl p-6 max-h-[85vh] flex flex-col shadow-2xl"><div class="flex justify-between items-center mb-4"><h3 id="modalTitle" class="text-xl font-black text-blue-600">🔍 選擇項目</h3><button onclick="closeModal()" class="text-3xl text-gray-400 p-2">×</button></div><div id="modalList" class="space-y-2 overflow-y-auto flex-1 pb-4"></div><button onclick="closeModal()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black">確定選擇</button></div></div>
@@ -225,54 +219,6 @@
         calculate();
     }
 
-    // --- 截圖模式核心邏輯 ---
-    function enterScreenshotMode() {
-        document.getElementById('ss-time').innerText = '日期：' + new Date().toLocaleString();
-        document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value).toLocaleString();
-        document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText;
-        document.getElementById('ss-warranty-info').innerText = document.getElementById('custWarranty').value ? `🛡️ 保固：${document.getElementById('custWarranty').value}` : '';
-        
-        document.getElementById('mainBody').classList.add('screenshot-mode');
-        document.getElementById('screenshot-header').style.display = 'block';
-        document.getElementById('screenshot-footer').style.display = 'block';
-        
-        // 強制顯示下載按鈕列
-        const nav = document.getElementById('screenshotNav');
-        nav.style.display = 'flex';
-        nav.classList.remove('hidden');
-        
-        renderConfig(); window.scrollTo(0,0);
-    }
-
-    function exitScreenshotMode() {
-        document.getElementById('mainBody').classList.remove('screenshot-mode');
-        document.getElementById('screenshot-header').style.display = 'none';
-        document.getElementById('screenshot-footer').style.display = 'none';
-        document.getElementById('screenshotNav').style.display = 'none';
-        renderConfig();
-    }
-
-    function downloadQuoteImage() {
-        const area = document.getElementById('screenshot-area');
-        html2canvas(area, {
-            scale: 2,
-            useCORS: true,
-            backgroundColor: "#ffffff",
-            onclone: (doc) => {
-                doc.getElementById('screenshot-area').style.width = '450px';
-                doc.getElementById('screenshot-area').style.margin = '0';
-            }
-        }).then(canvas => {
-            const link = document.createElement('a');
-            link.download = `神奇海螺報價_${document.getElementById('custName').value || '未命名'}.png`;
-            link.href = canvas.toDataURL("image/png");
-            link.click();
-        });
-    }
-
-    // --- 其他功能保留 ---
-    function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); if(t==='stats') renderStats(); if(t==='inventory') renderInventoryEditor(); renderRecords(); }
-
     function renderInventoryEditor() {
         const area = document.getElementById('inventoryEditor'); if (!area) return;
         const kw = (document.getElementById('inv-search')?.value || "").toLowerCase();
@@ -293,6 +239,44 @@
         });
     }
 
+    function enterScreenshotMode() {
+        document.getElementById('ss-time').innerText = '日期：' + new Date().toLocaleString();
+        document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value).toLocaleString();
+        document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText;
+        document.getElementById('ss-warranty-info').innerText = document.getElementById('custWarranty').value ? `🛡️ 保固：${document.getElementById('custWarranty').value}` : '';
+        document.getElementById('mainBody').classList.add('screenshot-mode');
+        document.getElementById('screenshot-header').style.display = 'block';
+        document.getElementById('screenshot-footer').style.display = 'block';
+        const nav = document.getElementById('screenshotNav');
+        nav.style.display = 'flex';
+        renderConfig(); window.scrollTo(0,0);
+    }
+
+    function exitScreenshotMode() {
+        document.getElementById('mainBody').classList.remove('screenshot-mode');
+        document.getElementById('screenshot-header').style.display = 'none';
+        document.getElementById('screenshot-footer').style.display = 'none';
+        document.getElementById('screenshotNav').style.display = 'none';
+        renderConfig();
+    }
+
+    function downloadQuoteImage() {
+        const area = document.getElementById('screenshot-area');
+        html2canvas(area, {
+            scale: 2, useCORS: true, backgroundColor: "#ffffff",
+            onclone: (doc) => {
+                doc.getElementById('screenshot-area').style.width = '450px';
+                doc.getElementById('screenshot-area').style.margin = '0';
+            }
+        }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `神奇海螺報價_${document.getElementById('custName').value || '未命名'}.png`;
+            link.href = canvas.toDataURL("image/png"); link.click();
+        });
+    }
+
+    function getStatusClass(p) { const map = {"待處理":"status-red", "已叫貨":"status-yellow", "組裝中":"status-blue", "測試中":"status-orange", "已完工":"status-purple", "已寄出":"status-green"}; return map[p] || ""; }
+
     function renderRecords() {
         const lists = { 'draft': document.getElementById('draftList'), 'order': document.getElementById('orderList'), 'completed': document.getElementById('completedList') };
         Object.values(lists).forEach(l => { if(l) l.innerHTML = ''; });
@@ -300,7 +284,7 @@
             const status = r.status || 'draft'; if (!lists[status]) return;
             const pOpts = ["待處理", "已叫貨", "組裝中", "測試中", "已完工", "已寄出"].map(p => `<option value="${p}" ${r.progress===p?'selected':''}>${p}</option>`).join('');
             const div = document.createElement('div'); div.className = "card p-4 flex flex-col gap-2 shadow-sm";
-            div.innerHTML = `<div class="flex justify-between"><div><div class="text-[10px] text-gray-400">${r.time}</div><div class="font-black">${r.name || '無名氏'}</div><div class="text-blue-600 font-black text-lg">${r.total}</div></div><div class="text-right flex flex-col items-end"><span class="bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-[10px]">${r.seller||'業務'}</span><select onchange="db.ref('records/${r.id}/progress').set(this.value)" class="text-[9px] font-bold p-1 rounded mt-2 status-blue">${pOpts}</select></div></div><div class="flex gap-1 pt-2 border-t"><button onclick="editRecord('${r.id}')" class="flex-1 py-2 bg-blue-600 text-white text-[10px] rounded font-black">編輯</button>${status==='draft'?'<button onclick="db.ref(\'records/'+r.id+'/status\').set(\'order\')" class="bg-green-600 text-white px-2 rounded text-[10px] font-bold">轉正式</button>':''}${status==='order'?'<button onclick="db.ref(\'records/'+r.id+'/status\').set(\'completed\')" class="bg-gray-700 text-white px-2 rounded text-[10px] font-bold">結案</button>':''}<button onclick="if(confirm(\'刪除？\')) db.ref(\'records/'+r.id+'\').remove()" class="text-red-300 px-1 font-bold">✕</button></div>`;
+            div.innerHTML = `<div class="flex justify-between"><div><div class="text-[10px] text-gray-400">${r.time}</div><div class="font-black">${r.name || '無名氏'}</div><div class="text-blue-600 font-black text-lg">${r.total}</div></div><div class="text-right flex flex-col items-end"><span class="bg-blue-100 text-blue-600 h-fit px-2 py-1 rounded-full text-[10px]">${r.seller||'業務'}</span><select onchange="db.ref('records/${r.id}/progress').set(this.value)" class="text-[9px] font-bold p-1 rounded mt-2 status-blue">${pOpts}</select></div></div><div class="flex gap-1 pt-2 border-t"><button onclick="editRecord('${r.id}')" class="flex-1 py-2 bg-blue-600 text-white text-[10px] rounded font-black">編輯</button>${status==='draft'?'<button onclick="db.ref(\'records/'+r.id+'/status\').set(\'order\')" class="bg-green-600 text-white px-2 rounded text-[10px] font-bold">轉正式</button>':''}${status==='order'?'<button onclick="db.ref(\'records/'+r.id+'/status\').set(\'completed\')" class="bg-gray-700 text-white px-2 rounded text-[10px] font-bold">結案</button>':''}<button onclick="if(confirm(\'刪除？\')) db.ref(\'records/'+r.id+'\').remove()" class="text-red-300 px-1 font-bold">✕</button></div>`;
             lists[status].appendChild(div);
         });
     }
@@ -310,6 +294,8 @@
         records.forEach(r => { if(r.status === 'draft') return; const mKey = r.time.split('/')[0] + '/' + r.time.split('/')[1]; if(!monthly[mKey]) monthly[mKey] = { rev: 0, count: 0 }; monthly[mKey].rev += (parseInt(r.total.replace(/[^0-9]/g,'')) || 0); monthly[mKey].count++; });
         content.innerHTML = Object.keys(monthly).sort((a,b)=>b.localeCompare(a)).map(m => `<div class="card p-4"><div class="text-sm font-black text-gray-600">${m} 績效總額</div><div class="text-2xl font-black text-blue-600">$${monthly[m].rev.toLocaleString()}</div><div class="text-[10px] text-gray-400 mt-1">成交：${monthly[m].count} 筆</div></div>`).join('');
     }
+
+    function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); if(t==='stats') renderStats(); if(t==='inventory') renderInventoryEditor(); renderRecords(); }
 
     function saveRecord(st) {
         const id = editingRecordId || String(Date.now());
