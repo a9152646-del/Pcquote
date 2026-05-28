@@ -227,29 +227,29 @@
             const baseTaxedTotal = (manualVal !== "" && !isNaN(parseFloat(manualVal))) ? parseFloat(manualVal) : (subP - disc);
             document.getElementById('ui-totalSale').innerText = `$${baseTaxedTotal.toLocaleString()}`;
             
-            // 【核心修復邏輯】：不論是無卡還是現金，都需要精準抓取對應的營業額基礎計算 5% 營業稅
-            let activeRevenue = baseTaxedTotal;
-            if (noCard > 0) {
-                activeRevenue = noCard;
+            // 【修正關鍵計算基礎】：找出實際含稅總營業額（若填寫無卡分期，無卡金額即為實際總營業額）
+            let finalTaxedTotal = baseTaxedTotal;
+            if (noCard > 0) { 
+                finalTaxedTotal = noCard; 
                 document.getElementById('ui-noCardVal').innerText = `$${noCard.toLocaleString()}`; 
                 document.getElementById('ui-noCardShow').classList.remove('hidden'); 
             } else {
                 document.getElementById('ui-noCardShow').classList.add('hidden');
             }
-
-            // 1. 稅金 5% (無論無卡還是現金，都會計算到此稅金)
-            const taxAmount = Math.round(activeRevenue - (activeRevenue / 1.05));
             
-            // 2. 稅前金額 = 總實收營業額 - 零件總成本
-            let profit = activeRevenue - subC; 
+            // 1. 稅金 5% = 含稅金額 - (含稅金額 / 1.05) （這樣不論無卡或現金變大，稅金都會跟著變大）
+            const taxAmount = Math.round(finalTaxedTotal - (finalTaxedTotal / 1.05));
             
-            // 3. 稅後毛利 = 稅前金額 - 稅金5%
-            const realProfit = profit - taxAmount;
+            // 2. 稅前金額 = 還沒含稅的實際總營業額 (金額變大，這裡也會正確等比例變大)
+            const preTaxAmount = Math.round(finalTaxedTotal / 1.05);
+            
+            // 3. 稅後毛利 = 稅前金額 - 零件總成本
+            const realProfit = preTaxAmount - subC;
             
             document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`; 
-            document.getElementById('ui-totalProfit').innerText = `$${profit.toLocaleString()}`;
-            document.getElementById('ui-taxAmt').innerText = `-$${taxAmount.toLocaleString()}`; 
-            document.getElementById('ui-realProfit').innerText = `$${realProfit.toLocaleString()}`;
+            document.getElementById('ui-totalProfit').innerText = `$${preTaxAmount.toLocaleString()}`; // 綁定到稅前金額的 UI
+            document.getElementById('ui-taxAmt').innerText = `-$${taxAmount.toLocaleString()}`; // 綁定到稅金5% 的 UI
+            document.getElementById('ui-realProfit').innerText = `$${realProfit.toLocaleString()}`; // 綁定到稅後毛利 的 UI
         } catch(e) {}
     }
 
@@ -409,9 +409,9 @@
             const noCardAmt = (r.noCard && r.noCard !== "") ? parseFloat(r.noCard) : 0;
             const rev = parseInt(r.total.replace(/[^0-9.-]+/g,"")) || 0; 
             
-            // 績效彙整頁面的稅金邏輯同步修復：如果有填無卡，就用無卡來做 5% 營業稅基礎
             const activeRevForTax = noCardAmt > 0 ? noCardAmt : rev;
             const tax = Math.round(activeRevForTax - (activeRevForTax / 1.05));
+            const preTax = Math.round(activeRevForTax / 1.05);
             
             let itemCost = 0; 
             for(let cat in r.selections) { 
@@ -422,10 +422,10 @@
                 }); 
             } 
             
-            monthlyData[monthKey].revenue += activeRevForTax; 
+            monthlyData[monthKey].revenue += preTax; // 統計顯示稅前銷售總額
             monthlyData[monthKey].cost += itemCost; 
             monthlyData[monthKey].taxTotal += tax; 
-            monthlyData[monthKey].profit += (activeRevForTax - itemCost - tax);
+            monthlyData[monthKey].profit += (preTax - itemCost); // 稅後毛利
             monthlyData[monthKey].count += 1; 
         });
         
@@ -433,7 +433,7 @@
             <div class="stats-card">
                 <div class="text-lg font-black text-gray-800 mb-2">${m} 績效彙整</div>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div><div class="text-[10px] text-gray-400">含稅總額</div><div class="text-blue-600 font-bold">$${monthlyData[m].revenue.toLocaleString()}</div></div>
+                    <div><div class="text-[10px] text-gray-400">稅前金額</div><div class="text-blue-600 font-bold">$${monthlyData[m].revenue.toLocaleString()}</div></div>
                     <div><div class="text-[10px] text-gray-400">零件成本</div><div class="text-red-500 font-bold">$${monthlyData[m].cost.toLocaleString()}</div></div>
                     <div><div class="text-[10px] text-gray-400">稅金5%</div><div class="text-orange-600 font-bold">$${monthlyData[m].taxTotal.toLocaleString()}</div></div>
                     <div><div class="text-[10px] text-gray-400">稅後毛利</div><div class="text-green-600 font-bold font-black">$${Math.round(monthlyData[m].profit).toLocaleString()}</div></div>
