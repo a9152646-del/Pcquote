@@ -227,10 +227,10 @@
             const baseTaxedTotal = (manualVal !== "" && !isNaN(parseFloat(manualVal))) ? parseFloat(manualVal) : (subP - disc);
             document.getElementById('ui-totalSale').innerText = `$${baseTaxedTotal.toLocaleString()}`;
             
-            // 稅金5% 計算 (依據營業額基礎算內含營業稅)
+            // 營業稅5% 計算
             const taxAmount = Math.round(baseTaxedTotal - (baseTaxedTotal / 1.05));
             
-            // 稅前金額 = 總實收營業額 - 零件總成本 (無卡分期不扣除手續費)
+            // 稅前金額 = 總實收營業額 - 零件總成本（無卡分期獨立不扣手續費）
             let profit = baseTaxedTotal - subC; 
             if (noCard > 0) { 
                 profit = noCard - subC; 
@@ -426,7 +426,7 @@
             monthlyData[monthKey].count += 1; 
         });
         
-        // 統計分頁同步正名：稅金5%、稅後毛利
+        // 績效分頁正名同步
         content.innerHTML = Object.keys(monthlyData).sort((a,b)=>b.localeCompare(a)).map(m => `
             <div class="stats-card">
                 <div class="text-lg font-black text-gray-800 mb-2">${m} 績效彙整</div>
