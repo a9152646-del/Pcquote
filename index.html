@@ -156,8 +156,8 @@
 
                         <div id="sellerBox" class="bg-blue-50 p-3 rounded-lg">
                             <div class="flex justify-between text-xs text-blue-500"><span>成本</span><span id="ui-totalCost">$0</span></div>
-                            <div class="flex justify-between text-xs text-gray-700 mt-1 font-bold"><span>稅前金額 (沒含稅賺多少)</span><span id="ui-totalProfit">$0</span></div>
-                            <div class="flex justify-between text-[10px] text-red-500 mt-1 font-bold"><span>內含稅金 (扣除多少稅金)</span><span id="ui-taxAmt">-$0</span></div>
+                            <div class="flex justify-between text-xs text-gray-700 mt-1 font-bold"><span>稅前金額</span><span id="ui-totalProfit">$0</span></div>
+                            <div class="flex justify-between text-[10px] text-red-500 mt-1 font-bold"><span>稅金5%</span><span id="ui-taxAmt">-$0</span></div>
                             <div class="flex justify-between text-sm font-black text-green-600 border-t-2 border-blue-100 mt-2 pt-2"><span>稅後毛利</span><span id="ui-realProfit">$0</span></div>
                         </div>
 
@@ -227,14 +227,12 @@
             const baseTaxedTotal = (manualVal !== "" && !isNaN(parseFloat(manualVal))) ? parseFloat(manualVal) : (subP - disc);
             document.getElementById('ui-totalSale').innerText = `$${baseTaxedTotal.toLocaleString()}`;
             
-            // 【依要求修正公式】：無卡金額不扣除抽成手續費，且精確定義稅前金額、稅金、稅後毛利
-            // 稅金計算 (5% 營業稅營業額基礎計算)
+            // 稅金5% 計算 (依據營業額基礎算內含營業稅)
             const taxAmount = Math.round(baseTaxedTotal - (baseTaxedTotal / 1.05));
             
-            // 稅前金額 (沒有含稅賺多少) = 總營業額 - 零件總成本
+            // 稅前金額 = 總實收營業額 - 零件總成本 (無卡分期不扣除手續費)
             let profit = baseTaxedTotal - subC; 
             if (noCard > 0) { 
-                // 若有無卡，無卡金額視為實際取得的總營業額，不另外扣手續費
                 profit = noCard - subC; 
                 document.getElementById('ui-noCardVal').innerText = `$${noCard.toLocaleString()}`; 
                 document.getElementById('ui-noCardShow').classList.remove('hidden'); 
@@ -242,7 +240,7 @@
                 document.getElementById('ui-noCardShow').classList.add('hidden');
             }
             
-            // 稅後毛利 = 稅前金額 - 內含稅金
+            // 稅後毛利 = 稅前金額 - 稅金5%
             const realProfit = profit - taxAmount;
             
             document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`; 
@@ -415,7 +413,6 @@
                 }); 
             } 
             
-            // 統計頁面同步調整無卡獨立不扣手續費之計算邏輯
             const noCardAmt = (r.noCard && r.noCard !== "") ? parseFloat(r.noCard) : 0;
             monthlyData[monthKey].revenue += rev; 
             monthlyData[monthKey].cost += itemCost; 
@@ -429,13 +426,14 @@
             monthlyData[monthKey].count += 1; 
         });
         
+        // 統計分頁同步正名：稅金5%、稅後毛利
         content.innerHTML = Object.keys(monthlyData).sort((a,b)=>b.localeCompare(a)).map(m => `
             <div class="stats-card">
                 <div class="text-lg font-black text-gray-800 mb-2">${m} 績效彙整</div>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div><div class="text-[10px] text-gray-400">含稅總額</div><div class="text-blue-600 font-bold">$${monthlyData[m].revenue.toLocaleString()}</div></div>
                     <div><div class="text-[10px] text-gray-400">零件成本</div><div class="text-red-500 font-bold">$${monthlyData[m].cost.toLocaleString()}</div></div>
-                    <div><div class="text-[10px] text-gray-400">內含稅金</div><div class="text-orange-600 font-bold">$${monthlyData[m].taxTotal.toLocaleString()}</div></div>
+                    <div><div class="text-[10px] text-gray-400">稅金5%</div><div class="text-orange-600 font-bold">$${monthlyData[m].taxTotal.toLocaleString()}</div></div>
                     <div><div class="text-[10px] text-gray-400">稅後毛利</div><div class="text-green-600 font-bold font-black">$${Math.round(monthlyData[m].profit).toLocaleString()}</div></div>
                 </div>
                 <div class="mt-2 text-[10px] text-gray-400 italic">※ 共 ${monthlyData[m].count} 筆正式/結案訂單</div>
