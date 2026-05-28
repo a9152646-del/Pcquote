@@ -154,30 +154,30 @@
                             <input type="number" id="noCardTotal" class="w-full border-orange-200 text-sm" placeholder="輸入無卡金額" oninput="calculate()">
                         </div>
 
-                        <div id="sellerBox" class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-3">
-                            <div class="flex justify-between text-xs text-slate-500 border-b pb-1">
-                                <span>零件總成本</span><span id="ui-totalCost" class="font-bold text-slate-700">$0</span>
+                        <div id="sellerBox" class="bg-blue-50 p-3 rounded-lg border border-blue-100 space-y-3">
+                            <div class="flex justify-between text-xs text-blue-500 border-b border-blue-200 pb-1">
+                                <span>零件總成本</span><span id="ui-totalCost" class="font-bold">$0</span>
                             </div>
                             
-                            <div class="space-y-1 p-2 bg-white rounded border border-slate-100">
+                            <div class="space-y-1 p-2 bg-white rounded border border-blue-100">
                                 <div class="text-[10px] font-black text-blue-500 flex justify-between">
-                                    <span>💵 現金交易結算</span><span id="ui-cashStatus" class="text-slate-400 font-normal">啟用中</span>
+                                    <span>💵 現金交易結算</span><span id="ui-cashStatus" class="text-gray-400 font-normal">啟用中</span>
                                 </div>
                                 <div class="flex justify-between text-[11px] text-red-500">
                                     <span>內含稅金 (5%)</span><span id="ui-taxAmt">-$0</span>
                                 </div>
-                                <div class="flex justify-between text-xs font-black text-emerald-600 pt-1 border-t border-dashed">
+                                <div class="flex justify-between text-xs font-black text-green-600 pt-1 border-t border-dashed">
                                     <span>現金稅後純利</span><span id="ui-realProfit">$0</span>
                                 </div>
                             </div>
 
-                            <div id="ui-noCardBox" class="space-y-1 p-2 bg-orange-50/50 rounded border border-orange-100 hidden">
+                            <div id="ui-noCardBox" class="space-y-1 p-2 bg-orange-50 rounded border border-orange-200 hidden">
                                 <div class="text-[10px] font-black text-orange-600">💳 無卡分期結算</div>
-                                <div class="flex justify-between text-[11px] text-red-400">
+                                <div class="flex justify-between text-[11px] text-red-500">
                                     <span>內含稅金 (5%)</span><span id="ui-ncTaxAmt">-$0</span>
                                 </div>
-                                <div class="flex justify-between text-[11px] text-red-400">
-                                    <span>金流抽成手續費</span><span id="ui-ncFeeAmt">-$0</span>
+                                <div class="flex justify-between text-[11px] text-red-500">
+                                    <span>金流抽成費 (6%)</span><span id="ui-ncFeeAmt">-$0</span>
                                 </div>
                                 <div class="flex justify-between text-xs font-black text-orange-600 pt-1 border-t border-dashed">
                                     <span>無卡稅後純利</span><span id="ui-ncRealProfit">$0</span>
@@ -226,7 +226,7 @@
     let inv = {}; let catOrder = []; let records = []; let templates = {}; let currentSelections = {}; let editingRecordId = null; let currentCat = "";
     let collapsedCats = {}; 
 
-    // 【可調參數】：無卡分期融資公司手續費抽成比例（預設為 6%）
+    // 可調參數：無卡分期融資公司抽成比例 (預設為 6%)
     const NOCARD_FEE_RATE = 0.06;
 
     function downloadScreenshot() {
@@ -255,30 +255,29 @@
             document.getElementById('ui-totalSale').innerText = `$${baseTaxedTotal.toLocaleString()}`;
             document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`;
 
-            // 1. 【現金分項精準獨立計算】
-            const taxAmount = Math.round(baseTaxedTotal - (baseTaxedTotal / 1.05));
-            const cashProfit = baseTaxedTotal - subC - taxAmount;
-            document.getElementById('ui-taxAmt').innerText = `-$${taxAmount.toLocaleString()}`;
+            // 1. 現金交易獨立結算 (內含稅倒推)
+            const cashTax = Math.round(baseTaxedTotal - (baseTaxedTotal / 1.05));
+            const cashProfit = baseTaxedTotal - subC - cashTax;
+            document.getElementById('ui-taxAmt').innerText = `-$${cashTax.toLocaleString()}`;
             document.getElementById('ui-realProfit').innerText = `$${cashProfit.toLocaleString()}`;
 
-            // 2. 【無卡分期分項精準獨立計算（方案 B：內含稅倒推扣除制）】
-            if (noCard > 0) { 
-                const ncTaxAmount = Math.round(noCard - (noCard / 1.05)); // 無卡金額內含的 5% 稅金
-                const ncFeeAmount = Math.round(noCard * NOCARD_FEE_RATE); // 無卡金流手續費
-                const ncProfit = noCard - subC - ncTaxAmount - ncFeeAmount; // 無卡稅後純利
+            // 2. 無卡分期交易獨立結算 (方案 B：內含稅倒推 + 扣除手續費)
+            if (noCard > 0) {
+                const ncTax = Math.round(noCard - (noCard / 1.05)); // 內含 5% 稅金
+                const ncFee = Math.round(noCard * NOCARD_FEE_RATE); // 融資公司手續費
+                const ncProfit = noCard - subC - ncTax - ncFee;     // 無卡稅後純利
 
-                // 渲染無卡專用財務面板數據
-                document.getElementById('ui-ncTaxAmt').innerText = `-$${ncTaxAmount.toLocaleString()}`;
-                document.getElementById('ui-ncFeeAmt').innerText = `-$${ncFeeAmount.toLocaleString()}`;
+                document.getElementById('ui-ncTaxAmt').innerText = `-$${ncTax.toLocaleString()}`;
+                document.getElementById('ui-ncFeeAmt').innerText = `-$${ncFee.toLocaleString()}`;
                 document.getElementById('ui-ncRealProfit').innerText = `$${ncProfit.toLocaleString()}`;
 
                 document.getElementById('ui-noCardVal').innerText = `$${noCard.toLocaleString()}`; 
-                document.getElementById('ui-noCardShow').classList.remove('hidden'); 
-                document.getElementById('ui-noCardBox').classList.remove('hidden'); 
+                document.getElementById('ui-noCardShow').classList.remove('hidden');
+                document.getElementById('ui-noCardBox').classList.remove('hidden'); // 秀出無卡計算區
                 document.getElementById('ui-cashStatus').innerText = "僅計零件成本";
             } else {
                 document.getElementById('ui-noCardShow').classList.add('hidden');
-                document.getElementById('ui-noCardBox').classList.add('hidden');
+                document.getElementById('ui-noCardBox').classList.add('hidden'); // 隱藏無卡計算區
                 document.getElementById('ui-cashStatus').innerText = "啟用中";
             }
         } catch(e) {}
@@ -447,26 +446,25 @@
                 }); 
             } 
             
-            let singleProfit = 0;
-            let singleTax = 0;
+            let orderTax = 0;
+            let orderProfit = 0;
 
+            // 統計頁面同步拆分：若走無卡則算無卡的內含稅金，否則算現金
             if (r.noCard && parseFloat(r.noCard) > 0) {
-                // 無卡單：業績算無卡金額，稅金用無卡倒推，利潤扣手續費
                 const ncVal = parseFloat(r.noCard);
-                singleTax = Math.round(ncVal - (ncVal / 1.05));
+                orderTax = Math.round(ncVal - (ncVal / 1.05));
                 const ncFee = Math.round(ncVal * NOCARD_FEE_RATE);
-                singleProfit = ncVal - itemCost - singleTax - ncFee;
+                orderProfit = ncVal - itemCost - orderTax - ncFee;
                 monthlyData[monthKey].revenue += ncVal;
             } else {
-                // 現金單：業績算現金，稅金用現金倒推
-                singleTax = Math.round(rev - (rev / 1.05));
-                singleProfit = rev - itemCost - singleTax;
+                orderTax = Math.round(rev - (rev / 1.05));
+                orderProfit = rev - itemCost - orderTax;
                 monthlyData[monthKey].revenue += rev;
             }
 
             monthlyData[monthKey].cost += itemCost; 
-            monthlyData[monthKey].taxTotal += singleTax; 
-            monthlyData[monthKey].profit += singleProfit; 
+            monthlyData[monthKey].taxTotal += orderTax; 
+            monthlyData[monthKey].profit += orderProfit; 
             monthlyData[monthKey].count += 1; 
         });
 
@@ -474,10 +472,10 @@
             <div class="stats-card">
                 <div class="text-lg font-black text-gray-800 mb-2">${m} 績效彙整</div>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div><div class="text-[10px] text-gray-400">營業總額 (拆分加總)</div><div class="text-blue-600 font-bold">$${monthlyData[m].revenue.toLocaleString()}</div></div>
+                    <div><div class="text-[10px] text-gray-400">營業總額</div><div class="text-blue-600 font-bold">$${monthlyData[m].revenue.toLocaleString()}</div></div>
                     <div><div class="text-[10px] text-gray-400">零件成本</div><div class="text-red-500 font-bold">$${monthlyData[m].cost.toLocaleString()}</div></div>
                     <div><div class="text-[10px] text-gray-400">總稅金倒推</div><div class="text-orange-600 font-bold">$${monthlyData[m].taxTotal.toLocaleString()}</div></div>
-                    <div><div class="text-[10px] text-gray-400">實賺純利 (拆分淨利)</div><div class="text-green-600 font-bold font-black">$${Math.round(monthlyData[m].profit).toLocaleString()}</div></div>
+                    <div><div class="text-[10px] text-gray-400">實賺純利</div><div class="text-green-600 font-bold font-black">$${Math.round(monthlyData[m].profit).toLocaleString()}</div></div>
                 </div>
                 <div class="mt-2 text-[10px] text-gray-400 italic">※ 共 ${monthlyData[m].count} 筆正式/結案訂單</div>
             </div>`).join('');
@@ -489,19 +487,10 @@
         const r = records.find(x => String(x.id) === String(id)); 
         if(!r) { alert('找不到該筆紀錄，請重新整理頁面。'); return; }
         editingRecordId = id; currentSelections = JSON.parse(JSON.stringify(r.selections || {})); 
-        
-        document.getElementById('custName').value = r.name || ''; 
-        document.getElementById('custPhone').value = r.custPhone || ''; 
-        document.getElementById('discountAmt').value = r.discount || 0; 
-        document.getElementById('manualTotal').value = r.manualTotal || ''; 
-        document.getElementById('noCardTotal').value = r.noCard || ''; 
-        document.getElementById('custAddr').value = r.custAddr || ''; 
-        document.getElementById('custWarranty').value = r.custWarranty || ''; 
-        if(document.getElementById('custSource')) document.getElementById('custSource').value = r.custSource || 'FB';
-        if(document.getElementById('infoSeller')) document.getElementById('infoSeller').value = r.seller || '朱冠穎';
-        if(document.getElementById('orderMemo')) document.getElementById('orderMemo').value = r.orderMemo || '';
-
-        renderConfig(); showTab('calc'); 
+        document.getElementById('custName').value = r.name || ''; document.getElementById('custPhone').value = r.custPhone || ''; 
+        document.getElementById('discountAmt').value = r.discount || 0; document.getElementById('manualTotal').value = r.manualTotal || ''; 
+        document.getElementById('noCardTotal').value = r.noCard || ''; document.getElementById('custAddr').value = r.custAddr || ''; 
+        document.getElementById('custWarranty').value = r.custWarranty || ''; renderConfig(); showTab('calc'); 
     }
 
     function resetForm() { editingRecordId=null; currentSelections={}; document.querySelectorAll('#tab-calc input, #tab-calc textarea').forEach(i=>i.value=""); document.getElementById('discountAmt').value=0; renderConfig(); }
