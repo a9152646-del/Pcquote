@@ -298,7 +298,7 @@
     <div class="card">
         <h2>結算明細</h2>
         <div class="result-box">
-            <div class="result-row">
+            <div class="result-row" id="rowTotalSales">
                 <span>原始商品銷售總額：</span>
                 <span><span id="lblTotalSales">0</span> 元</span>
             </div>
@@ -395,24 +395,24 @@
             const creditRate = parseFloat(document.getElementById('creditRate').value) || 0;
             goldFee = Math.round(totalSales * (creditRate / 100));
             realReceive = totalSales - goldFee;
-            document.getElementById('rowGoldFee').style.display = 'flex';
+            document.getElementById('rowGoldFee').style.display = 'flex'; // 顯示刷卡手續費
         } else if (method === 'no_card_install') {
             const periods = parseInt(document.getElementById('installPeriods').value) || 0;
             const periodExtremity = parseFloat(document.getElementById('periodExtremity').value) || 0;
             
             // 利息加成
             installInterest = periods * periodExtremity;
-            // 依您指示：無卡分期無流金抽成手續費，故手續費為 0
+            // 完全排除手續費
             goldFee = 0; 
             realReceive = totalSales + installInterest;
             
-            // 隱藏手續費扣除列
+            // 關鍵修改：無卡分期時完全不顯示「金流平台手續費扣除」這一列
             document.getElementById('rowGoldFee').style.display = 'none';
         } else {
             // 現金方案
-            document.getElementById('rowGoldFee').style.display = 'flex';
             goldFee = 0;
             realReceive = totalSales;
+            document.getElementById('rowGoldFee').style.display = 'flex'; // 現金顯示 0 元
         }
 
         // 渲染結算明細
@@ -421,7 +421,7 @@
         document.getElementById('lblInstallInterest').innerText = installInterest.toLocaleString();
         document.getElementById('lblRealReceive').innerText = realReceive.toLocaleString();
 
-        // 根據指示更新底端利潤與稅務
+        // 核心修改：計算指定的底部稅務欄位
         // 1. 稅前金額 (未含稅賺多少) = 原始商品銷售總額 - 商品總成本
         const preTaxProfit = totalSales - totalCost;
 
@@ -442,9 +442,9 @@
         document.body.classList.toggle('screenshot-mode');
     }
 
-    // 匯出銷貨 Excel 資料範例
+    // 匯出銷貨 Excel 資料
     function exportToExcelFormat() {
-        alert("系統提示：已將今日銷貨資料封裝，準備與背景資料庫/Excel進行同盟同步。");
+        alert("系統提示：已將今日銷貨資料封裝，準備與背景資料庫/Excel進行同步。");
     }
 
     // 重設表單
