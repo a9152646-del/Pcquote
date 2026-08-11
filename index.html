@@ -154,7 +154,7 @@
                             <input type="number" id="noCardTotal" class="w-full border-orange-200 text-sm" placeholder="輸入無卡金額" oninput="calculate()">
                         </div>
 
-                        <!-- 財務統計區塊：含稅/未稅金額與毛利 -->
+                        <!-- 財務統計區塊 -->
                         <div id="sellerBox" class="bg-blue-50 p-3 rounded-lg space-y-1.5">
                             <div class="flex justify-between text-xs text-gray-600 font-bold"><span>零件總成本</span><span id="ui-totalCost">$0</span></div>
                             <div class="flex justify-between text-xs text-blue-700 font-bold"><span>含稅金額</span><span id="ui-taxedTotal">$0</span></div>
@@ -189,7 +189,6 @@
                     <h3 id="modalTitle" class="text-xl font-black text-blue-600">🔍 選擇項目</h3>
                     <button onclick="closeModal()" class="text-3xl text-gray-400 p-2">×</button>
                 </div>
-                <!-- 搜尋欄 -->
                 <input type="text" id="modalSearchInput" placeholder="🔍 搜尋此類別零件名稱..." class="w-full mb-3 p-3 rounded-xl border-2 border-blue-200 font-bold text-sm outline-none focus:border-blue-500 shadow-sm" oninput="renderModalList()">
                 <div id="modalList" class="space-y-2 overflow-y-auto flex-1 pb-4"></div>
                 <div class="pt-4 border-t">
@@ -202,7 +201,7 @@
         <div id="templateModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[10000] backdrop-blur-md"><div class="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl"><div class="p-5 border-b flex justify-between items-center bg-indigo-50"><h3 class="font-black text-indigo-700">📁 載入範本</h3><button onclick="document.getElementById('templateModal').classList.add('hidden')" class="text-3xl">×</button></div><div id="templateList" class="overflow-y-auto flex-1 p-5 space-y-3"></div></div></div>
     </div>
 
-    <!-- 徹底修復：強效手機存圖預覽 Modal -->
+    <!-- 長按存圖預覽 Modal（依要求刪除點此下載按鈕，保留長按儲存） -->
     <div id="imgPreviewModal" class="hidden fixed inset-0 bg-black/80 z-[60000] flex flex-col items-center justify-center p-4">
         <div class="bg-white rounded-2xl p-4 max-w-lg w-full max-h-[90vh] flex flex-col items-center space-y-3 shadow-2xl">
             <div class="flex justify-between items-center w-full border-b pb-2">
@@ -210,15 +209,14 @@
                 <button onclick="document.getElementById('imgPreviewModal').classList.add('hidden')" class="text-2xl font-bold text-gray-500 px-2">×</button>
             </div>
             <div class="text-xs text-blue-600 font-bold bg-blue-50 w-full p-2.5 rounded text-center leading-relaxed">
-                💡 手機用戶請「長按圖片」選取「儲存影像」<br>或點擊下方按鈕以新分頁開啟存圖！
+                💡 請「長按圖片」選擇「儲存影像」或「複製」<br>亦可點擊下方按鈕以新分頁開啟！
             </div>
             <div class="overflow-y-auto flex-1 w-full flex justify-center bg-gray-100 p-2 rounded">
-                <img id="previewImg" class="max-w-full h-auto rounded shadow" src="" alt="報價單預覽" />
+                <img id="previewImg" class="max-w-full h-auto rounded shadow cursor-pointer" src="" alt="報價單預覽" />
             </div>
-            <div class="grid grid-cols-3 gap-2 w-full pt-1">
-                <button onclick="downloadImageDirect()" class="bg-green-600 text-white py-3 rounded-xl font-black text-xs shadow">💾 下載圖片</button>
-                <button onclick="openImageInNewTab()" class="bg-indigo-600 text-white py-3 rounded-xl font-black text-xs shadow">🔗 新分頁開啟</button>
-                <button onclick="document.getElementById('imgPreviewModal').classList.add('hidden')" class="bg-gray-600 text-white py-3 rounded-xl font-black text-xs shadow">關閉</button>
+            <div class="grid grid-cols-2 gap-2 w-full pt-1">
+                <button onclick="openImageInNewTab()" class="bg-indigo-600 text-white py-3 rounded-xl font-black text-sm shadow">🔗 新分頁開啟</button>
+                <button onclick="document.getElementById('imgPreviewModal').classList.add('hidden')" class="bg-gray-600 text-white py-3 rounded-xl font-black text-sm shadow">關閉視窗</button>
             </div>
         </div>
     </div>
@@ -232,7 +230,7 @@
     let collapsedCats = {}; 
     let generatedImgUrl = "";
 
-    // 重構版：徹底修復截圖下載邏輯 (防安全限制、支援 iOS/Android 原生分享)
+    // 截圖生成與彈窗 logic
     function downloadScreenshot(e) {
         const captureEl = document.getElementById('captureArea');
         if(!captureEl) return;
@@ -243,16 +241,14 @@
         
         if (btn) btn.innerText = '⏳ 圖片生成中...';
 
-        // 1. 置頂視窗防切邊
         window.scrollTo(0, 0);
 
-        // 2. 暫時隱藏導航浮鈕
         if (nav) nav.style.opacity = '0';
 
         setTimeout(() => {
             html2canvas(captureEl, { 
                 useCORS: true, 
-                allowTaint: false, // 關閉 allowTaint 避免跨域畫布被污染而無法導出
+                allowTaint: false, 
                 scale: 2, 
                 backgroundColor: "#f8fafc",
                 scrollX: 0,
@@ -262,28 +258,27 @@
                 if (nav) nav.style.opacity = '1';
                 if (btn) btn.innerText = origText;
 
-                // 轉為 Blob 檔
                 canvas.toBlob(async (blob) => {
                     const fileName = `神奇海螺電競報價_${new Date().toISOString().slice(0,10)}_${Date.now()}.png`;
 
                     if (blob) {
                         const file = new File([blob], fileName, { type: 'image/png' });
 
-                        // 方案 A：優先嘗試手機原生 Web Share API（支援 iOS/Android 直接選「儲存影像」）
+                        // 優先嘗試調用原生系統分享（若支援）
                         if (navigator.canShare && navigator.canShare({ files: [file] })) {
                             try {
                                 await navigator.share({
                                     files: [file],
                                     title: '神奇海螺電競報價單'
                                 });
-                                return; // 若成功調起分享面板則直接返回
+                                return;
                             } catch (shareErr) {
-                                console.log('使用者取消或不支援原生分享');
+                                console.log('使用者取消分享');
                             }
                         }
                     }
 
-                    // 方案 B：顯示相片預覽視窗 (可長按存圖 / 手動下載 / 新分頁開啟)
+                    // 展示長按存圖視窗
                     generatedImgUrl = canvas.toDataURL('image/png');
                     showImagePreviewModal(generatedImgUrl);
 
@@ -301,16 +296,6 @@
     function showImagePreviewModal(imgUrl) {
         document.getElementById('previewImg').src = imgUrl;
         document.getElementById('imgPreviewModal').classList.remove('hidden');
-    }
-
-    function downloadImageDirect() {
-        if(!generatedImgUrl) return;
-        const link = document.createElement('a');
-        link.download = `神奇海螺電競報價_${new Date().toISOString().slice(0,10)}_${Date.now()}.png`;
-        link.href = generatedImgUrl;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
     }
 
     function openImageInNewTab() {
