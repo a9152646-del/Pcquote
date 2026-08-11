@@ -81,8 +81,8 @@
         .preview-table td { padding: 6px 8px; border: 1px solid #e2e8f0; white-space: nowrap; max-width: 250px; overflow: hidden; text-overflow: ellipsis; }
         .preview-table tr:nth-child(even) { background-color: #f8fafc; }
 
-        /* 方案切換頁籤樣式 */
-        .plan-tab-active { background-color: #2563eb !important; color: white !important; font-weight: 900 !important; }
+        /* 方案切換頁籤專屬樣式 */
+        .plan-tab-active { background-color: #2563eb !important; color: #ffffff !important; font-weight: 900 !important; border: 2px solid #60a5fa !important; }
     </style>
 </head>
 <body class="p-2 md:p-4" id="mainBody">
@@ -122,19 +122,20 @@
         </div>
 
         <div id="tab-calc" class="page-content">
-            <!-- 🌟 多方案 A/B 菜單控制 Bar 🌟 -->
-            <div class="no-screenshot bg-blue-900 text-white p-2.5 rounded-xl mb-3 flex flex-wrap items-center justify-between gap-2 shadow-md">
-                <div class="flex items-center gap-1.5 overflow-x-auto">
-                    <span class="text-xs font-black mr-1 text-blue-200">📑 方案切換：</span>
-                    <button onclick="switchPlan('A')" id="plan-btn-A" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-800 text-blue-100 transition-all plan-tab-active">方案 A</button>
-                    <button onclick="switchPlan('B')" id="plan-btn-B" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-800 text-blue-100 transition-all">方案 B</button>
+            
+            <!-- 🌟🌟🌟 新增：多方案 A/B 菜單切換與比較 Bar 🌟🌟🌟 -->
+            <div class="no-screenshot bg-slate-900 text-white p-3 rounded-2xl mb-3 flex flex-wrap items-center justify-between gap-2 shadow-lg border-2 border-blue-500">
+                <div class="flex items-center gap-2 overflow-x-auto">
+                    <span class="text-xs font-black text-blue-300 whitespace-nowrap">📑 報價方案：</span>
+                    <button onclick="switchPlan('A')" id="plan-btn-A" class="px-4 py-2 rounded-xl text-xs font-black bg-slate-800 text-slate-300 border border-slate-700 transition-all plan-tab-active cursor-pointer">方案 A</button>
+                    <button onclick="switchPlan('B')" id="plan-btn-B" class="px-4 py-2 rounded-xl text-xs font-black bg-slate-800 text-slate-300 border border-slate-700 transition-all cursor-pointer">方案 B</button>
                 </div>
-                <div class="flex items-center gap-1.5">
-                    <button onclick="copyCurrentPlanToOther()" class="bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-black shadow-sm flex items-center gap-1">
+                <div class="flex items-center gap-2">
+                    <button onclick="copyCurrentPlanToOther()" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-xl text-xs font-black shadow transition-all cursor-pointer">
                         ➕ 複製到另一方案
                     </button>
-                    <button onclick="copyDualPlanQuoteText()" class="bg-cyan-500 hover:bg-cyan-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-black shadow-sm flex items-center gap-1">
-                        📋 雙方案 (A/B) LINE 報價
+                    <button onclick="copyDualPlanQuoteText()" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-3 py-2 rounded-xl text-xs font-black shadow transition-all cursor-pointer">
+                        📋 複製雙方案 (A/B) LINE 對比報價
                     </button>
                 </div>
             </div>
@@ -214,9 +215,9 @@
                         </div>
 
                         <div class="space-y-2">
-                            <button onclick="saveRecord('current')" class="w-full bg-blue-600 text-white py-3 rounded-lg font-black shadow-lg">以當前方案成立訂單 💾</button>
-                            <button onclick="saveTemplate()" class="w-full bg-gray-700 text-white py-3 rounded-lg font-bold">📂 存為範本</button>
-                            <button onclick="enterScreenshotMode()" class="w-full bg-orange-500 text-white py-3 rounded-lg font-black">📸 截圖模式</button>
+                            <button onclick="saveRecord('current')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-black shadow-lg cursor-pointer">以當前方案成立訂單 💾</button>
+                            <button onclick="saveTemplate()" class="w-full bg-gray-700 hover:bg-gray-800 text-white py-3 rounded-lg font-bold cursor-pointer">📂 存為範本</button>
+                            <button onclick="enterScreenshotMode()" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-black cursor-pointer">📸 截圖模式</button>
                         </div>
                     </div>
                 </div>
@@ -300,15 +301,14 @@
     let currentTsvText = "";
     let currentHtmlTable = "";
 
-    // 🌟 多方案 A/B 資料結構變數 🌟
+    // 🌟 多方案 A/B 資料結構 🌟
     let currentPlan = 'A';
     let plansData = {
         'A': { selections: {}, discount: 0, manualTotal: '', noCard: '', deposit: 0 },
         'B': { selections: {}, discount: 0, manualTotal: '', noCard: '', deposit: 0 }
     };
-    let currentSelections = {}; // 指向當前方案的 selections
+    let currentSelections = {};
 
-    // 儲存當前輸入框資料到暫存方案
     function saveCurrentInputsToPlan() {
         plansData[currentPlan] = {
             selections: JSON.parse(JSON.stringify(currentSelections)),
@@ -319,7 +319,6 @@
         };
     }
 
-    // 切換方案 A / B
     function switchPlan(planKey) {
         saveCurrentInputsToPlan();
         currentPlan = planKey;
@@ -328,7 +327,6 @@
         document.getElementById('plan-btn-B').classList.remove('plan-tab-active');
         document.getElementById(`plan-btn-${planKey}`).classList.add('plan-tab-active');
 
-        // 載入該方案資料
         const p = plansData[planKey];
         currentSelections = JSON.parse(JSON.stringify(p.selections || {}));
         document.getElementById('discountAmt').value = p.discount || 0;
@@ -339,12 +337,11 @@
         renderConfig();
     }
 
-    // 一鍵複製當前方案到另一方案
     function copyCurrentPlanToOther() {
         saveCurrentInputsToPlan();
         const targetPlan = (currentPlan === 'A') ? 'B' : 'A';
         plansData[targetPlan] = JSON.parse(JSON.stringify(plansData[currentPlan]));
-        alert(`📋 已成功將【方案 ${currentPlan}】完整複製到【方案 ${targetPlan}】！\n您可以直接切換到方案 ${targetPlan} 進行配件修改。`);
+        alert(`📋 已成功將【方案 ${currentPlan}】完整複製到【方案 ${targetPlan}】！\n您可以點擊選單切換到【方案 ${targetPlan}】進行零件修改。`);
     }
 
     function downloadScreenshot(e) {
@@ -994,7 +991,6 @@
         navigator.clipboard.writeText(text).then(() => alert(`📋 已複製【方案 ${currentPlan}】文字報價！`)); 
     }
 
-    // 生成雙方案 A/B 對比報價文字
     function copyDualPlanQuoteText() {
         saveCurrentInputsToPlan();
         
