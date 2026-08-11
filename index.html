@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v14.00</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v15.00</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,7 +12,6 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        /* iPhone 專屬間距設定 */
         body { background-color: #f8fafc; font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; padding-top: 105px !important; padding-bottom: 300px !important; font-size: 14px; color: #334155; line-height: 1.5; }
         .tab-active { border-bottom: 3px solid #3b82f6; color: #3b82f6; font-weight: bold; }
         .card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
@@ -81,16 +80,15 @@
         .preview-table td { padding: 6px 8px; border: 1px solid #e2e8f0; white-space: nowrap; max-width: 250px; overflow: hidden; text-overflow: ellipsis; }
         .preview-table tr:nth-child(even) { background-color: #f8fafc; }
 
-        /* 方案切換頁籤專屬樣式 */
         .plan-tab-active { background-color: #2563eb !important; color: #ffffff !important; font-weight: 900 !important; border: 2px solid #60a5fa !important; }
     </style>
 </head>
 <body class="p-2 md:p-4" id="mainBody">
 
     <div class="no-screenshot fixed right-4 bottom-10 z-[2000] flex flex-col gap-3">
-        <button id="floatingSaveBtn" onclick="saveInventory()" class="hidden bg-green-600 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">💾</button>
-        <button onclick="if(confirm('重新整理系統？')) { window.location.reload(); }" class="bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔄</button>
-        <button onclick="goBack()" class="bg-black text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl">🔙</button>
+        <button id="floatingSaveBtn" onclick="saveInventory()" class="hidden bg-green-600 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl cursor-pointer">💾</button>
+        <button onclick="if(confirm('重新整理系統？')) { window.location.reload(); }" class="bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl cursor-pointer">🔄</button>
+        <button onclick="goBack()" class="bg-black text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl cursor-pointer">🔙</button>
     </div>
 
     <div id="adminToggleContainer" class="no-screenshot">
@@ -101,8 +99,8 @@
     </div>
 
     <div id="screenshotNav" class="hidden">
-        <button id="ssDownloadBtn" onclick="downloadScreenshot(event)" class="bg-blue-600 text-white py-4 rounded-full font-black shadow-2xl w-full text-lg">💾 存成圖片保存</button>
-        <button onclick="exitScreenshotMode()" class="bg-gray-800 text-white py-4 rounded-full font-black shadow-2xl w-full text-lg">🔙 返回報價單</button>
+        <button id="ssDownloadBtn" onclick="downloadScreenshot(event)" class="bg-blue-600 text-white py-4 rounded-full font-black shadow-2xl w-full text-lg cursor-pointer">💾 存成圖片保存</button>
+        <button onclick="exitScreenshotMode()" class="bg-gray-800 text-white py-4 rounded-full font-black shadow-2xl w-full text-lg cursor-pointer">🔙 返回報價單</button>
     </div>
 
     <div class="max-w-7xl mx-auto w-full px-1" id="captureArea">
@@ -113,17 +111,15 @@
         </div>
         
         <div class="flex border-b-2 mb-4 no-screenshot overflow-x-auto bg-white sticky top-0 z-50 rounded-t">
-            <button onclick="showTab('calc')" id="btn-calc" class="flex-1 px-4 py-3 tab-active whitespace-nowrap">🖥️ 報價</button>
-            <button onclick="showTab('drafts')" id="btn-drafts" class="flex-1 px-4 py-3 whitespace-nowrap">📂 草稿</button>
-            <button onclick="showTab('orders')" id="btn-orders" class="flex-1 px-4 py-3 whitespace-nowrap">✅ 正式</button>
-            <button onclick="showTab('completed')" id="btn-completed" class="flex-1 px-4 py-3 whitespace-nowrap">🏁 結案</button>
-            <button onclick="showTab('stats')" id="btn-stats" class="flex-1 px-4 py-3 whitespace-nowrap">📊 統計</button>
-            <button onclick="showTab('inventory')" id="btn-inventory" class="flex-1 px-4 py-3 whitespace-nowrap">⚙️ 品項</button>
+            <button onclick="showTab('calc')" id="btn-calc" class="flex-1 px-4 py-3 tab-active whitespace-nowrap cursor-pointer">🖥️ 報價</button>
+            <button onclick="showTab('drafts')" id="btn-drafts" class="flex-1 px-4 py-3 whitespace-nowrap cursor-pointer">📂 草稿</button>
+            <button onclick="showTab('orders')" id="btn-orders" class="flex-1 px-4 py-3 whitespace-nowrap cursor-pointer">✅ 正式</button>
+            <button onclick="showTab('completed')" id="btn-completed" class="flex-1 px-4 py-3 whitespace-nowrap cursor-pointer">🏁 結案</button>
+            <button onclick="showTab('stats')" id="btn-stats" class="flex-1 px-4 py-3 whitespace-nowrap cursor-pointer">📊 統計</button>
+            <button onclick="showTab('inventory')" id="btn-inventory" class="flex-1 px-4 py-3 whitespace-nowrap cursor-pointer">⚙️ 品項</button>
         </div>
 
         <div id="tab-calc" class="page-content">
-            
-            <!-- 多方案 A/B 菜單切換與比較 Bar -->
             <div class="no-screenshot bg-slate-900 text-white p-3 rounded-2xl mb-3 flex flex-wrap items-center justify-between gap-2 shadow-lg border-2 border-blue-500">
                 <div class="flex items-center gap-2 overflow-x-auto">
                     <span class="text-xs font-black text-blue-300 whitespace-nowrap">📑 編輯方案：</span>
@@ -160,13 +156,12 @@
                             <input type="text" id="custPhone" placeholder="📞 電話">
                             <select id="custSource"><option value="FB">FB</option><option value="IG">IG</option><option value="Line">Line</option><option value="蝦皮">蝦皮</option></select>
                             <div class="flex gap-1">
-                                <select id="infoSeller" class="flex-1 font-bold text-blue-600">
+                                <select id="infoSeller" class="flex-1 font-bold text-blue-600 cursor-pointer">
                                     <option value="朱冠穎">朱冠穎</option><option value="江苙翔">江苙翔</option><option value="江鈞宇">江鈞宇</option>
                                 </select>
-                                <button onclick="addCustomSeller()" class="bg-gray-200 px-3 rounded border">+</button>
+                                <button onclick="addCustomSeller()" class="bg-gray-200 px-3 rounded border cursor-pointer">+</button>
                             </div>
 
-                            <!-- 發票開立狀態選擇框 -->
                             <div class="md:col-span-4 bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-xl border-2 border-blue-300 flex flex-col md:flex-row items-center justify-between gap-2 shadow-sm">
                                 <label class="text-xs font-black text-blue-900 flex items-center gap-1">🧾 發票開立狀態：</label>
                                 <select id="custInvoice" onchange="calculate()" class="w-full md:w-auto font-black text-blue-800 bg-white border-2 border-blue-400 rounded-lg p-2 text-xs outline-none shadow-sm cursor-pointer">
@@ -202,7 +197,6 @@
                             <input type="number" id="noCardTotal" class="w-full border-orange-200 text-sm" placeholder="輸入無卡金額" oninput="calculate()">
                         </div>
 
-                        <!-- 財務統計區塊 -->
                         <div id="sellerBox" class="bg-blue-50 p-3 rounded-lg space-y-1.5">
                             <div class="flex justify-between text-xs text-gray-600 font-bold"><span>零件總成本</span><span id="ui-totalCost">$0</span></div>
                             <div class="flex justify-between text-xs text-blue-700 font-bold"><span>總金額</span><span id="ui-taxedTotal">$0</span></div>
@@ -281,7 +275,7 @@
         </div>
     </div>
 
-    <!-- 結案訂單專屬：零件大項獨立開欄 匯出視窗 -->
+    <!-- 結案訂單專屬 CSV 預覽 Modal -->
     <div id="csvPreviewModal" class="hidden fixed inset-0 bg-black/80 z-[60000] flex flex-col items-center justify-center p-4">
         <div class="bg-white rounded-2xl p-4 max-w-4xl w-full max-h-[90vh] flex flex-col items-center space-y-3 shadow-2xl">
             <div class="flex justify-between items-center w-full border-b pb-2">
@@ -289,7 +283,7 @@
                 <button onclick="document.getElementById('csvPreviewModal').classList.add('hidden')" class="text-2xl font-bold text-gray-500 px-2 cursor-pointer">×</button>
             </div>
             <div class="text-xs text-blue-600 font-bold bg-blue-50 w-full p-2.5 rounded text-center leading-relaxed">
-                ✨ **已為您過濾【僅限結案訂單】**！CPU、主機板等零件獨立分欄，並已支援<b>【免開發票/免稅】正確毛利計算</b>！<br>點擊「複製試算表格式」後，對準 Google 試算表 <b>A1 格貼上</b>即可！
+                ✨ 點擊「複製試算表格式」後，對準 Google 試算表 <b>A1 格貼上</b>即可！
             </div>
             
             <div id="tablePreviewContainer" class="w-full h-72 overflow-auto border rounded bg-white p-1"></div>
@@ -313,7 +307,6 @@
     let currentTsvText = "";
     let currentHtmlTable = "";
 
-    // 多方案 A/B 資料結構
     let currentPlan = 'A';
     let plansData = {
         'A': { selections: {}, discount: 0, manualTotal: '', noCard: '', deposit: 0 },
@@ -353,45 +346,34 @@
         saveCurrentInputsToPlan();
         const targetPlan = (currentPlan === 'A') ? 'B' : 'A';
         plansData[targetPlan] = JSON.parse(JSON.stringify(plansData[currentPlan]));
-        alert(`📋 已成功將【方案 ${currentPlan}】完整複製到【方案 ${targetPlan}】！\n您可以點擊選單切換到【方案 ${targetPlan}】進行零件修改。`);
+        alert(`📋 已成功將【方案 ${currentPlan}】完整複製到【方案 ${targetPlan}】！`);
     }
 
     function downloadScreenshot(e) {
         const captureEl = document.getElementById('captureArea');
         if(!captureEl) return;
-
         const btn = document.getElementById('ssDownloadBtn');
         const origText = btn ? btn.innerText : '💾 存成圖片保存';
         if (btn) btn.innerText = '⏳ 圖片生成中...';
-
         window.scrollTo(0, 0);
 
         setTimeout(() => {
             try {
-                html2canvas(captureEl, { 
-                    useCORS: true, 
-                    allowTaint: true, 
-                    scale: 2, 
-                    backgroundColor: "#f8fafc",
-                    logging: false
-                }).then(canvas => {
+                html2canvas(captureEl, { useCORS: true, allowTaint: true, scale: 2, backgroundColor: "#f8fafc", logging: false }).then(canvas => {
                     if (btn) btn.innerText = origText;
                     const dataUrl = canvas.toDataURL('image/png');
                     generatedImgUrl = dataUrl;
-
                     const imgEl = document.getElementById('previewImg');
                     if (imgEl) imgEl.src = dataUrl;
-
                     const modal = document.getElementById('imgPreviewModal');
                     if (modal) modal.classList.remove('hidden');
-
                 }).catch(err => {
                     if (btn) btn.innerText = origText;
-                    alert('截圖生成失敗：' + (err.message || '請重新整理後重試'));
+                    alert('截圖生成失敗：' + (err.message || '請重試'));
                 });
             } catch(err) {
                 if (btn) btn.innerText = origText;
-                alert('截圖發生錯誤，請重試！');
+                alert('截圖發生錯誤！');
             }
         }, 300);
     }
@@ -399,11 +381,7 @@
     function openImageInNewTab() {
         if (!generatedImgUrl) return;
         const newWin = window.open();
-        if (newWin) {
-            newWin.document.write(`<title>報價單圖片</title><body style="margin:0;background:#333;display:flex;justify-content:center;align-items:center;min-height:100vh;"><img src="${generatedImgUrl}" style="max-width:100%;height:auto;"/></body>`);
-        } else {
-            alert('請允許瀏覽器彈出視窗以觀看圖片！');
-        }
+        if (newWin) newWin.document.write(`<title>報價單圖片</title><body style="margin:0;background:#333;display:flex;justify-content:center;align-items:center;min-height:100vh;"><img src="${generatedImgUrl}" style="max-width:100%;height:auto;"/></body>`);
     }
 
     function calculate() {
@@ -415,7 +393,8 @@
 
             catOrder.forEach(cat => {
                 (currentSelections[cat] || []).forEach(s => {
-                    let p = 0, c = 0; if (s.p !== undefined && s.c !== undefined) { p = Number(s.p || 0); c = Number(s.c || 0); } 
+                    let p = 0, c = 0; 
+                    if (s.p !== undefined && s.c !== undefined) { p = Number(s.p || 0); c = Number(s.c || 0); } 
                     else { const item = (inv[cat] || [])[s.idx]; if(item) { p = Number(item.p || 0); c = Number(item.c || 0); } }
                     if(!s.isGift) subP += (p * (s.qty || 1)); subC += (c * (s.qty || 1));
                 });
@@ -518,7 +497,6 @@
     function toggleAdminMode() { const i = document.getElementById('adminToggle').checked; if(i) document.getElementById('mainBody').classList.remove('hide-admin-box'); else document.getElementById('mainBody').classList.add('hide-admin-box'); }
     function toggleSSTotalMode() { const i = document.getElementById('ssTotalToggle').checked; if(i) document.getElementById('mainBody').classList.remove('ss-hide-totals'); else document.getElementById('mainBody').classList.add('ss-hide-totals'); }
 
-    // 一次儲存 A+B 方案到同一筆草稿紀錄
     function saveRecord(st) { 
         saveCurrentInputsToPlan();
         const id = editingRecordId ? String(editingRecordId) : String(Date.now()); 
@@ -544,7 +522,7 @@
             payStatus: defaultPayStatus,
             orderMemo: document.getElementById('orderMemo').value || "", 
             deposit: depositVal, 
-            plans: plansData, // 打包 A + B 方案
+            plans: plansData, 
             selections: currentSelections || {}, 
             total: currentDisplayTotal, 
             discount: document.getElementById('discountAmt').value || 0, 
@@ -562,14 +540,11 @@
         });
     }
 
-    // 將草稿轉正式訂單時，彈出選單選擇留存哪一個方案
     function promptConvertToOrder(id) {
         const r = records.find(x => String(x.id) === String(id));
         if(!r) return;
-
         const optionsContainer = document.getElementById('planSelectOptions');
         optionsContainer.innerHTML = '';
-
         const hasPlans = r.plans && (Object.keys(r.plans.A.selections).length > 0 || Object.keys(r.plans.B.selections).length > 0);
 
         if (hasPlans) {
@@ -603,13 +578,11 @@
         }
     }
 
-    // 確定成立正式訂單：保留選定方案，清除多餘方案
     function executeConvertToOrder(id, chosenPlanKey) {
         const r = records.find(x => String(x.id) === String(id));
         if(!r || !r.plans) return;
 
         const chosenPlan = r.plans[chosenPlanKey];
-        
         let subP = 0;
         catOrder.forEach(cat => {
             (chosenPlan.selections[cat] || []).forEach(s => {
@@ -627,7 +600,7 @@
             manualTotal: chosenPlan.manualTotal || '',
             noCard: chosenPlan.noCard || '',
             total: finalTotalStr,
-            plans: null // 轉正式訂單後，自動刪除多餘方案
+            plans: null 
         };
 
         db.ref('records/' + id).update(updateData).then(() => {
@@ -733,12 +706,17 @@
         });
     }
 
+    // 🌟 核心優化：渲染【📊 統計與業務抽成戰情室】
     function renderStats() {
         const content = document.getElementById('statsContent'); 
         if(!content) return; 
 
         let monthlyData = {};
-        let sellerStats = { "朱冠穎": { profit: 0, count: 0 }, "江苙翔": { profit: 0, count: 0 }, "江鈞宇": { profit: 0, count: 0 } };
+        let sellerStats = { 
+            "朱冠穎": { profit: 0, count: 0 }, 
+            "江苙翔": { profit: 0, count: 0 }, 
+            "江鈞宇": { profit: 0, count: 0 } 
+        };
 
         records.forEach(r => { 
             if(!r || r.status === 'draft') return; 
@@ -775,7 +753,7 @@
             monthlyData[monthKey].profit += orderProfit; 
             monthlyData[monthKey].count += 1; 
 
-            // 統計業務個人業績（僅計算已結案訂單）
+            // 統計【結案訂單】的業務個人抽成
             if (r.status === 'completed') {
                 const sName = r.seller || "朱冠穎";
                 if (!sellerStats[sName]) sellerStats[sName] = { profit: 0, count: 0 };
@@ -795,17 +773,16 @@
             </button>
         </div>`;
 
-        // 業務 3 人抽成看板
-        html += `
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">`;
+        // 渲染業務 3 人抽成看板
+        html += `<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">`;
         
         Object.keys(sellerStats).forEach(name => {
             const sData = sellerStats[name];
-            const commission = Math.round(sData.profit * 0.4); // 業務分 40%
-            const companyShare = Math.round(sData.profit * 0.6); // 公司分 60%
+            const commission = Math.round(sData.profit * 0.4); 
+            const companyShare = Math.round(sData.profit * 0.6); 
 
             html += `
-            <div class="card p-4 border-t-4 border-indigo-500 space-y-2 bg-gradient-to-b from-indigo-50/30 to-white">
+            <div class="card p-4 border-t-4 border-indigo-500 space-y-2 bg-gradient-to-b from-indigo-50/30 to-white shadow-sm">
                 <div class="flex justify-between items-center">
                     <span class="font-black text-base text-gray-800">👤 ${name}</span>
                     <span class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-black">已結案 ${sData.count} 單</span>
@@ -827,7 +804,7 @@
 
         html += `</div>`;
 
-        // 每月績效彙整
+        // 渲染月份績效
         html += Object.keys(monthlyData).sort((a,b)=>b.localeCompare(a)).map(m => `
             <div class="stats-card">
                 <div class="text-lg font-black text-gray-800 mb-2">${m} 績效彙整</div>
@@ -846,18 +823,13 @@
     function exportCompletedOrdersCSV() {
         try {
             const completedRecords = records.filter(r => r && r.status === 'completed');
-            
-            if (completedRecords.length === 0) {
-                alert('目前系統中尚無任何【結案】狀態的訂單紀錄！');
-                return;
-            }
+            if (completedRecords.length === 0) { alert('目前無【結案】狀態紀錄！'); return; }
 
             const baseHeadersFront = ["訂單ID", "日期時間", "客戶姓名", "電話", "客戶來源", "負責業務", "發票狀態"];
             const dynamicCatHeaders = catOrder.map(cat => `【${cat}】`);
             const baseHeadersBack = ["總金額", "折扣金額", "銷售額(未稅/免稅)", "營業稅(5%)", "零件總成本", "稅後實賺毛利", "業務抽成(40%)", "預收訂金", "待收尾款", "付款狀態", "取貨地址", "保固備註", "內部備註"];
 
             const allHeaders = [...baseHeadersFront, ...dynamicCatHeaders, ...baseHeadersBack];
-
             let tsvContent = allHeaders.join('\t') + '\n';
             let htmlRows = '';
 
@@ -910,27 +882,18 @@
                 const backCells = [totalVal, discountVal, preTax, tax, itemCost, profit, commission40, deposit, balance, payStatus, addr, warranty, memo];
 
                 const fullRow = [...frontCells, ...catCells, ...backCells];
-                
                 tsvContent += fullRow.join('\t') + '\n';
                 htmlRows += `<tr>${fullRow.map(cell => `<td>${cell}</td>`).join('')}</tr>`;
             });
 
             currentTsvText = tsvContent;
-
-            currentHtmlTable = `
-                <table class="preview-table">
-                    <thead><tr>${allHeaders.map(h => `<th>${h}</th>`).join('')}</tr></thead>
-                    <tbody>${htmlRows}</tbody>
-                </table>`;
-
+            currentHtmlTable = `<table class="preview-table"><thead><tr>${allHeaders.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${htmlRows}</tbody></table>`;
             const previewBox = document.getElementById('tablePreviewContainer');
             if (previewBox) previewBox.innerHTML = currentHtmlTable;
-
             const modal = document.getElementById('csvPreviewModal');
             if (modal) modal.classList.remove('hidden');
-
         } catch(err) {
-            alert('匯出時發生錯誤：' + err.message);
+            alert('匯出失敗：' + err.message);
         }
     }
 
@@ -938,61 +901,25 @@
         if (!currentTsvText) return;
         try {
             if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(currentTsvText).then(() => {
-                    alert('📋 已成功複製結案配單表！\n請開啟 Google 試算表，點擊【A1 格子】貼上，資料就會自動對齊拆分成專屬欄位！');
-                }).catch(() => fallbackCopyTsv());
-            } else {
-                fallbackCopyTsv();
-            }
-        } catch(e) {
-            fallbackCopyTsv();
-        }
+                navigator.clipboard.writeText(currentTsvText).then(() => { alert('📋 已成功複製！請對準 Google 試算表 A1 格貼上即可！'); }).catch(() => fallbackCopyTsv());
+            } else { fallbackCopyTsv(); }
+        } catch(e) { fallbackCopyTsv(); }
     }
 
     function fallbackCopyTsv() {
         const dummy = document.createElement("textarea");
         document.body.appendChild(dummy);
-        dummy.value = currentTsvText;
-        dummy.select();
-        document.execCommand("copy");
-        document.body.removeChild(dummy);
-        alert('📋 已成功複製！請至 Google 試算表對準 A1 格貼上即可！');
+        dummy.value = currentTsvText; dummy.select();
+        document.execCommand("copy"); document.body.removeChild(dummy);
+        alert('📋 已複製！請至試算表貼上即可！');
     }
 
     function openCsvInNewTab() {
         if (!currentHtmlTable) return;
         const newWin = window.open('', '_blank');
         if (newWin) {
-            newWin.document.write(`
-                <!DOCTYPE html>
-                <html lang="zh-TW">
-                <head>
-                    <meta charset="utf-8">
-                    <title>神奇海螺電競 - 結案訂單完整配單與財務總表</title>
-                    <style>
-                        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; background: #f8fafc; color: #1e293b; }
-                        h2 { color: #1e40af; margin-bottom: 8px; }
-                        p { font-size: 13px; color: #64748b; margin-bottom: 16px; }
-                        .table-wrapper { overflow-x: auto; background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
-                        table { width: 100%; border-collapse: collapse; font-size: 12px; }
-                        th { background-color: #2563eb; color: white; padding: 10px 12px; text-align: left; white-space: nowrap; font-weight: bold; border: 1px solid #1d4ed8; }
-                        td { padding: 10px 12px; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #f1f5f9; white-space: nowrap; }
-                        tr:nth-child(even) { background-color: #f8fafc; }
-                        tr:hover { background-color: #f1f5f9; }
-                    </style>
-                </head>
-                <body>
-                    <h2>🏁 神奇海螺電競 - 結案訂單完整配單與財務總表</h2>
-                    <p>💡 提示：按 Ctrl+A 全選或滑動選取表格後複製，可直接貼入 Excel / Google 試算表！</p>
-                    <div class="table-wrapper">
-                        ${currentHtmlTable}
-                    </div>
-                </body>
-                </html>
-            `);
+            newWin.document.write(`<!DOCTYPE html><html lang="zh-TW"><head><meta charset="utf-8"><title>結案配單總表</title><style>body{font-family:sans-serif;padding:20px;background:#f8fafc;}table{width:100%;border-collapse:collapse;font-size:12px;}th{background:#2563eb;color:#fff;padding:8px;border:1px solid #1d4ed8;}td{padding:8px;border:1px solid #e2e8f0;white-space:nowrap;}</style></head><body><h2>🏁 結案訂單完整配單與財務總表</h2><div>${currentHtmlTable}</div></body></html>`);
             newWin.document.close();
-        } else {
-            alert('請允許瀏覽器彈出視窗以觀看報表！');
         }
     }
 
@@ -1000,24 +927,14 @@
     
     function editRecord(id) { 
         const r = records.find(x => String(x.id) === String(id)); 
-        if(!r) { alert('找不到該筆紀錄，請重新整理頁面。'); return; }
+        if(!r) return;
         editingRecordId = id; 
-        
-        if (r.plans) {
-            plansData = JSON.parse(JSON.stringify(r.plans));
-        } else {
-            plansData = {
-                'A': { selections: JSON.parse(JSON.stringify(r.selections || {})), discount: r.discount||0, manualTotal: r.manualTotal||'', noCard: r.noCard||'', deposit: r.deposit||0 },
-                'B': { selections: {}, discount: 0, manualTotal: '', noCard: '', deposit: 0 }
-            };
-        }
-
+        if (r.plans) { plansData = JSON.parse(JSON.stringify(r.plans)); } 
+        else { plansData = { 'A': { selections: JSON.parse(JSON.stringify(r.selections || {})), discount: r.discount||0, manualTotal: r.manualTotal||'', noCard: r.noCard||'', deposit: r.deposit||0 }, 'B': { selections: {}, discount: 0, manualTotal: '', noCard: '', deposit: 0 } }; }
         currentPlan = 'A';
         document.getElementById('plan-btn-A').classList.add('plan-tab-active');
         document.getElementById('plan-btn-B').classList.remove('plan-tab-active');
-
         currentSelections = JSON.parse(JSON.stringify(plansData['A'].selections || {}));
-        
         document.getElementById('custName').value = r.name || ''; 
         document.getElementById('custPhone').value = r.custPhone || ''; 
         if(r.custSource) document.getElementById('custSource').value = r.custSource;
@@ -1028,41 +945,22 @@
         document.getElementById('custWarranty').value = r.custWarranty || ''; 
         document.getElementById('orderMemo').value = r.orderMemo || ''; 
         document.getElementById('depositAmt').value = plansData['A'].deposit || 0; 
-        
-        if (r.hasInvoice) {
-            document.getElementById('custInvoice').value = r.hasInvoice;
-        } else {
-            document.getElementById('custInvoice').value = 'yes';
-        }
-
+        if (r.hasInvoice) { document.getElementById('custInvoice').value = r.hasInvoice; } else { document.getElementById('custInvoice').value = 'yes'; }
         const sellerSelect = document.getElementById('infoSeller');
         const targetSeller = r.seller || '朱冠穎';
         let hasOption = false;
-        for(let i=0; i<sellerSelect.options.length; i++) {
-            if(sellerSelect.options[i].value === targetSeller) { hasOption = true; break; }
-        }
-        if(!hasOption) {
-            const opt = document.createElement('option');
-            opt.value = targetSeller; opt.text = targetSeller;
-            sellerSelect.add(opt);
-        }
+        for(let i=0; i<sellerSelect.options.length; i++) { if(sellerSelect.options[i].value === targetSeller) { hasOption = true; break; } }
+        if(!hasOption) { const opt = document.createElement('option'); opt.value = targetSeller; opt.text = targetSeller; sellerSelect.add(opt); }
         sellerSelect.value = targetSeller;
-
-        renderConfig(); 
-        showTab('calc'); 
+        renderConfig(); showTab('calc'); 
     }
 
     function resetForm() { 
-        editingRecordId = null; 
-        currentSelections = {}; 
-        plansData = {
-            'A': { selections: {}, discount: 0, manualTotal: '', noCard: '', deposit: 0 },
-            'B': { selections: {}, discount: 0, manualTotal: '', noCard: '', deposit: 0 }
-        };
+        editingRecordId = null; currentSelections = {}; 
+        plansData = { 'A': { selections: {}, discount: 0, manualTotal: '', noCard: '', deposit: 0 }, 'B': { selections: {}, discount: 0, manualTotal: '', noCard: '', deposit: 0 } };
         currentPlan = 'A';
         document.getElementById('plan-btn-A').classList.add('plan-tab-active');
         document.getElementById('plan-btn-B').classList.remove('plan-tab-active');
-
         document.querySelectorAll('#tab-calc input, #tab-calc textarea').forEach(i=>i.value=""); 
         document.getElementById('discountAmt').value = 0; 
         document.getElementById('depositAmt').value = 0; 
@@ -1083,8 +981,7 @@
         document.getElementById('screenshot-header').style.display = 'block'; 
         document.getElementById('screenshot-footer').style.display = 'block'; 
         document.getElementById('screenshotNav').classList.remove('hidden'); 
-        renderConfig(); 
-        window.scrollTo(0,0); 
+        renderConfig(); window.scrollTo(0,0); 
     }
     function exitScreenshotMode() { document.getElementById('mainBody').classList.remove('screenshot-mode'); document.getElementById('screenshot-header').style.display = 'none'; document.getElementById('screenshot-footer').style.display = 'none'; document.getElementById('screenshotNav').classList.add('hidden'); renderConfig(); }
     function toggleAllCats(s) { catOrder.forEach(c => { collapsedCats[c] = s; }); renderInventoryEditor(); }
@@ -1116,14 +1013,10 @@
 
         (inv[currentCat] || []).forEach((item, idx) => { 
             if (searchKey && !item.name.toLowerCase().includes(searchKey)) return;
-
             const sel = (currentSelections[currentCat] || []).find(s => s.idx === idx); 
-            list.innerHTML += `<div class="p-3 border-2 rounded-xl flex justify-between items-center mb-2 ${sel?'border-blue-500 bg-blue-50':'border-gray-100'} ${item.outOfStock?'opacity-30 pointer-events-none':''}" onclick="togglePick(${idx})"><div class="flex-1"><div class="font-black text-gray-800 text-xs">${item.name}</div><div class="flex items-center gap-2 mt-1"><span class="text-blue-600 font-black text-sm">$${Number(item.p).toLocaleString()}</span><span class="text-red-500 font-bold text-xs bg-red-50 px-1.5 py-0.5 rounded border border-red-200">成本: $${Number(item.c||0).toLocaleString()}</span></div></div>${sel ? `<div class="flex flex-col items-end gap-2" onclick="event.stopPropagation()"><div class="flex items-center gap-2"><button onclick="updateSubItem(${idx}, 'qty', -1)" class="bg-gray-100 px-3 py-1 rounded-lg font-black text-lg">-</button><span class="text-sm font-black w-6 text-center">${sel.qty}</span><button onclick="updateSubItem(${idx}, 'qty', 1)" class="bg-blue-100 px-3 py-1 rounded-lg font-black text-lg">+</button></div><button onclick="toggleGift(${idx})" class="text-[10px] px-2 py-1 rounded ${sel.isGift?'bg-red-500 text-white':'bg-gray-200 text-gray-500'} font-black">🎁 贈品</button></div>`:''}</div>`; 
+            list.innerHTML += `<div class="p-3 border-2 rounded-xl flex justify-between items-center mb-2 ${sel?'border-blue-500 bg-blue-50':'border-gray-100'} ${item.outOfStock?'opacity-30 pointer-events-none':''}" onclick="togglePick(${idx})"><div class="flex-1"><div class="font-black text-gray-800 text-xs">${item.name}</div><div class="flex items-center gap-2 mt-1"><span class="text-blue-600 font-black text-sm">$${Number(item.p).toLocaleString()}</span><span class="text-red-500 font-bold text-xs bg-red-50 px-1.5 py-0.5 rounded border border-red-200">成本: $${Number(item.c||0).toLocaleString()}</span></div></div>${sel ? `<div class="flex flex-col items-end gap-2" onclick="event.stopPropagation()"><div class="flex items-center gap-2"><button onclick="updateSubItem(${idx}, 'qty', -1)" class="bg-gray-100 px-3 py-1 rounded-lg font-black text-lg cursor-pointer">-</button><span class="text-sm font-black w-6 text-center">${sel.qty}</span><button onclick="updateSubItem(${idx}, 'qty', 1)" class="bg-blue-100 px-3 py-1 rounded-lg font-black text-lg cursor-pointer">+</button></div><button onclick="toggleGift(${idx})" class="text-[10px] px-2 py-1 rounded ${sel.isGift?'bg-red-500 text-white':'bg-gray-200 text-gray-500'} font-black cursor-pointer">🎁 贈品</button></div>`:''}</div>`; 
         }); 
-        
-        if(list.innerHTML === '') {
-            list.innerHTML = `<div class="text-center text-gray-400 py-6 font-bold">查無符合名稱的零件</div>`;
-        }
+        if(list.innerHTML === '') list.innerHTML = `<div class="text-center text-gray-400 py-6 font-bold">查無符合名稱的零件</div>`;
     }
 
     function togglePick(idx) { if(!currentSelections[currentCat]) currentSelections[currentCat] = []; const i = currentSelections[currentCat].findIndex(s => s.idx === idx); if(i > -1) { currentSelections[currentCat].splice(i,1); } else { const t = (inv[currentCat] || [])[idx]; currentSelections[currentCat].push({idx, qty:1, isGift:false, p: Number(t.p||0), c: Number(t.c||0)}); } renderConfig(); renderModalList(); }
@@ -1135,7 +1028,6 @@
         text += `------------------------------\n`; 
         if (document.getElementById('discountAmt').value > 0) text += `折扣：-$${Number(document.getElementById('discountAmt').value).toLocaleString()}\n`; 
         text += `總計：${document.getElementById('ui-totalSale').innerText}\n`; 
-        
         const deposit = parseFloat(document.getElementById('depositAmt')?.value || 0);
         if (deposit > 0) {
             const totalVal = parseInt(document.getElementById('ui-totalSale').innerText.replace(/[^0-9.-]+/g,"")) || 0;
@@ -1146,11 +1038,9 @@
 
     function copyDualPlanQuoteText() {
         saveCurrentInputsToPlan();
-        
         function buildSingleText(pKey) {
             const p = plansData[pKey];
-            let subP = 0;
-            let listStr = "";
+            let subP = 0; let listStr = "";
             catOrder.forEach(cat => {
                 (p.selections[cat] || []).forEach(sel => {
                     let target = (inv[cat] || [])[sel.idx];
@@ -1168,22 +1058,11 @@
 
         const resA = buildSingleText('A');
         const resB = buildSingleText('B');
-
         const diff = resB.finalTotal - resA.finalTotal;
         let diffStr = (diff > 0) ? `(方案 B 較高 +$${diff.toLocaleString()})` : (diff < 0 ? `(方案 B 較省 -$${Math.abs(diff).toLocaleString()})` : `(兩方案金額相同)`);
 
-        let text = `🐚【神奇海螺電競 | 雙方案報價對比】\n日期：${new Date().toLocaleDateString()}\n`;
-        text += `==============================\n`;
-        text += `🔹【方案 A 內容】\n${resA.listStr || '  (未選擇項目)\n'}`;
-        text += `👉 方案 A 總計：$${resA.finalTotal.toLocaleString()}\n`;
-        text += `------------------------------\n`;
-        text += `🔸【方案 B 內容】\n${resB.listStr || '  (未選擇項目)\n'}`;
-        text += `👉 方案 B 總計：$${resB.finalTotal.toLocaleString()}\n`;
-        text += `==============================\n`;
-        text += `💡 兩方案價差：${diffStr}\n`;
-        text += `歡迎告訴我們您偏好哪一個方案，我們立即為您備貨與安排組裝！`;
-
-        navigator.clipboard.writeText(text).then(() => alert('📋 已成功複製【雙方案 A/B LINE 對比報價】！可直接貼給客戶看！'));
+        let text = `🐚【神奇海螺電競 | 雙方案報價對比】\n日期：${new Date().toLocaleDateString()}\n==============================\n🔹【方案 A 內容】\n${resA.listStr || '  (未選擇項目)\n'}👉 方案 A 總計：$${resA.finalTotal.toLocaleString()}\n------------------------------\n🔸【方案 B 內容】\n${resB.listStr || '  (未選擇項目)\n'}👉 方案 B 總計：$${resB.finalTotal.toLocaleString()}\n==============================\n💡 兩方案價差：${diffStr}\n歡迎告訴我們您偏好哪一個方案，我們立即為您備貨與安排組裝！`;
+        navigator.clipboard.writeText(text).then(() => alert('📋 已成功複製【雙方案 A/B LINE 對比報價】！'));
     }
     
     function toggleGift(idx) { const sel = currentSelections[currentCat].find(s => s.idx === idx); if(sel) { sel.isGift = !sel.isGift; renderConfig(); renderModalList(); } }
@@ -1193,7 +1072,6 @@
         if(!r || !r.selections) return; 
         const list = document.getElementById('shipmentList'); list.innerHTML = ''; 
         const ns = r.notShipped || {}; 
-
         catOrder.forEach(cat => { 
             (r.selections[cat] || []).forEach((sel, idxInOrder) => { 
                 let target = (inv[cat] || [])[sel.idx]; 
@@ -1209,11 +1087,8 @@
     function updateItemShipment(id, cat, idxInOrder, isNotShipped) { 
         const r = records.find(x => String(x.id) === String(id)); 
         if(!r) return; let ns = r.notShipped || {}; if(!ns[cat]) ns[cat] = []; 
-        if(isNotShipped) { 
-            if(!ns[cat].includes(idxInOrder)) ns[cat].push(idxInOrder); 
-        } else { 
-            ns[cat] = ns[cat].filter(i => i !== idxInOrder); 
-        } 
+        if(isNotShipped) { if(!ns[cat].includes(idxInOrder)) ns[cat].push(idxInOrder); } 
+        else { ns[cat] = ns[cat].filter(i => i !== idxInOrder); } 
         db.ref('records/' + id + '/notShipped').set(ns); 
     }
 
