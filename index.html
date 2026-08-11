@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v12.00</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v13.00</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -252,7 +252,7 @@
                 <p class="text-xs text-gray-500 leading-relaxed">請選擇客人最終確定的方案，轉為正式訂單後，將會<b>自動保留該方案</b>並精準計算業績與成本：</p>
                 <div id="planSelectOptions" class="space-y-2"></div>
                 <div class="flex justify-end gap-2 pt-2 border-t">
-                    <button onclick="document.getElementById('planSelectModal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 font-bold text-xs rounded-xl">取消</button>
+                    <button onclick="document.getElementById('planSelectModal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 font-bold text-xs rounded-xl cursor-pointer">取消</button>
                 </div>
             </div>
         </div>
@@ -313,7 +313,7 @@
     let currentTsvText = "";
     let currentHtmlTable = "";
 
-    // 🌟 多方案 A/B 資料結構（單一草稿內存雙方案） 🌟
+    // 多方案 A/B 資料結構
     let currentPlan = 'A';
     let plansData = {
         'A': { selections: {}, discount: 0, manualTotal: '', noCard: '', deposit: 0 },
@@ -698,7 +698,7 @@
             
             let actionButtons = "";
             if (status === 'draft') {
-                actionButtons = `<button onclick="promptConvertToOrder('${r.id}')" class="bg-green-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-black">轉正式</button>`;
+                actionButtons = `<button onclick="promptConvertToOrder('${r.id}')" class="bg-green-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-black cursor-pointer">轉正式</button>`;
             } else if (status === 'order') {
                 actionButtons = `
                 <button onclick="if(confirm('要將此訂單退回草稿嗎？')) db.ref('records/' + '${r.id}' + '/status').set('draft')" class="bg-amber-500 text-white px-2 rounded-lg text-[10px] font-bold">退回草稿</button>
