@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v11.00</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v12.00</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -123,10 +123,10 @@
 
         <div id="tab-calc" class="page-content">
             
-            <!-- 🌟🌟🌟 新增：多方案 A/B 菜單切換與比較 Bar 🌟🌟🌟 -->
+            <!-- 多方案 A/B 菜單切換與比較 Bar -->
             <div class="no-screenshot bg-slate-900 text-white p-3 rounded-2xl mb-3 flex flex-wrap items-center justify-between gap-2 shadow-lg border-2 border-blue-500">
                 <div class="flex items-center gap-2 overflow-x-auto">
-                    <span class="text-xs font-black text-blue-300 whitespace-nowrap">📑 報價方案：</span>
+                    <span class="text-xs font-black text-blue-300 whitespace-nowrap">📑 編輯方案：</span>
                     <button onclick="switchPlan('A')" id="plan-btn-A" class="px-4 py-2 rounded-xl text-xs font-black bg-slate-800 text-slate-300 border border-slate-700 transition-all plan-tab-active cursor-pointer">方案 A</button>
                     <button onclick="switchPlan('B')" id="plan-btn-B" class="px-4 py-2 rounded-xl text-xs font-black bg-slate-800 text-slate-300 border border-slate-700 transition-all cursor-pointer">方案 B</button>
                 </div>
@@ -215,7 +215,7 @@
                         </div>
 
                         <div class="space-y-2">
-                            <button onclick="saveRecord('current')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-black shadow-lg cursor-pointer">以當前方案成立訂單 💾</button>
+                            <button onclick="saveRecord('current')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-black shadow-lg cursor-pointer">💾 儲存修訂 (全存 A+B 方案)</button>
                             <button onclick="saveTemplate()" class="w-full bg-gray-700 hover:bg-gray-800 text-white py-3 rounded-lg font-bold cursor-pointer">📂 存為範本</button>
                             <button onclick="enterScreenshotMode()" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-black cursor-pointer">📸 截圖模式</button>
                         </div>
@@ -241,6 +241,18 @@
                 <div id="modalList" class="space-y-2 overflow-y-auto flex-1 pb-4"></div>
                 <div class="pt-4 border-t">
                     <button onclick="closeModal()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-lg shadow-xl">確定選擇並關閉</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 轉正式訂單選方案 Modal -->
+        <div id="planSelectModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[10002] backdrop-blur-md">
+            <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4">
+                <h3 class="font-black text-gray-800 text-lg border-b pb-2">🎯 選擇轉換正式訂單之方案</h3>
+                <p class="text-xs text-gray-500 leading-relaxed">請選擇客人最終確定的方案，轉為正式訂單後，將會<b>自動保留該方案</b>並精準計算業績與成本：</p>
+                <div id="planSelectOptions" class="space-y-2"></div>
+                <div class="flex justify-end gap-2 pt-2 border-t">
+                    <button onclick="document.getElementById('planSelectModal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 font-bold text-xs rounded-xl">取消</button>
                 </div>
             </div>
         </div>
@@ -301,7 +313,7 @@
     let currentTsvText = "";
     let currentHtmlTable = "";
 
-    // 🌟 多方案 A/B 資料結構 🌟
+    // 🌟 多方案 A/B 資料結構（單一草稿內存雙方案） 🌟
     let currentPlan = 'A';
     let plansData = {
         'A': { selections: {}, discount: 0, manualTotal: '', noCard: '', deposit: 0 },
@@ -506,6 +518,7 @@
     function toggleAdminMode() { const i = document.getElementById('adminToggle').checked; if(i) document.getElementById('mainBody').classList.remove('hide-admin-box'); else document.getElementById('mainBody').classList.add('hide-admin-box'); }
     function toggleSSTotalMode() { const i = document.getElementById('ssTotalToggle').checked; if(i) document.getElementById('mainBody').classList.remove('ss-hide-totals'); else document.getElementById('mainBody').classList.add('ss-hide-totals'); }
 
+    // 一次儲存 A+B 方案到同一筆草稿紀錄
     function saveRecord(st) { 
         saveCurrentInputsToPlan();
         const id = editingRecordId ? String(editingRecordId) : String(Date.now()); 
@@ -515,6 +528,8 @@
         
         let defaultPayStatus = (editingRecordId && oldR) ? (oldR.payStatus || "未付款") : "未付款";
         if (depositVal > 0 && defaultPayStatus === "未付款") defaultPayStatus = "已付訂金";
+
+        const currentDisplayTotal = document.getElementById('ui-totalSale').innerText || "$0";
 
         const rawData = { 
             id: id, 
@@ -529,8 +544,9 @@
             payStatus: defaultPayStatus,
             orderMemo: document.getElementById('orderMemo').value || "", 
             deposit: depositVal, 
+            plans: plansData, // 打包 A + B 方案
             selections: currentSelections || {}, 
-            total: document.getElementById('ui-totalSale').innerText || "$0", 
+            total: currentDisplayTotal, 
             discount: document.getElementById('discountAmt').value || 0, 
             noCard: document.getElementById('noCardTotal').value || "", 
             manualTotal: document.getElementById('manualTotal').value || "", 
@@ -538,10 +554,85 @@
             progress: (oldR ? oldR.progress : "待處理"), 
             notShipped: (oldR ? (oldR.notShipped || {}) : {}) 
         }; 
+
         db.ref('records/' + id).update(rawData).then(() => { 
-            alert(`💾 以【方案 ${currentPlan}】成功成立訂單！`); 
+            alert(`💾 成功儲存草稿！（已完整包覆 A+B 雙方案）`); 
             resetForm(); 
             showTab(status === 'draft' ? 'drafts' : (status === 'order' ? 'orders' : 'completed')); 
+        });
+    }
+
+    // 將草稿轉正式訂單時，彈出選單選擇留存哪一個方案
+    function promptConvertToOrder(id) {
+        const r = records.find(x => String(x.id) === String(id));
+        if(!r) return;
+
+        const optionsContainer = document.getElementById('planSelectOptions');
+        optionsContainer.innerHTML = '';
+
+        const hasPlans = r.plans && (Object.keys(r.plans.A.selections).length > 0 || Object.keys(r.plans.B.selections).length > 0);
+
+        if (hasPlans) {
+            ['A', 'B'].forEach(pKey => {
+                const p = r.plans[pKey];
+                let subP = 0;
+                catOrder.forEach(cat => {
+                    (p.selections[cat] || []).forEach(s => {
+                        let target = (inv[cat] || [])[s.idx];
+                        if (target && !s.isGift) subP += ((s.p !== undefined ? s.p : target.p) * (s.qty||1));
+                    });
+                });
+                const baseTotal = (p.manualTotal !== "" && !isNaN(parseFloat(p.manualTotal))) ? parseFloat(p.manualTotal) : (subP - (p.discount||0));
+                const finalTotal = (p.noCard && p.noCard !== "") ? parseFloat(p.noCard) : baseTotal;
+
+                optionsContainer.innerHTML += `
+                    <button onclick="executeConvertToOrder('${id}', '${pKey}')" class="w-full text-left p-3.5 border-2 rounded-xl border-blue-200 hover:border-blue-600 bg-blue-50/50 flex justify-between items-center cursor-pointer transition-all">
+                        <div>
+                            <div class="font-black text-sm text-blue-900">選擇【方案 ${pKey}】</div>
+                            <div class="text-xs text-gray-500 mt-0.5">預估總額：$${finalTotal.toLocaleString()}</div>
+                        </div>
+                        <span class="bg-blue-600 text-white font-black text-xs px-3 py-1.5 rounded-lg">確定以此成立</span>
+                    </button>
+                `;
+            });
+            document.getElementById('planSelectModal').classList.remove('hidden');
+        } else {
+            if(confirm('確定轉為正式訂單？')) {
+                db.ref('records/' + id + '/status').set('order');
+            }
+        }
+    }
+
+    // 確定成立正式訂單：保留選定方案，清除多餘方案
+    function executeConvertToOrder(id, chosenPlanKey) {
+        const r = records.find(x => String(x.id) === String(id));
+        if(!r || !r.plans) return;
+
+        const chosenPlan = r.plans[chosenPlanKey];
+        
+        let subP = 0;
+        catOrder.forEach(cat => {
+            (chosenPlan.selections[cat] || []).forEach(s => {
+                let target = (inv[cat] || [])[s.idx];
+                if (target && !s.isGift) subP += ((s.p !== undefined ? s.p : target.p) * (s.qty||1));
+            });
+        });
+        const baseTotal = (chosenPlan.manualTotal !== "" && !isNaN(parseFloat(chosenPlan.manualTotal))) ? parseFloat(chosenPlan.manualTotal) : (subP - (chosenPlan.discount||0));
+        const finalTotalStr = `$${((chosenPlan.noCard && chosenPlan.noCard !== "") ? parseFloat(chosenPlan.noCard) : baseTotal).toLocaleString()}`;
+
+        const updateData = {
+            status: 'order',
+            selections: chosenPlan.selections,
+            discount: chosenPlan.discount || 0,
+            manualTotal: chosenPlan.manualTotal || '',
+            noCard: chosenPlan.noCard || '',
+            total: finalTotalStr,
+            plans: null // 轉正式訂單後，自動刪除多餘方案
+        };
+
+        db.ref('records/' + id).update(updateData).then(() => {
+            document.getElementById('planSelectModal').classList.add('hidden');
+            alert(`✅ 已成功選定【方案 ${chosenPlanKey}】轉為正式訂單！另一方案已自動清理。`);
         });
     }
 
@@ -599,6 +690,7 @@
             ` : '';
 
             const invBadge = (r.hasInvoice === 'no') ? `<span class="bg-gray-100 text-gray-600 text-[10px] px-1.5 py-0.5 rounded font-black border border-gray-300">免發票</span>` : `<span class="bg-blue-50 text-blue-600 text-[10px] px-1.5 py-0.5 rounded font-black border border-blue-200">含稅5%</span>`;
+            const planBadge = (r.plans && r.status === 'draft') ? `<span class="bg-indigo-100 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded font-black border border-indigo-200">雙方案 A/B</span>` : '';
 
             const div = document.createElement('div'); div.className = "p-4 border-2 rounded-xl bg-white shadow-sm space-y-3";
             const shipmentBtn = (status === 'order' || status === 'completed') ? `<button onclick="openShipmentModal('${r.id}')" class="flex-1 py-2 bg-gray-50 text-gray-500 text-[10px] rounded-lg font-black border">🚚 出貨管理</button>` : '';
@@ -606,7 +698,7 @@
             
             let actionButtons = "";
             if (status === 'draft') {
-                actionButtons = `<button onclick="if(confirm('轉正式訂單？')) db.ref('records/' + '${r.id}' + '/status').set('order')" class="bg-green-600 text-white px-2 rounded-lg text-[10px] font-bold">轉正式</button>`;
+                actionButtons = `<button onclick="promptConvertToOrder('${r.id}')" class="bg-green-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-black">轉正式</button>`;
             } else if (status === 'order') {
                 actionButtons = `
                 <button onclick="if(confirm('要將此訂單退回草稿嗎？')) db.ref('records/' + '${r.id}' + '/status').set('draft')" class="bg-amber-500 text-white px-2 rounded-lg text-[10px] font-bold">退回草稿</button>
@@ -617,7 +709,7 @@
 
             div.innerHTML = `<div class="flex justify-between items-start">
                 <div>
-                    <div class="text-[10px] text-gray-400 flex items-center gap-1">${r.time} ${invBadge}</div>
+                    <div class="text-[10px] text-gray-400 flex items-center gap-1">${r.time} ${invBadge} ${planBadge}</div>
                     <div class="text-base font-black mt-0.5">${r.name || '無名氏'}</div>
                     <div class="text-blue-600 font-black text-lg">${r.total}</div>
                     ${noCardVal ? `<div class="text-[11px] text-orange-600 font-black mt-1">💳 無卡：$${noCardVal}</div>` : ''}
@@ -862,19 +954,32 @@
         const r = records.find(x => String(x.id) === String(id)); 
         if(!r) { alert('找不到該筆紀錄，請重新整理頁面。'); return; }
         editingRecordId = id; 
-        currentSelections = JSON.parse(JSON.stringify(r.selections || {})); 
-        plansData[currentPlan].selections = currentSelections;
+        
+        if (r.plans) {
+            plansData = JSON.parse(JSON.stringify(r.plans));
+        } else {
+            plansData = {
+                'A': { selections: JSON.parse(JSON.stringify(r.selections || {})), discount: r.discount||0, manualTotal: r.manualTotal||'', noCard: r.noCard||'', deposit: r.deposit||0 },
+                'B': { selections: {}, discount: 0, manualTotal: '', noCard: '', deposit: 0 }
+            };
+        }
+
+        currentPlan = 'A';
+        document.getElementById('plan-btn-A').classList.add('plan-tab-active');
+        document.getElementById('plan-btn-B').classList.remove('plan-tab-active');
+
+        currentSelections = JSON.parse(JSON.stringify(plansData['A'].selections || {}));
         
         document.getElementById('custName').value = r.name || ''; 
         document.getElementById('custPhone').value = r.custPhone || ''; 
         if(r.custSource) document.getElementById('custSource').value = r.custSource;
-        document.getElementById('discountAmt').value = r.discount || 0; 
-        document.getElementById('manualTotal').value = r.manualTotal || ''; 
-        document.getElementById('noCardTotal').value = r.noCard || ''; 
+        document.getElementById('discountAmt').value = plansData['A'].discount || 0; 
+        document.getElementById('manualTotal').value = plansData['A'].manualTotal || ''; 
+        document.getElementById('noCardTotal').value = plansData['A'].noCard || ''; 
         document.getElementById('custAddr').value = r.custAddr || ''; 
         document.getElementById('custWarranty').value = r.custWarranty || ''; 
         document.getElementById('orderMemo').value = r.orderMemo || ''; 
-        document.getElementById('depositAmt').value = r.deposit || 0; 
+        document.getElementById('depositAmt').value = plansData['A'].deposit || 0; 
         
         if (r.hasInvoice) {
             document.getElementById('custInvoice').value = r.hasInvoice;
