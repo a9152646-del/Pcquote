@@ -144,6 +144,16 @@
                                 </select>
                                 <button onclick="addCustomSeller()" class="bg-gray-200 px-3 rounded border">+</button>
                             </div>
+
+                            <!-- 新增：發票狀態切換選單 -->
+                            <div class="md:col-span-4 bg-blue-50 p-3 rounded-xl border border-blue-200 flex flex-col md:flex-row items-center justify-between gap-2">
+                                <label class="text-xs font-black text-blue-800 flex items-center gap-1">🧾 發票開立狀態：</label>
+                                <select id="custInvoice" onchange="calculate()" class="w-full md:w-auto font-black text-blue-700 bg-white border border-blue-300 rounded-lg p-2 text-xs outline-none">
+                                    <option value="yes">🧾 開立發票 (扣 5% 營業稅)</option>
+                                    <option value="no">🚫 免開發票 / 免稅 (不扣營業稅，毛利全算)</option>
+                                </select>
+                            </div>
+
                             <input type="text" id="custAddr" placeholder="📦 地址 / 取貨方式" class="md:col-span-4">
                             <input type="text" id="custWarranty" placeholder="🛡️ 保固備註" class="md:col-span-4 font-bold text-blue-600">
                             <textarea id="orderMemo" placeholder="📝 內部備註" class="md:col-span-4 h-20 w-full"></textarea>
@@ -167,16 +177,16 @@
                         <div class="space-y-3">
                             <div><label class="text-xs text-gray-400 font-bold tracking-widest">折扣</label><input type="number" id="discountAmt" class="w-full mt-1 text-red-500 font-black text-lg" value="0" oninput="calculate()"></div>
                             <div><label class="text-xs text-blue-400 font-bold tracking-widest">手動總額 (Lock)</label><input type="number" id="manualTotal" class="w-full mt-1 border-blue-200 font-black text-lg text-blue-600" placeholder="修改總價..." oninput="calculate()"></div>
-                            <div class="pt-1"><div class="text-xs text-blue-400 font-bold tracking-widest">Total 含稅 ✏️</div><div id="ui-totalSale" class="text-3xl font-black text-blue-600">$0</div></div>
+                            <div class="pt-1"><div class="text-xs text-blue-400 font-bold tracking-widest">Total 總計 ✏️</div><div id="ui-totalSale" class="text-3xl font-black text-blue-600">$0</div></div>
                             <div id="ui-noCardShow" class="p-2 bg-orange-50 rounded hidden border-2 border-orange-200"><div id="ui-noCardVal" class="text-lg font-black text-orange-600">$0</div></div>
                             <input type="number" id="noCardTotal" class="w-full border-orange-200 text-sm" placeholder="輸入無卡金額" oninput="calculate()">
                         </div>
 
-                        <!-- 財務統計區塊 -->
+                        <!-- 財務統計區塊 (連動發票狀態) -->
                         <div id="sellerBox" class="bg-blue-50 p-3 rounded-lg space-y-1.5">
                             <div class="flex justify-between text-xs text-gray-600 font-bold"><span>零件總成本</span><span id="ui-totalCost">$0</span></div>
-                            <div class="flex justify-between text-xs text-blue-700 font-bold"><span>含稅金額</span><span id="ui-taxedTotal">$0</span></div>
-                            <div class="flex justify-between text-xs text-gray-700 font-bold"><span>未稅金額 (5%稅前)</span><span id="ui-preTaxTotal">$0</span></div>
+                            <div class="flex justify-between text-xs text-blue-700 font-bold"><span>總金額</span><span id="ui-taxedTotal">$0</span></div>
+                            <div class="flex justify-between text-xs text-gray-700 font-bold"><span id="ui-preTaxLabel">未稅金額 (5%稅前)</span><span id="ui-preTaxTotal">$0</span></div>
                             <div class="flex justify-between text-xs text-red-500 font-bold"><span>營業稅金 (5%)</span><span id="ui-taxAmt">-$0</span></div>
                             <div class="border-t border-blue-200 pt-1.5 space-y-1">
                                 <div class="flex justify-between text-xs font-black text-indigo-700"><span>含稅毛利</span><span id="ui-taxedProfit">$0</span></div>
@@ -247,7 +257,7 @@
                 <button onclick="document.getElementById('csvPreviewModal').classList.add('hidden')" class="text-2xl font-bold text-gray-500 px-2">×</button>
             </div>
             <div class="text-xs text-blue-600 font-bold bg-blue-50 w-full p-2.5 rounded text-center leading-relaxed">
-                ✨ **已為您過濾【僅限結案訂單】**！且 CPU、主機板、顯示卡等零件已**自動獨立拆分成專屬欄位**！<br>點擊「複製試算表格式」後，對準 Google 試算表 <b>A1 格貼上</b>即可完美自動分欄。
+                ✨ **已為您過濾【僅限結案訂單】**！CPU、主機板等零件獨立分欄，並已支援<b>【免開發票/免稅】正確毛利計算</b>！<br>點擊「複製試算表格式」後，對準 Google 試算表 <b>A1 格貼上</b>即可！
             </div>
             
             <!-- 表格預覽 -->
@@ -322,11 +332,14 @@
         }
     }
 
+    // 關鍵修復：依據「發票開立狀態」決定是否扣除 5% 營業稅
     function calculate() {
         try {
             let subP = 0, subC = 0, disc = parseFloat(document.getElementById('discountAmt')?.value || 0);
             let noCard = parseFloat(document.getElementById('noCardTotal')?.value || 0);
             let manualVal = document.getElementById('manualTotal').value;
+            const hasInvoice = document.getElementById('custInvoice')?.value !== 'no'; // 是否開發票
+
             catOrder.forEach(cat => {
                 (currentSelections[cat] || []).forEach(s => {
                     let p = 0, c = 0; if (s.p !== undefined && s.c !== undefined) { p = Number(s.p || 0); c = Number(s.c || 0); } 
@@ -346,10 +359,21 @@
                 document.getElementById('ui-noCardShow').classList.add('hidden');
             }
             
-            const preTaxTotal = Math.round(finalTaxedTotal / 1.05); 
-            const taxAmt = Math.round(finalTaxedTotal - preTaxTotal); 
-            const taxedProfit = finalTaxedTotal - subC; 
-            const preTaxProfit = preTaxTotal - subC; 
+            let preTaxTotal = finalTaxedTotal;
+            let taxAmt = 0;
+            let preTaxProfit = finalTaxedTotal - subC;
+            let taxedProfit = finalTaxedTotal - subC;
+
+            if (hasInvoice) {
+                // 有開發票：扣除 5% 營業稅
+                preTaxTotal = Math.round(finalTaxedTotal / 1.05); 
+                taxAmt = Math.round(finalTaxedTotal - preTaxTotal); 
+                preTaxProfit = preTaxTotal - subC; 
+                document.getElementById('ui-preTaxLabel').innerText = "未稅金額 (5%稅前)";
+            } else {
+                // 免開發票：不扣稅，營業稅為 $0，銷售總額即為稅前金額
+                document.getElementById('ui-preTaxLabel').innerText = "未稅金額 (免開立發票)";
+            }
             
             const depositAmt = parseFloat(document.getElementById('depositAmt')?.value || 0);
             const balanceAmt = finalTaxedTotal - depositAmt;
@@ -441,6 +465,7 @@
             custAddr: document.getElementById('custAddr').value || "", 
             custWarranty: document.getElementById('custWarranty').value || "", 
             seller: document.getElementById('infoSeller').value || "朱冠穎", 
+            hasInvoice: document.getElementById('custInvoice')?.value || "yes", // 儲存發票狀態
             payStatus: defaultPayStatus,
             orderMemo: document.getElementById('orderMemo').value || "", 
             deposit: depositVal, 
@@ -513,6 +538,8 @@
                 <div class="text-[12px] text-red-600 font-black">🔴 待收尾款：$${balanceVal.toLocaleString()}</div>
             ` : '';
 
+            const invBadge = (r.hasInvoice === 'no') ? `<span class="bg-gray-100 text-gray-600 text-[10px] px-1.5 py-0.5 rounded font-black border border-gray-300">免發票</span>` : `<span class="bg-blue-50 text-blue-600 text-[10px] px-1.5 py-0.5 rounded font-black border border-blue-200">含稅5%</span>`;
+
             const div = document.createElement('div'); div.className = "p-4 border-2 rounded-xl bg-white shadow-sm space-y-3";
             const shipmentBtn = (status === 'order' || status === 'completed') ? `<button onclick="openShipmentModal('${r.id}')" class="flex-1 py-2 bg-gray-50 text-gray-500 text-[10px] rounded-lg font-black border">🚚 出貨管理</button>` : '';
             const noCardVal = (r.noCard && r.noCard !== "") ? Number(r.noCard).toLocaleString() : null;
@@ -530,8 +557,8 @@
 
             div.innerHTML = `<div class="flex justify-between items-start">
                 <div>
-                    <div class="text-[10px] text-gray-400">${r.time}</div>
-                    <div class="text-base font-black">${r.name || '無名氏'}</div>
+                    <div class="text-[10px] text-gray-400 flex items-center gap-1">${r.time} ${invBadge}</div>
+                    <div class="text-base font-black mt-0.5">${r.name || '無名氏'}</div>
                     <div class="text-blue-600 font-black text-lg">${r.total}</div>
                     ${noCardVal ? `<div class="text-[11px] text-orange-600 font-black mt-1">💳 無卡：$${noCardVal}</div>` : ''}
                     ${depositHtml}
@@ -554,6 +581,7 @@
         });
     }
 
+    // 關鍵修復：統計時判斷每筆訂單發票狀態，未開發票者不扣 5% 稅金
     function renderStats() {
         const content = document.getElementById('statsContent'); if(!content) return; let monthlyData = {};
         records.forEach(r => { 
@@ -564,10 +592,11 @@
             
             const noCardAmt = (r.noCard && r.noCard !== "") ? parseFloat(r.noCard) : 0;
             const rev = parseInt(String(r.total || '0').replace(/[^0-9.-]+/g,"")) || 0; 
-            
             const activeRevForTax = noCardAmt > 0 ? noCardAmt : rev;
-            const tax = Math.round(activeRevForTax - (activeRevForTax / 1.05));
-            const preTax = Math.round(activeRevForTax / 1.05);
+
+            const hasInv = (r.hasInvoice !== 'no'); // 判斷是否開發票
+            const tax = hasInv ? Math.round(activeRevForTax - (activeRevForTax / 1.05)) : 0;
+            const preTax = hasInv ? Math.round(activeRevForTax / 1.05) : activeRevForTax;
             
             let itemCost = 0; 
             const selections = r.selections || {};
@@ -605,10 +634,10 @@
             <div class="stats-card">
                 <div class="text-lg font-black text-gray-800 mb-2">${m} 績效彙整</div>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div><div class="text-[10px] text-gray-400">未稅金額</div><div class="text-blue-600 font-bold">$${monthlyData[m].revenue.toLocaleString()}</div></div>
+                    <div><div class="text-[10px] text-gray-400">未稅/不開票銷售額</div><div class="text-blue-600 font-bold">$${monthlyData[m].revenue.toLocaleString()}</div></div>
                     <div><div class="text-[10px] text-gray-400">零件成本</div><div class="text-red-500 font-bold">$${monthlyData[m].cost.toLocaleString()}</div></div>
-                    <div><div class="text-[10px] text-gray-400">稅金5%</div><div class="text-orange-600 font-bold">$${monthlyData[m].taxTotal.toLocaleString()}</div></div>
-                    <div><div class="text-[10px] text-gray-400">稅後實賺毛利</div><div class="text-green-600 font-bold font-black">$${Math.round(monthlyData[m].profit).toLocaleString()}</div></div>
+                    <div><div class="text-[10px] text-gray-400">預估營業稅(5%)</div><div class="text-orange-600 font-bold">$${monthlyData[m].taxTotal.toLocaleString()}</div></div>
+                    <div><div class="text-[10px] text-gray-400">真實稅後實賺毛利</div><div class="text-green-600 font-bold font-black">$${Math.round(monthlyData[m].profit).toLocaleString()}</div></div>
                 </div>
                 <div class="mt-2 text-[10px] text-gray-400 italic">※ 共 ${monthlyData[m].count} 筆正式/結案訂單</div>
             </div>`).join('');
@@ -616,10 +645,9 @@
         content.innerHTML = html;
     }
 
-    // 關鍵改造：僅針對【結案訂單 (completed)】，並動態將 catOrder (CPU, 主機板, 顯示卡...) 拆解為獨立專屬欄位！
+    // 匯出結案訂單時支援「發票狀態」與正確毛利欄位
     function exportCompletedOrdersCSV() {
         try {
-            // 嚴格僅過濾 結案訂單
             const completedRecords = records.filter(r => r && r.status === 'completed');
             
             if (completedRecords.length === 0) {
@@ -627,10 +655,9 @@
                 return;
             }
 
-            // 動態組裝表頭：基本資料 + (每個零件類別獨佔一欄) + 財務與備註
-            const baseHeadersFront = ["訂單ID", "日期時間", "客戶姓名", "電話", "客戶來源", "負責業務"];
+            const baseHeadersFront = ["訂單ID", "日期時間", "客戶姓名", "電話", "客戶來源", "負責業務", "發票狀態"];
             const dynamicCatHeaders = catOrder.map(cat => `【${cat}】`);
-            const baseHeadersBack = ["總金額(含稅)", "折扣金額", "未稅金額(5%前)", "營業稅(5%)", "零件總成本", "稅後實賺毛利", "預收訂金", "待收尾款", "付款狀態", "取貨地址", "保固備註", "內部備註"];
+            const baseHeadersBack = ["總金額", "折扣金額", "未稅/不開票銷售額", "營業稅(5%)", "零件總成本", "稅後實賺毛利", "預收訂金", "待收尾款", "付款狀態", "取貨地址", "保固備註", "內部備註"];
 
             const allHeaders = [...baseHeadersFront, ...dynamicCatHeaders, ...baseHeadersBack];
 
@@ -642,13 +669,14 @@
                 const discountVal = Number(r.discount || 0);
                 const noCardAmt = (r.noCard && r.noCard !== "") ? parseFloat(r.noCard) : 0;
                 const activeRev = noCardAmt > 0 ? noCardAmt : totalVal;
-                const preTax = Math.round(activeRev / 1.05);
-                const tax = Math.round(activeRev - preTax);
+
+                const hasInv = (r.hasInvoice !== 'no');
+                const preTax = hasInv ? Math.round(activeRev / 1.05) : activeRev;
+                const tax = hasInv ? Math.round(activeRev - preTax) : 0;
 
                 let itemCost = 0;
                 const selections = r.selections || {};
 
-                // 依據 catOrder 依序擷取該大項的零件名稱與價格
                 const catCells = catOrder.map(cat => {
                     const selList = selections[cat];
                     if (Array.isArray(selList) && selList.length > 0) {
@@ -663,7 +691,7 @@
                             return `${itemName}${qty > 1 ? ' x' + qty : ''} ($${itemPrice.toLocaleString()})${s.isGift?'[贈]':''}`;
                         }).join(' ; ');
                     }
-                    return '-'; // 若該項目未選用則填入短線
+                    return '-';
                 });
 
                 const profit = preTax - itemCost;
@@ -678,8 +706,9 @@
                 const payStatus = String(r.payStatus || '');
                 const addr = String(r.custAddr || '');
                 const warranty = String(r.custWarranty || '');
+                const invStr = hasInv ? '含稅5%' : '免發票';
 
-                const frontCells = [r.id||'', r.time||'', name, phone, source, seller];
+                const frontCells = [r.id||'', r.time||'', name, phone, source, seller, invStr];
                 const backCells = [totalVal, discountVal, preTax, tax, itemCost, profit, deposit, balance, payStatus, addr, warranty, memo];
 
                 const fullRow = [...frontCells, ...catCells, ...backCells];
@@ -787,6 +816,12 @@
         document.getElementById('custWarranty').value = r.custWarranty || ''; 
         document.getElementById('orderMemo').value = r.orderMemo || ''; 
         document.getElementById('depositAmt').value = r.deposit || 0; 
+        
+        if (r.hasInvoice) {
+            document.getElementById('custInvoice').value = r.hasInvoice;
+        } else {
+            document.getElementById('custInvoice').value = 'yes';
+        }
 
         const sellerSelect = document.getElementById('infoSeller');
         const targetSeller = r.seller || '朱冠穎';
@@ -813,6 +848,7 @@
         document.getElementById('depositAmt').value = 0; 
         document.getElementById('custSource').selectedIndex = 0;
         document.getElementById('infoSeller').selectedIndex = 0;
+        document.getElementById('custInvoice').value = 'yes';
         renderConfig(); 
     }
 
@@ -866,7 +902,7 @@
         catOrder.forEach(cat => { (currentSelections[cat] || []).forEach(sel => { let target = (inv[cat] || [])[sel.idx]; if (target) text += `[${cat}] ${target.name}${sel.qty > 1 ? ` x ${sel.qty}` : ''}${sel.isGift?' (贈品)':''}\n`; }); }); 
         text += `------------------------------\n`; 
         if (document.getElementById('discountAmt').value > 0) text += `折扣：-$${Number(document.getElementById('discountAmt').value).toLocaleString()}\n`; 
-        text += `總計：${document.getElementById('ui-totalSale').innerText} (含稅)\n`; 
+        text += `總計：${document.getElementById('ui-totalSale').innerText}\n`; 
         
         const deposit = parseFloat(document.getElementById('depositAmt')?.value || 0);
         if (deposit > 0) {
