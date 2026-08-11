@@ -154,7 +154,7 @@
                             <input type="number" id="noCardTotal" class="w-full border-orange-200 text-sm" placeholder="輸入無卡金額" oninput="calculate()">
                         </div>
 
-                        <!-- 財務統計區塊：修改為「稅後實賺毛利」 -->
+                        <!-- 需求4：四項金額與毛利顯示區塊 -->
                         <div id="sellerBox" class="bg-blue-50 p-3 rounded-lg space-y-1.5">
                             <div class="flex justify-between text-xs text-gray-600 font-bold"><span>零件總成本</span><span id="ui-totalCost">$0</span></div>
                             <div class="flex justify-between text-xs text-blue-700 font-bold"><span>含稅金額</span><span id="ui-taxedTotal">$0</span></div>
@@ -182,13 +182,14 @@
         <div id="tab-stats" class="page-content hidden"><div id="statsContent" class="space-y-4"></div></div>
         <div id="tab-inventory" class="page-content hidden"><div class="card p-4"><div id="inventoryHeader" class="flex flex-col gap-4 mb-4"></div><div id="inventoryEditor" class="space-y-4"></div></div></div>
 
-        <!-- 選擇品項 Modal -->
+        <!-- 需求1 & 2：選擇品項 Modal (內含搜尋欄與成本顯示) -->
         <div id="selectionModal" class="hidden fixed inset-0 bg-black/60 z-[20000] flex items-end">
             <div class="bg-white w-full rounded-t-3xl p-6 max-h-[85vh] flex flex-col shadow-2xl">
                 <div class="flex justify-between items-center mb-3">
                     <h3 id="modalTitle" class="text-xl font-black text-blue-600">🔍 選擇項目</h3>
                     <button onclick="closeModal()" class="text-3xl text-gray-400 p-2">×</button>
                 </div>
+                <!-- 需求2：搜尋欄 -->
                 <input type="text" id="modalSearchInput" placeholder="🔍 搜尋此類別零件名稱..." class="w-full mb-3 p-3 rounded-xl border-2 border-blue-200 font-bold text-sm outline-none focus:border-blue-500 shadow-sm" oninput="renderModalList()">
                 <div id="modalList" class="space-y-2 overflow-y-auto flex-1 pb-4"></div>
                 <div class="pt-4 border-t">
@@ -201,17 +202,23 @@
         <div id="templateModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[10000] backdrop-blur-md"><div class="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl"><div class="p-5 border-b flex justify-between items-center bg-indigo-50"><h3 class="font-black text-indigo-700">📁 載入範本</h3><button onclick="document.getElementById('templateModal').classList.add('hidden')" class="text-3xl">×</button></div><div id="templateList" class="overflow-y-auto flex-1 p-5 space-y-3"></div></div></div>
     </div>
 
-    <!-- 存圖長按預覽 Modal -->
+    <!-- 需求5：手機截圖長按存圖視窗 Modal -->
     <div id="imgPreviewModal" class="hidden fixed inset-0 bg-black/80 z-[60000] flex flex-col items-center justify-center p-4">
         <div class="bg-white rounded-2xl p-4 max-w-lg w-full max-h-[90vh] flex flex-col items-center space-y-3 shadow-2xl">
             <div class="flex justify-between items-center w-full border-b pb-2">
-                <h3 class="font-black text-gray-800 text-base">📸 長按圖片可儲存至相簿</h3>
+                <h3 class="font-black text-gray-800 text-base">📸 報價單圖片已生成</h3>
                 <button onclick="document.getElementById('imgPreviewModal').classList.add('hidden')" class="text-2xl font-bold text-gray-500 px-2">×</button>
             </div>
-            <div class="overflow-y-auto flex-1 w-full flex justify-center">
+            <div class="text-xs text-blue-600 font-bold bg-blue-50 w-full p-2 rounded text-center">
+                💡 手機用戶請「長按下方圖片」選擇「儲存影像」！
+            </div>
+            <div class="overflow-y-auto flex-1 w-full flex justify-center bg-gray-100 p-2 rounded">
                 <img id="previewImg" class="max-w-full h-auto rounded shadow" src="" />
             </div>
-            <button onclick="document.getElementById('imgPreviewModal').classList.add('hidden')" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black">關閉視窗</button>
+            <div class="flex gap-2 w-full">
+                <button onclick="downloadImageDirect()" class="flex-1 bg-green-600 text-white py-3 rounded-xl font-black">點此下載圖片</button>
+                <button onclick="document.getElementById('imgPreviewModal').classList.add('hidden')" class="flex-1 bg-gray-600 text-white py-3 rounded-xl font-black">關閉視窗</button>
+            </div>
         </div>
     </div>
 
@@ -222,13 +229,15 @@
 
     let inv = {}; let catOrder = []; let records = []; let templates = {}; let currentSelections = {}; let editingRecordId = null; let currentCat = "";
     let collapsedCats = {}; 
+    let generatedImgUrl = "";
 
+    // 需求5：截圖生成與存圖邏輯
     function downloadScreenshot(e) {
         const area = document.getElementById('captureArea');
         if(!area) return;
 
         const nav = document.getElementById('screenshotNav');
-        if (nav) nav.style.display = 'none';
+        if (nav) nav.style.display = 'none'; 
 
         const btn = document.getElementById('ssDownloadBtn');
         const origText = btn ? btn.innerText : '';
@@ -247,17 +256,9 @@
                 if (nav) nav.style.display = 'flex';
                 if (btn) btn.innerText = origText;
 
-                const imgUrl = canvas.toDataURL('image/png');
-                try {
-                    const link = document.createElement('a');
-                    link.download = `神奇海螺電競報價_${new Date().toISOString().slice(0,10)}_${Date.now()}.png`;
-                    link.href = imgUrl;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                } catch(err) {
-                    showImagePreviewModal(imgUrl);
-                }
+                generatedImgUrl = canvas.toDataURL('image/png');
+                showImagePreviewModal(generatedImgUrl);
+
             }).catch(err => {
                 if (nav) nav.style.display = 'flex';
                 if (btn) btn.innerText = origText;
@@ -271,6 +272,17 @@
         document.getElementById('imgPreviewModal').classList.remove('hidden');
     }
 
+    function downloadImageDirect() {
+        if(!generatedImgUrl) return;
+        const link = document.createElement('a');
+        link.download = `神奇海螺電競報價_${new Date().toISOString().slice(0,10)}_${Date.now()}.png`;
+        link.href = generatedImgUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // 需求4：四項金額與毛利精準計算
     function calculate() {
         try {
             let subP = 0, subC = 0, disc = parseFloat(document.getElementById('discountAmt')?.value || 0);
@@ -366,6 +378,7 @@
     function toggleAdminMode() { const i = document.getElementById('adminToggle').checked; if(i) document.getElementById('mainBody').classList.remove('hide-admin-box'); else document.getElementById('mainBody').classList.add('hide-admin-box'); }
     function toggleSSTotalMode() { const i = document.getElementById('ssTotalToggle').checked; if(i) document.getElementById('mainBody').classList.remove('ss-hide-totals'); else document.getElementById('mainBody').classList.add('ss-hide-totals'); }
 
+    // 需求3 & 6：儲存訂單（含備註與業務人員）
     function saveRecord(st) { 
         const id = editingRecordId ? String(editingRecordId) : String(Date.now()); 
         const oldR = records.find(x => String(x.id) === id);
@@ -397,6 +410,7 @@
         });
     }
 
+    // 需求3 & 6：卡片渲染、備註與業務同步
     function renderRecords() {
         const lists = { 'draft': document.getElementById('draftList'), 'order': document.getElementById('orderList'), 'completed': document.getElementById('completedList') };
         const searchTerms = {
@@ -439,6 +453,7 @@
                 });
             }
             
+            // 需求3：黃底區塊顯示備註
             const memoHtml = r.orderMemo ? `<div class="text-xs text-gray-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200 mt-2 font-bold whitespace-pre-wrap">📝 備註：${r.orderMemo}</div>` : '';
             const div = document.createElement('div'); div.className = "p-4 border-2 rounded-xl bg-white shadow-sm space-y-3";
             const shipmentBtn = (status === 'order' || status === 'completed') ? `<button onclick="openShipmentModal('${r.id}')" class="flex-1 py-2 bg-gray-50 text-gray-500 text-[10px] rounded-lg font-black border">🚚 出貨管理</button>` : '';
@@ -455,6 +470,7 @@
                 actionButtons = `<button onclick="if(confirm('要退回正式訂單重新處理嗎？')) db.ref('records/' + '${r.id}' + '/status').set('order')" class="bg-blue-500 text-white px-2 rounded-lg text-[10px] font-bold">退回正式</button>`;
             }
 
+            // 需求6：負責業務選單即時寫入 Firebase
             div.innerHTML = `<div class="flex justify-between items-start">
                 <div>
                     <div class="text-[10px] text-gray-400">${r.time}</div>
@@ -480,7 +496,6 @@
         });
     }
 
-    // 統計分頁：改為「稅後實賺毛利」
     function renderStats() {
         const content = document.getElementById('statsContent'); if(!content) return; let monthlyData = {};
         records.forEach(r => { 
@@ -541,7 +556,7 @@
         document.getElementById('noCardTotal').value = r.noCard || ''; 
         document.getElementById('custAddr').value = r.custAddr || ''; 
         document.getElementById('custWarranty').value = r.custWarranty || ''; 
-        document.getElementById('orderMemo').value = r.orderMemo || ''; 
+        document.getElementById('orderMemo').value = r.orderMemo || ''; // 載入備註
 
         const sellerSelect = document.getElementById('infoSeller');
         const targetSeller = r.seller || '朱冠穎';
@@ -583,6 +598,7 @@
     function saveInventory() { if(confirm('同步雲端？')) { db.ref('inventory').set(inv); db.ref('catOrder').set(catOrder); alert('同步成功'); } }
     function getStatusClass(p) { const map = {"待處理":"status-red", "已叫貨":"status-yellow", "組裝中":"status-blue", "測試中":"status-orange", "已完工":"status-purple", "已寄出":"status-green"}; return map[p] || ""; }
     
+    // 需求2：開啟 Modal 自動清空搜尋欄
     function openSelection(cat) { 
         currentCat = cat; 
         document.getElementById('modalTitle').innerText = '🔍 ' + cat; 
@@ -594,6 +610,7 @@
     
     function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
     
+    // 需求1 & 2：零件彈窗清單（含搜尋過濾與成本標籤）
     function renderModalList() { 
         const list = document.getElementById('modalList'); 
         if(!list) return;
