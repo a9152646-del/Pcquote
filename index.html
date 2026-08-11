@@ -142,7 +142,7 @@
                             <input type="text" id="custWarranty" placeholder="🛡️ 保固備註" class="md:col-span-4 font-bold text-blue-600">
                             <textarea id="orderMemo" placeholder="📝 內部備註" class="md:col-span-4 h-20 w-full"></textarea>
 
-                            <!-- 需求：預收訂金與待收尾款試算（做在備註正下方） -->
+                            <!-- 預收訂金與待收尾款試算（在備註正下方） -->
                             <div class="md:col-span-4 bg-orange-50/80 p-3 rounded-xl border border-orange-200 grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
                                 <div class="flex items-center gap-2">
                                     <label class="text-xs font-black text-orange-700 whitespace-nowrap">💵 預收訂金：</label>
@@ -213,7 +213,7 @@
         <div id="templateModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[10000] backdrop-blur-md"><div class="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl"><div class="p-5 border-b flex justify-between items-center bg-indigo-50"><h3 class="font-black text-indigo-700">📁 載入範本</h3><button onclick="document.getElementById('templateModal').classList.add('hidden')" class="text-3xl">×</button></div><div id="templateList" class="overflow-y-auto flex-1 p-5 space-y-3"></div></div></div>
     </div>
 
-    <!-- 長按存圖預覽 Modal（保留長按儲存與新分頁開啟） -->
+    <!-- 長按存圖預覽 Modal（徹底修復：點擊按鈕直接 100% 跳出此視窗） -->
     <div id="imgPreviewModal" class="hidden fixed inset-0 bg-black/80 z-[60000] flex flex-col items-center justify-center p-4">
         <div class="bg-white rounded-2xl p-4 max-w-lg w-full max-h-[90vh] flex flex-col items-center space-y-3 shadow-2xl">
             <div class="flex justify-between items-center w-full border-b pb-2">
@@ -242,68 +242,45 @@
     let collapsedCats = {}; 
     let generatedImgUrl = "";
 
+    // 截圖邏輯重構：直接生成圖片並可靠地跳出預覽視窗，完全避免手機原生分享被阻擋
     function downloadScreenshot(e) {
         const captureEl = document.getElementById('captureArea');
         if(!captureEl) return;
 
-        const nav = document.getElementById('screenshotNav');
         const btn = document.getElementById('ssDownloadBtn');
         const origText = btn ? btn.innerText : '💾 存成圖片保存';
-        
         if (btn) btn.innerText = '⏳ 圖片生成中...';
 
         window.scrollTo(0, 0);
-        if (nav) nav.style.opacity = '0';
 
         setTimeout(() => {
-            html2canvas(captureEl, { 
-                useCORS: true, 
-                allowTaint: false, 
-                scale: 2, 
-                backgroundColor: "#f8fafc",
-                scrollX: 0,
-                scrollY: 0,
-                logging: false
-            }).then(canvas => {
-                if (nav) nav.style.opacity = '1';
+            try {
+                html2canvas(captureEl, { 
+                    useCORS: true, 
+                    allowTaint: true, 
+                    scale: 2, 
+                    backgroundColor: "#f8fafc",
+                    logging: false
+                }).then(canvas => {
+                    if (btn) btn.innerText = origText;
+                    const dataUrl = canvas.toDataURL('image/png');
+                    generatedImgUrl = dataUrl;
+
+                    const imgEl = document.getElementById('previewImg');
+                    if (imgEl) imgEl.src = dataUrl;
+
+                    const modal = document.getElementById('imgPreviewModal');
+                    if (modal) modal.classList.remove('hidden');
+
+                }).catch(err => {
+                    if (btn) btn.innerText = origText;
+                    alert('截圖生成失敗：' + (err.message || '請重新整理後重試'));
+                });
+            } catch(err) {
                 if (btn) btn.innerText = origText;
-
-                canvas.toBlob(async (blob) => {
-                    const fileName = `神奇海螺電競報價_${new Date().toISOString().slice(0,10)}_${Date.now()}.png`;
-
-                    if (blob) {
-                        const file = new File([blob], fileName, { type: 'image/png' });
-
-                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                            try {
-                                await navigator.share({
-                                    files: [file],
-                                    title: '神奇海螺電競報價單'
-                                });
-                                return;
-                            } catch (shareErr) {
-                                console.log('使用者取消分享');
-                            }
-                        }
-                    }
-
-                    generatedImgUrl = canvas.toDataURL('image/png');
-                    showImagePreviewModal(generatedImgUrl);
-
-                }, 'image/png');
-
-            }).catch(err => {
-                if (nav) nav.style.opacity = '1';
-                if (btn) btn.innerText = origText;
-                console.error('截圖出錯:', err);
-                alert('截圖生成失敗，請重試！');
-            });
-        }, 250);
-    }
-
-    function showImagePreviewModal(imgUrl) {
-        document.getElementById('previewImg').src = imgUrl;
-        document.getElementById('imgPreviewModal').classList.remove('hidden');
+                alert('截圖發生錯誤，請重試！');
+            }
+        }, 300);
     }
 
     function openImageInNewTab() {
@@ -316,7 +293,6 @@
         }
     }
 
-    // 試算邏輯 (連動訂金與尾款)
     function calculate() {
         try {
             let subP = 0, subC = 0, disc = parseFloat(document.getElementById('discountAmt')?.value || 0);
@@ -346,7 +322,6 @@
             const taxedProfit = finalTaxedTotal - subC; 
             const preTaxProfit = preTaxTotal - subC; 
             
-            // 訂金與尾款計算
             const depositAmt = parseFloat(document.getElementById('depositAmt')?.value || 0);
             const balanceAmt = finalTaxedTotal - depositAmt;
             if (document.getElementById('ui-balanceAmt')) {
@@ -419,7 +394,6 @@
     function toggleAdminMode() { const i = document.getElementById('adminToggle').checked; if(i) document.getElementById('mainBody').classList.remove('hide-admin-box'); else document.getElementById('mainBody').classList.add('hide-admin-box'); }
     function toggleSSTotalMode() { const i = document.getElementById('ssTotalToggle').checked; if(i) document.getElementById('mainBody').classList.remove('ss-hide-totals'); else document.getElementById('mainBody').classList.add('ss-hide-totals'); }
 
-    // 儲存訂單（含訂金）
     function saveRecord(st) { 
         const id = editingRecordId ? String(editingRecordId) : String(Date.now()); 
         const oldR = records.find(x => String(x.id) === id);
@@ -440,7 +414,7 @@
             seller: document.getElementById('infoSeller').value || "朱冠穎", 
             payStatus: defaultPayStatus,
             orderMemo: document.getElementById('orderMemo').value || "", 
-            deposit: depositVal, // 寫入訂金
+            deposit: depositVal, 
             selections: currentSelections || {}, 
             total: document.getElementById('ui-totalSale').innerText || "$0", 
             discount: document.getElementById('discountAmt').value || 0, 
@@ -501,7 +475,6 @@
             
             const memoHtml = r.orderMemo ? `<div class="text-xs text-gray-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200 mt-2 font-bold whitespace-pre-wrap">📝 備註：${r.orderMemo}</div>` : '';
             
-            // 訂金與待收尾款標籤
             const totalVal = parseInt(r.total.replace(/[^0-9.-]+/g,"")) || 0;
             const activeTotal = (r.noCard && r.noCard !== "") ? parseFloat(r.noCard) : totalVal;
             const depositVal = Number(r.deposit || 0);
@@ -609,7 +582,7 @@
         content.innerHTML = html;
     }
 
-    // 需求：一鍵匯出 Excel / CSV 報表功能 (帶 BOM 防 Excel 簡/繁體亂碼)
+    // 一鍵匯出 Excel / CSV 報表功能 (帶 UTF-8 BOM 防 Excel 亂碼)
     function exportCompletedOrdersCSV() {
         const validRecords = records.filter(r => r.status === 'completed' || r.status === 'order');
         if (validRecords.length === 0) {
@@ -617,7 +590,7 @@
             return;
         }
 
-        let csvContent = "\uFEFF"; // UTF-8 BOM
+        let csvContent = "\uFEFF"; 
         csvContent += "訂單ID,日期時間,客戶姓名,電話,客戶來源,負責業務,總金額(含稅),未稅金額(5%前),營業稅(5%),零件成本,稅後實賺毛利,預收訂金,待收尾款,處理進度,付款狀態,內部備註\n";
 
         validRecords.forEach(r => {
@@ -671,7 +644,7 @@
         document.getElementById('custAddr').value = r.custAddr || ''; 
         document.getElementById('custWarranty').value = r.custWarranty || ''; 
         document.getElementById('orderMemo').value = r.orderMemo || ''; 
-        document.getElementById('depositAmt').value = r.deposit || 0; // 載入訂金
+        document.getElementById('depositAmt').value = r.deposit || 0; 
 
         const sellerSelect = document.getElementById('infoSeller');
         const targetSeller = r.seller || '朱冠穎';
