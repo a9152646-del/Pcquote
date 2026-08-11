@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v13.00</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v14.00</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -143,8 +143,8 @@
             <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
                 <div class="lg:col-span-3 space-y-3">
                     <div class="flex gap-2 no-screenshot mb-2">
-                        <button onclick="openTemplateModal()" class="flex-[2] bg-indigo-600 text-white py-3 rounded-xl font-black shadow-md">📂 載入範本</button>
-                        <button onclick="copyQuoteAsText()" class="flex-[3] bg-cyan-500 text-white py-3 rounded-xl font-black shadow-md">📋 複製當前方案 LINE 報價</button>
+                        <button onclick="openTemplateModal()" class="flex-[2] bg-indigo-600 text-white py-3 rounded-xl font-black shadow-md cursor-pointer">📂 載入範本</button>
+                        <button onclick="copyQuoteAsText()" class="flex-[3] bg-cyan-500 text-white py-3 rounded-xl font-black shadow-md cursor-pointer">📋 複製當前方案 LINE 報價</button>
                     </div>
                     <div class="card p-2 !bg-gray-100/50">
                         <div id="configRows" class="space-y-3"></div>
@@ -235,12 +235,12 @@
             <div class="bg-white w-full rounded-t-3xl p-6 max-h-[85vh] flex flex-col shadow-2xl">
                 <div class="flex justify-between items-center mb-3">
                     <h3 id="modalTitle" class="text-xl font-black text-blue-600">🔍 選擇項目</h3>
-                    <button onclick="closeModal()" class="text-3xl text-gray-400 p-2">×</button>
+                    <button onclick="closeModal()" class="text-3xl text-gray-400 p-2 cursor-pointer">×</button>
                 </div>
                 <input type="text" id="modalSearchInput" placeholder="🔍 搜尋此類別零件名稱..." class="w-full mb-3 p-3 rounded-xl border-2 border-blue-200 font-bold text-sm outline-none focus:border-blue-500 shadow-sm" oninput="renderModalList()">
                 <div id="modalList" class="space-y-2 overflow-y-auto flex-1 pb-4"></div>
                 <div class="pt-4 border-t">
-                    <button onclick="closeModal()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-lg shadow-xl">確定選擇並關閉</button>
+                    <button onclick="closeModal()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-lg shadow-xl cursor-pointer">確定選擇並關閉</button>
                 </div>
             </div>
         </div>
@@ -266,7 +266,7 @@
         <div class="bg-white rounded-2xl p-4 max-w-lg w-full max-h-[90vh] flex flex-col items-center space-y-3 shadow-2xl">
             <div class="flex justify-between items-center w-full border-b pb-2">
                 <h3 class="font-black text-gray-800 text-base">📸 報價單圖片已完成</h3>
-                <button onclick="document.getElementById('imgPreviewModal').classList.add('hidden')" class="text-2xl font-bold text-gray-500 px-2">×</button>
+                <button onclick="document.getElementById('imgPreviewModal').classList.add('hidden')" class="text-2xl font-bold text-gray-500 px-2 cursor-pointer">×</button>
             </div>
             <div class="text-xs text-blue-600 font-bold bg-blue-50 w-full p-2.5 rounded text-center leading-relaxed">
                 💡 請「長按圖片」選擇「儲存影像」或「複製」<br>亦可點擊下方按鈕以新分頁開啟！
@@ -275,8 +275,8 @@
                 <img id="previewImg" class="max-w-full h-auto rounded shadow cursor-pointer" src="" alt="報價單預覽" />
             </div>
             <div class="grid grid-cols-2 gap-2 w-full pt-1">
-                <button onclick="openImageInNewTab()" class="bg-indigo-600 text-white py-3 rounded-xl font-black text-sm shadow">🔗 新分頁開啟</button>
-                <button onclick="document.getElementById('imgPreviewModal').classList.add('hidden')" class="bg-gray-600 text-white py-3 rounded-xl font-black text-sm shadow">關閉視窗</button>
+                <button onclick="openImageInNewTab()" class="bg-indigo-600 text-white py-3 rounded-xl font-black text-sm shadow cursor-pointer">🔗 新分頁開啟</button>
+                <button onclick="document.getElementById('imgPreviewModal').classList.add('hidden')" class="bg-gray-600 text-white py-3 rounded-xl font-black text-sm shadow cursor-pointer">關閉視窗</button>
             </div>
         </div>
     </div>
@@ -286,7 +286,7 @@
         <div class="bg-white rounded-2xl p-4 max-w-4xl w-full max-h-[90vh] flex flex-col items-center space-y-3 shadow-2xl">
             <div class="flex justify-between items-center w-full border-b pb-2">
                 <h3 class="font-black text-gray-800 text-base">🏁 結案訂單配單與財務清單 (零件獨立分欄)</h3>
-                <button onclick="document.getElementById('csvPreviewModal').classList.add('hidden')" class="text-2xl font-bold text-gray-500 px-2">×</button>
+                <button onclick="document.getElementById('csvPreviewModal').classList.add('hidden')" class="text-2xl font-bold text-gray-500 px-2 cursor-pointer">×</button>
             </div>
             <div class="text-xs text-blue-600 font-bold bg-blue-50 w-full p-2.5 rounded text-center leading-relaxed">
                 ✨ **已為您過濾【僅限結案訂單】**！CPU、主機板等零件獨立分欄，並已支援<b>【免開發票/免稅】正確毛利計算</b>！<br>點擊「複製試算表格式」後，對準 Google 試算表 <b>A1 格貼上</b>即可！
@@ -295,9 +295,9 @@
             <div id="tablePreviewContainer" class="w-full h-72 overflow-auto border rounded bg-white p-1"></div>
 
             <div class="grid grid-cols-3 gap-2 w-full pt-1">
-                <button onclick="copyTsvText()" class="bg-emerald-600 text-white py-3 rounded-xl font-black text-xs shadow">📋 複製試算表格式 (自動分欄)</button>
-                <button onclick="openCsvInNewTab()" class="bg-indigo-600 text-white py-3 rounded-xl font-black text-xs shadow">🔗 新分頁全螢幕開啟</button>
-                <button onclick="document.getElementById('csvPreviewModal').classList.add('hidden')" class="bg-gray-600 text-white py-3 rounded-xl font-black text-xs shadow">關閉視窗</button>
+                <button onclick="copyTsvText()" class="bg-emerald-600 text-white py-3 rounded-xl font-black text-xs shadow cursor-pointer">📋 複製試算表格式 (自動分欄)</button>
+                <button onclick="openCsvInNewTab()" class="bg-indigo-600 text-white py-3 rounded-xl font-black text-xs shadow cursor-pointer">🔗 新分頁全螢幕開啟</button>
+                <button onclick="document.getElementById('csvPreviewModal').classList.add('hidden')" class="bg-gray-600 text-white py-3 rounded-xl font-black text-xs shadow cursor-pointer">關閉視窗</button>
             </div>
         </div>
     </div>
@@ -494,16 +494,16 @@
     function renderInventoryEditor() { 
         const area = document.getElementById('inventoryEditor'); if (!area) return; const scrollPos = window.scrollY; area.innerHTML = ''; 
         const head = document.getElementById('inventoryHeader'); 
-        if(head) head.innerHTML = `<div class="flex justify-between items-center"><h2 class="font-black text-lg text-gray-700">⚙️ 雲端品項管理</h2><div class="flex gap-2"><button onclick="addNewCategory()" class="bg-blue-500 text-white px-3 py-2 rounded-lg text-[10px]">+ 大項</button><button onclick="saveInventory()" class="bg-green-600 text-white px-3 py-2 rounded-lg text-[10px]">💾 同步數據</button></div></div><div class="flex gap-2"><button onclick="toggleAllCats(true)" class="flex-1 bg-gray-200 py-2 rounded-lg text-[10px] font-black">全部收合 ↑</button><button onclick="toggleAllCats(false)" class="flex-1 bg-gray-200 py-2 rounded-lg text-[10px] font-black">全部展開 ↓</button></div>`; 
+        if(head) head.innerHTML = `<div class="flex justify-between items-center"><h2 class="font-black text-lg text-gray-700">⚙️ 雲端品項管理</h2><div class="flex gap-2"><button onclick="addNewCategory()" class="bg-blue-500 text-white px-3 py-2 rounded-lg text-[10px] cursor-pointer">+ 大項</button><button onclick="saveInventory()" class="bg-green-600 text-white px-3 py-2 rounded-lg text-[10px] cursor-pointer">💾 同步數據</button></div></div><div class="flex gap-2"><button onclick="toggleAllCats(true)" class="flex-1 bg-gray-200 py-2 rounded-lg text-[10px] font-black cursor-pointer">全部收合 ↑</button><button onclick="toggleAllCats(false)" class="flex-1 bg-gray-200 py-2 rounded-lg text-[10px] font-black cursor-pointer">全部展開 ↓</button></div>`; 
         catOrder.forEach((cat, cIdx) => { 
             const isCollapsed = collapsedCats[cat]; const sec = document.createElement('div'); sec.className = "bg-gray-100 p-3 rounded-xl border-2 mb-4 category-drag-item"; sec.dataset.catname = cat; 
-            sec.innerHTML = `<div class="flex justify-between items-center ${isCollapsed?'':'mb-4'}"><div class="flex items-center gap-2"><span class="drag-handle cat-drag-handle">≡</span><input class="font-black text-base text-blue-700 border-none bg-transparent p-0 w-40" value="${cat}" onchange="renameCat(${cIdx}, this.value)"></div><div class="flex items-center gap-2"><button onclick="collapsedCats['${cat}']=!collapsedCats['${cat}'];renderInventoryEditor();" class="px-3 py-1 bg-white border rounded-lg font-black text-[10px] shadow-sm">${isCollapsed?'展開 +':'收合 -'}</button><button onclick="removeCat(${cIdx})" class="text-red-300 hover:text-red-500 text-2xl">×</button></div></div><div id="edit-${cat}" class="space-y-3 item-drag-container ${isCollapsed?'hidden':''}" data-cat="${cat}"></div><button onclick="addInvItem('${cat}')" class="w-full text-xs font-bold bg-white mt-4 py-3 rounded-xl border-2 border-dashed border-gray-300 text-gray-400 ${isCollapsed?'hidden':''}">+ 新增零件品項</button>`; 
+            sec.innerHTML = `<div class="flex justify-between items-center ${isCollapsed?'':'mb-4'}"><div class="flex items-center gap-2"><span class="drag-handle cat-drag-handle">≡</span><input class="font-black text-base text-blue-700 border-none bg-transparent p-0 w-40" value="${cat}" onchange="renameCat(${cIdx}, this.value)"></div><div class="flex items-center gap-2"><button onclick="collapsedCats['${cat}']=!collapsedCats['${cat}'];renderInventoryEditor();" class="px-3 py-1 bg-white border rounded-lg font-black text-[10px] shadow-sm cursor-pointer">${isCollapsed?'展開 +':'收合 -'}</button><button onclick="removeCat(${cIdx})" class="text-red-300 hover:text-red-500 text-2xl cursor-pointer">×</button></div></div><div id="edit-${cat}" class="space-y-3 item-drag-container ${isCollapsed?'hidden':''}" data-cat="${cat}"></div><button onclick="addInvItem('${cat}')" class="w-full text-xs font-bold bg-white mt-4 py-3 rounded-xl border-2 border-dashed border-gray-300 text-gray-400 cursor-pointer ${isCollapsed?'hidden':''}">+ 新增零件品項</button>`; 
             area.appendChild(sec); 
             if(!isCollapsed) {
                 (inv[cat] || []).forEach((item, idx) => { 
                     const row = document.createElement('div'); row.className = `inv-item-row item-drag-row`; row.dataset.originalidx = idx; 
                     const sups = ['原', '速', '裕']; let supHtml = sups.map(s => `<button onclick="toggleSup('${cat}', ${idx}, '${s}')" class="sup-btn ${(item.sups||[]).includes(s)?'active':''}">${s}</button>`).join(''); 
-                    row.innerHTML = `<div class="inv-item-main"><span class="drag-handle item-drag-handle">≡</span><div class="inv-name-area"><textarea class="inv-name-input" rows="1">${item.name}</textarea></div><button onclick="removeInvItem('${cat}', ${idx})" class="text-red-500 text-2xl px-2 flex-shrink-0">×</button></div><div class="inv-control-bar"><div class="price-group"><div class="val-box"><span class="val-label">售</span><input type="number" class="val-input p-input" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div><div class="val-box"><span class="val-label">本</span><input type="number" class="val-input c-input" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div><div class="flex gap-1 mx-1">${supHtml}</div><button onclick="inv['${cat}'][${idx}].outOfStock=!inv['${cat}'][${idx}].outOfStock;renderInventoryEditor();" class="stock-btn ${item.outOfStock?'oos':'active'}">${item.outOfStock?'缺貨':'供應'}</button></div></div>`; 
+                    row.innerHTML = `<div class="inv-item-main"><span class="drag-handle item-drag-handle">≡</span><div class="inv-name-area"><textarea class="inv-name-input" rows="1">${item.name}</textarea></div><button onclick="removeInvItem('${cat}', ${idx})" class="text-red-500 text-2xl px-2 flex-shrink-0 cursor-pointer">×</button></div><div class="inv-control-bar"><div class="price-group"><div class="val-box"><span class="val-label">售</span><input type="number" class="val-input p-input" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div><div class="val-box"><span class="val-label">本</span><input type="number" class="val-input c-input" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div><div class="flex gap-1 mx-1">${supHtml}</div><button onclick="inv['${cat}'][${idx}].outOfStock=!inv['${cat}'][${idx}].outOfStock;renderInventoryEditor();" class="stock-btn ${item.outOfStock?'oos':'active'} cursor-pointer">${item.outOfStock?'缺貨':'供應'}</button></div></div>`; 
                     document.getElementById(`edit-${cat}`).appendChild(row); 
                     const ta = row.querySelector('textarea'); setTimeout(() => { ta.style.height = 'auto'; ta.style.height = (ta.scrollHeight) + 'px'; }, 10);
                     ta.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; inv[cat][idx].name = this.value; });
@@ -693,7 +693,7 @@
             const planBadge = (r.plans && r.status === 'draft') ? `<span class="bg-indigo-100 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded font-black border border-indigo-200">雙方案 A/B</span>` : '';
 
             const div = document.createElement('div'); div.className = "p-4 border-2 rounded-xl bg-white shadow-sm space-y-3";
-            const shipmentBtn = (status === 'order' || status === 'completed') ? `<button onclick="openShipmentModal('${r.id}')" class="flex-1 py-2 bg-gray-50 text-gray-500 text-[10px] rounded-lg font-black border">🚚 出貨管理</button>` : '';
+            const shipmentBtn = (status === 'order' || status === 'completed') ? `<button onclick="openShipmentModal('${r.id}')" class="flex-1 py-2 bg-gray-50 text-gray-500 text-[10px] rounded-lg font-black border cursor-pointer">🚚 出貨管理</button>` : '';
             const noCardVal = (r.noCard && r.noCard !== "") ? Number(r.noCard).toLocaleString() : null;
             
             let actionButtons = "";
@@ -701,10 +701,10 @@
                 actionButtons = `<button onclick="promptConvertToOrder('${r.id}')" class="bg-green-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-black cursor-pointer">轉正式</button>`;
             } else if (status === 'order') {
                 actionButtons = `
-                <button onclick="if(confirm('要將此訂單退回草稿嗎？')) db.ref('records/' + '${r.id}' + '/status').set('draft')" class="bg-amber-500 text-white px-2 rounded-lg text-[10px] font-bold">退回草稿</button>
-                <button onclick="if(confirm('結案？')) db.ref('records/' + '${r.id}' + '/status').set('completed')" class="bg-gray-600 text-white px-2 rounded-lg text-[10px] font-bold">結案</button>`;
+                <button onclick="if(confirm('要將此訂單退回草稿嗎？')) db.ref('records/' + '${r.id}' + '/status').set('draft')" class="bg-amber-500 text-white px-2 rounded-lg text-[10px] font-bold cursor-pointer">退回草稿</button>
+                <button onclick="if(confirm('結案？')) db.ref('records/' + '${r.id}' + '/status').set('completed')" class="bg-gray-600 text-white px-2 rounded-lg text-[10px] font-bold cursor-pointer">結案</button>`;
             } else if (status === 'completed') {
-                actionButtons = `<button onclick="if(confirm('要退回正式訂單重新處理嗎？')) db.ref('records/' + '${r.id}' + '/status').set('order')" class="bg-blue-500 text-white px-2 rounded-lg text-[10px] font-bold">退回正式</button>`;
+                actionButtons = `<button onclick="if(confirm('要退回正式訂單重新處理嗎？')) db.ref('records/' + '${r.id}' + '/status').set('order')" class="bg-blue-500 text-white px-2 rounded-lg text-[10px] font-bold cursor-pointer">退回正式</button>`;
             }
 
             div.innerHTML = `<div class="flex justify-between items-start">
@@ -717,24 +717,29 @@
                     <div class="mt-1">${unshippedHtml}</div>
                 </div>
                 <div class="text-right flex flex-col items-end gap-2">
-                    <select onchange="db.ref('records/' + '${r.id}' + '/seller').set(this.value)" class="text-[10px] font-black px-2 py-1 rounded bg-blue-50 text-blue-600 border border-blue-200 outline-none">${sellerOptsHtml}</select>
-                    <select onchange="db.ref('records/' + '${r.id}' + '/progress').set(this.value)" class="text-[10px] font-bold px-1 rounded ${getStatusClass(r.progress)}">${pOpts}</select>
-                    <select onchange="db.ref('records/' + '${r.id}' + '/payStatus').set(this.value)" class="text-[10px] font-black px-2 py-1 rounded-lg ${getPayClass(r.payStatus)}">${payOpts}</select>
+                    <select onchange="db.ref('records/' + '${r.id}' + '/seller').set(this.value)" class="text-[10px] font-black px-2 py-1 rounded bg-blue-50 text-blue-600 border border-blue-200 outline-none cursor-pointer">${sellerOptsHtml}</select>
+                    <select onchange="db.ref('records/' + '${r.id}' + '/progress').set(this.value)" class="text-[10px] font-bold px-1 rounded ${getStatusClass(r.progress)} cursor-pointer">${pOpts}</select>
+                    <select onchange="db.ref('records/' + '${r.id}' + '/payStatus').set(this.value)" class="text-[10px] font-black px-2 py-1 rounded-lg ${getPayClass(r.payStatus)} cursor-pointer">${payOpts}</select>
                 </div>
             </div>
             ${memoHtml}
             <div class="flex gap-1 pt-3 border-t">
-                <button onclick="editRecord('${r.id}')" class="flex-1 py-2 bg-blue-600 text-white text-[10px] rounded-lg font-black">編輯</button>
+                <button onclick="editRecord('${r.id}')" class="flex-1 py-2 bg-blue-600 text-white text-[10px] rounded-lg font-black cursor-pointer">編輯</button>
                 ${shipmentBtn}
                 ${actionButtons}
-                <button onclick="if(confirm('確定刪除紀錄？')) db.ref('records/' + '${r.id}').remove()" class="text-red-300 text-xl px-1">✕</button>
+                <button onclick="if(confirm('確定刪除紀錄？')) db.ref('records/' + '${r.id}').remove()" class="text-red-300 text-xl px-1 cursor-pointer">✕</button>
             </div>`;
             lists[status].appendChild(div);
         });
     }
 
     function renderStats() {
-        const content = document.getElementById('statsContent'); if(!content) return; let monthlyData = {};
+        const content = document.getElementById('statsContent'); 
+        if(!content) return; 
+
+        let monthlyData = {};
+        let sellerStats = { "朱冠穎": { profit: 0, count: 0 }, "江苙翔": { profit: 0, count: 0 }, "江鈞宇": { profit: 0, count: 0 } };
+
         records.forEach(r => { 
             if(!r || r.status === 'draft') return; 
             const dateParts = String(r.time || '').split('/'); 
@@ -762,25 +767,67 @@
                     });
                 }
             } 
-            
+
+            const orderProfit = preTax - itemCost;
             monthlyData[monthKey].revenue += preTax; 
             monthlyData[monthKey].cost += itemCost; 
             monthlyData[monthKey].taxTotal += tax; 
-            monthlyData[monthKey].profit += (preTax - itemCost); 
+            monthlyData[monthKey].profit += orderProfit; 
             monthlyData[monthKey].count += 1; 
+
+            // 統計業務個人業績（僅計算已結案訂單）
+            if (r.status === 'completed') {
+                const sName = r.seller || "朱冠穎";
+                if (!sellerStats[sName]) sellerStats[sName] = { profit: 0, count: 0 };
+                sellerStats[sName].profit += orderProfit;
+                sellerStats[sName].count += 1;
+            }
         }); 
         
         let html = `
-        <div class="flex justify-between items-center bg-white p-4 rounded-2xl border shadow-sm mb-4">
+        <div class="flex justify-between items-center bg-white p-4 rounded-2xl border shadow-sm mb-4 flex-wrap gap-3">
             <div>
-                <h2 class="font-black text-gray-800 text-base">📊 結案訂單配單總表</h2>
-                <p class="text-xs text-gray-400">僅匯出【結案訂單】，零件依 CPU/主機板/顯示卡...自動拆分獨立欄位</p>
+                <h2 class="font-black text-gray-800 text-base">📊 結案訂單配單總表 & 業務抽成戰情室</h2>
+                <p class="text-xs text-gray-400">公司 60% ｜ 業務 40% 自動結算 (朱冠穎、江苙翔、江鈞宇)</p>
             </div>
-            <button onclick="exportCompletedOrdersCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-black text-xs shadow flex items-center gap-1">
+            <button onclick="exportCompletedOrdersCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-black text-xs shadow flex items-center gap-1 cursor-pointer">
                 📊 匯出 結案訂單全配單表
             </button>
         </div>`;
 
+        // 業務 3 人抽成看板
+        html += `
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">`;
+        
+        Object.keys(sellerStats).forEach(name => {
+            const sData = sellerStats[name];
+            const commission = Math.round(sData.profit * 0.4); // 業務分 40%
+            const companyShare = Math.round(sData.profit * 0.6); // 公司分 60%
+
+            html += `
+            <div class="card p-4 border-t-4 border-indigo-500 space-y-2 bg-gradient-to-b from-indigo-50/30 to-white">
+                <div class="flex justify-between items-center">
+                    <span class="font-black text-base text-gray-800">👤 ${name}</span>
+                    <span class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-black">已結案 ${sData.count} 單</span>
+                </div>
+                <div class="text-xs text-gray-500 flex justify-between pt-1">
+                    <span>創造總毛利：</span>
+                    <span class="font-bold text-gray-700">$${Math.round(sData.profit).toLocaleString()}</span>
+                </div>
+                <div class="text-xs text-indigo-600 flex justify-between">
+                    <span>業務抽成 (40%)：</span>
+                    <span class="font-black text-base text-indigo-600">$${commission.toLocaleString()}</span>
+                </div>
+                <div class="text-[11px] text-gray-400 flex justify-between border-t pt-1">
+                    <span>公司保留 (60%)：</span>
+                    <span>$${companyShare.toLocaleString()}</span>
+                </div>
+            </div>`;
+        });
+
+        html += `</div>`;
+
+        // 每月績效彙整
         html += Object.keys(monthlyData).sort((a,b)=>b.localeCompare(a)).map(m => `
             <div class="stats-card">
                 <div class="text-lg font-black text-gray-800 mb-2">${m} 績效彙整</div>
@@ -807,7 +854,7 @@
 
             const baseHeadersFront = ["訂單ID", "日期時間", "客戶姓名", "電話", "客戶來源", "負責業務", "發票狀態"];
             const dynamicCatHeaders = catOrder.map(cat => `【${cat}】`);
-            const baseHeadersBack = ["總金額", "折扣金額", "銷售額(未稅/免稅)", "營業稅(5%)", "零件總成本", "稅後實賺毛利", "預收訂金", "待收尾款", "付款狀態", "取貨地址", "保固備註", "內部備註"];
+            const baseHeadersBack = ["總金額", "折扣金額", "銷售額(未稅/免稅)", "營業稅(5%)", "零件總成本", "稅後實賺毛利", "業務抽成(40%)", "預收訂金", "待收尾款", "付款狀態", "取貨地址", "保固備註", "內部備註"];
 
             const allHeaders = [...baseHeadersFront, ...dynamicCatHeaders, ...baseHeadersBack];
 
@@ -845,6 +892,7 @@
                 });
 
                 const profit = preTax - itemCost;
+                const commission40 = Math.round(profit * 0.4);
                 const deposit = Number(r.deposit || 0);
                 const balance = activeRev - deposit;
                 
@@ -859,7 +907,7 @@
                 const invStr = hasInv ? '含稅5%' : '免發票';
 
                 const frontCells = [r.id||'', r.time||'', name, phone, source, seller, invStr];
-                const backCells = [totalVal, discountVal, preTax, tax, itemCost, profit, deposit, balance, payStatus, addr, warranty, memo];
+                const backCells = [totalVal, discountVal, preTax, tax, itemCost, profit, commission40, deposit, balance, payStatus, addr, warranty, memo];
 
                 const fullRow = [...frontCells, ...catCells, ...backCells];
                 
@@ -1169,7 +1217,7 @@
         db.ref('records/' + id + '/notShipped').set(ns); 
     }
 
-    function openTemplateModal() { const list = document.getElementById('templateList'); list.innerHTML = ''; Object.keys(templates).forEach(id => { const t = templates[id]; list.innerHTML += `<div class="p-4 border-2 rounded-xl mb-3 flex justify-between items-center bg-white shadow-sm" onclick="applyTemplate('${id}')"><div class="font-black text-gray-700 text-xs">${t.name}</div><div class="flex gap-2"><button class="bg-blue-600 text-white px-3 py-1 rounded-lg text-[10px]" onclick="applyTemplate('${id}')">套用</button><button class="bg-red-100 text-red-500 px-3 py-1 rounded-lg text-[10px]" onclick="event.stopPropagation(); db.ref('templates/'+'${id}').remove()">刪除</button></div></div>`; }); document.getElementById('templateModal').classList.remove('hidden'); }
+    function openTemplateModal() { const list = document.getElementById('templateList'); list.innerHTML = ''; Object.keys(templates).forEach(id => { const t = templates[id]; list.innerHTML += `<div class="p-4 border-2 rounded-xl mb-3 flex justify-between items-center bg-white shadow-sm" onclick="applyTemplate('${id}')"><div class="font-black text-gray-700 text-xs">${t.name}</div><div class="flex gap-2"><button class="bg-blue-600 text-white px-3 py-1 rounded-lg text-[10px] cursor-pointer" onclick="applyTemplate('${id}')">套用</button><button class="bg-red-100 text-red-500 px-3 py-1 rounded-lg text-[10px] cursor-pointer" onclick="event.stopPropagation(); db.ref('templates/'+'${id}').remove()">刪除</button></div></div>`; }); document.getElementById('templateModal').classList.remove('hidden'); }
     function applyTemplate(id) { currentSelections = JSON.parse(JSON.stringify(templates[id].selections)); plansData[currentPlan].selections = currentSelections; document.getElementById('discountAmt').value = templates[id].discount || 0; document.getElementById('manualTotal').value = templates[id].manualTotal || ''; renderConfig(); document.getElementById('templateModal').classList.add('hidden'); }
     function saveTemplate() { const name = prompt("範本名稱："); if (!name) return; db.ref('templates/' + Date.now()).update({ name, selections: currentSelections, discount: document.getElementById('discountAmt').value, manualTotal: document.getElementById('manualTotal').value }); }
     function addCustomSeller() { const n = prompt("業務名稱："); if(n) { const s = document.getElementById('infoSeller'); const o = document.createElement('option'); o.value=n; o.text=n; o.selected=true; s.add(o); } }
