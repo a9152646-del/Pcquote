@@ -12,7 +12,6 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        /* iPhone 專屬間距設定 */
         body { background-color: #f8fafc; font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; padding-top: 105px !important; padding-bottom: 300px !important; font-size: 14px; color: #334155; line-height: 1.5; }
         .tab-active { border-bottom: 3px solid #3b82f6; color: #3b82f6; font-weight: bold; }
         .card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
@@ -76,7 +75,6 @@
         
         .stats-card { background: white; padding: 16px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
 
-        /* 試算表預覽表格樣式 */
         .preview-table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; }
         .preview-table th { background-color: #2563eb; color: white; padding: 6px 8px; font-weight: bold; white-space: nowrap; border: 1px solid #1d4ed8; }
         .preview-table td { padding: 6px 8px; border: 1px solid #e2e8f0; white-space: nowrap; max-width: 250px; overflow: hidden; text-overflow: ellipsis; }
@@ -130,7 +128,7 @@
                         <div id="screenshot-footer" class="text-right p-4 pt-2 border-t-2 border-gray-100 space-y-1" style="display: none;">
                             <div id="ss-warranty-info" class="text-[9px] text-blue-500 font-bold mb-1"></div>
                             <div class="ss-total-row text-[9px] text-gray-500 font-bold">折扣：<span id="ss-val-disc" class="text-red-500"></span></div>
-                            <div class="ss-total-row text-lg font-black text-blue-600">總計 (含稅)：<span id="ss-val-total"></span></div>
+                            <div class="ss-total-row text-lg font-black text-blue-600">總計：<span id="ss-val-total"></span></div>
                         </div>
                     </div>
                     <div class="card p-4 no-screenshot bg-gray-50/50">
@@ -145,12 +143,12 @@
                                 <button onclick="addCustomSeller()" class="bg-gray-200 px-3 rounded border">+</button>
                             </div>
 
-                            <!-- 新增：發票狀態切換選單 -->
-                            <div class="md:col-span-4 bg-blue-50 p-3 rounded-xl border border-blue-200 flex flex-col md:flex-row items-center justify-between gap-2">
-                                <label class="text-xs font-black text-blue-800 flex items-center gap-1">🧾 發票開立狀態：</label>
-                                <select id="custInvoice" onchange="calculate()" class="w-full md:w-auto font-black text-blue-700 bg-white border border-blue-300 rounded-lg p-2 text-xs outline-none">
-                                    <option value="yes">🧾 開立發票 (扣 5% 營業稅)</option>
-                                    <option value="no">🚫 免開發票 / 免稅 (不扣營業稅，毛利全算)</option>
+                            <!-- 🌟 新增：顯眼的【發票開立狀態】選擇框 🌟 -->
+                            <div class="md:col-span-4 bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-xl border-2 border-blue-300 flex flex-col md:flex-row items-center justify-between gap-2 shadow-sm">
+                                <label class="text-xs font-black text-blue-900 flex items-center gap-1">🧾 發票開立狀態：</label>
+                                <select id="custInvoice" onchange="calculate()" class="w-full md:w-auto font-black text-blue-800 bg-white border-2 border-blue-400 rounded-lg p-2 text-xs outline-none shadow-sm cursor-pointer">
+                                    <option value="yes">🧾 開立發票 (自動扣 5% 營業稅)</option>
+                                    <option value="no">🚫 免開發票 / 免稅 (不扣稅，100% 計算實賺毛利)</option>
                                 </select>
                             </div>
 
@@ -158,7 +156,6 @@
                             <input type="text" id="custWarranty" placeholder="🛡️ 保固備註" class="md:col-span-4 font-bold text-blue-600">
                             <textarea id="orderMemo" placeholder="📝 內部備註" class="md:col-span-4 h-20 w-full"></textarea>
 
-                            <!-- 預收訂金與待收尾款試算 -->
                             <div class="md:col-span-4 bg-orange-50/80 p-3 rounded-xl border border-orange-200 grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
                                 <div class="flex items-center gap-2">
                                     <label class="text-xs font-black text-orange-700 whitespace-nowrap">💵 預收訂金：</label>
@@ -182,7 +179,7 @@
                             <input type="number" id="noCardTotal" class="w-full border-orange-200 text-sm" placeholder="輸入無卡金額" oninput="calculate()">
                         </div>
 
-                        <!-- 財務統計區塊 (連動發票狀態) -->
+                        <!-- 財務統計區塊 -->
                         <div id="sellerBox" class="bg-blue-50 p-3 rounded-lg space-y-1.5">
                             <div class="flex justify-between text-xs text-gray-600 font-bold"><span>零件總成本</span><span id="ui-totalCost">$0</span></div>
                             <div class="flex justify-between text-xs text-blue-700 font-bold"><span>總金額</span><span id="ui-taxedTotal">$0</span></div>
@@ -260,7 +257,6 @@
                 ✨ **已為您過濾【僅限結案訂單】**！CPU、主機板等零件獨立分欄，並已支援<b>【免開發票/免稅】正確毛利計算</b>！<br>點擊「複製試算表格式」後，對準 Google 試算表 <b>A1 格貼上</b>即可！
             </div>
             
-            <!-- 表格預覽 -->
             <div id="tablePreviewContainer" class="w-full h-72 overflow-auto border rounded bg-white p-1"></div>
 
             <div class="grid grid-cols-3 gap-2 w-full pt-1">
@@ -332,13 +328,12 @@
         }
     }
 
-    // 關鍵修復：依據「發票開立狀態」決定是否扣除 5% 營業稅
     function calculate() {
         try {
             let subP = 0, subC = 0, disc = parseFloat(document.getElementById('discountAmt')?.value || 0);
             let noCard = parseFloat(document.getElementById('noCardTotal')?.value || 0);
             let manualVal = document.getElementById('manualTotal').value;
-            const hasInvoice = document.getElementById('custInvoice')?.value !== 'no'; // 是否開發票
+            const hasInvoice = document.getElementById('custInvoice')?.value !== 'no';
 
             catOrder.forEach(cat => {
                 (currentSelections[cat] || []).forEach(s => {
@@ -365,14 +360,12 @@
             let taxedProfit = finalTaxedTotal - subC;
 
             if (hasInvoice) {
-                // 有開發票：扣除 5% 營業稅
                 preTaxTotal = Math.round(finalTaxedTotal / 1.05); 
                 taxAmt = Math.round(finalTaxedTotal - preTaxTotal); 
                 preTaxProfit = preTaxTotal - subC; 
                 document.getElementById('ui-preTaxLabel').innerText = "未稅金額 (5%稅前)";
             } else {
-                // 免開發票：不扣稅，營業稅為 $0，銷售總額即為稅前金額
-                document.getElementById('ui-preTaxLabel').innerText = "未稅金額 (免開立發票)";
+                document.getElementById('ui-preTaxLabel').innerText = "銷售額 (免開立發票)";
             }
             
             const depositAmt = parseFloat(document.getElementById('depositAmt')?.value || 0);
@@ -465,7 +458,7 @@
             custAddr: document.getElementById('custAddr').value || "", 
             custWarranty: document.getElementById('custWarranty').value || "", 
             seller: document.getElementById('infoSeller').value || "朱冠穎", 
-            hasInvoice: document.getElementById('custInvoice')?.value || "yes", // 儲存發票狀態
+            hasInvoice: document.getElementById('custInvoice')?.value || "yes",
             payStatus: defaultPayStatus,
             orderMemo: document.getElementById('orderMemo').value || "", 
             deposit: depositVal, 
@@ -581,7 +574,6 @@
         });
     }
 
-    // 關鍵修復：統計時判斷每筆訂單發票狀態，未開發票者不扣 5% 稅金
     function renderStats() {
         const content = document.getElementById('statsContent'); if(!content) return; let monthlyData = {};
         records.forEach(r => { 
@@ -594,7 +586,7 @@
             const rev = parseInt(String(r.total || '0').replace(/[^0-9.-]+/g,"")) || 0; 
             const activeRevForTax = noCardAmt > 0 ? noCardAmt : rev;
 
-            const hasInv = (r.hasInvoice !== 'no'); // 判斷是否開發票
+            const hasInv = (r.hasInvoice !== 'no');
             const tax = hasInv ? Math.round(activeRevForTax - (activeRevForTax / 1.05)) : 0;
             const preTax = hasInv ? Math.round(activeRevForTax / 1.05) : activeRevForTax;
             
@@ -634,7 +626,7 @@
             <div class="stats-card">
                 <div class="text-lg font-black text-gray-800 mb-2">${m} 績效彙整</div>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div><div class="text-[10px] text-gray-400">未稅/不開票銷售額</div><div class="text-blue-600 font-bold">$${monthlyData[m].revenue.toLocaleString()}</div></div>
+                    <div><div class="text-[10px] text-gray-400">銷售額 (未稅/免稅)</div><div class="text-blue-600 font-bold">$${monthlyData[m].revenue.toLocaleString()}</div></div>
                     <div><div class="text-[10px] text-gray-400">零件成本</div><div class="text-red-500 font-bold">$${monthlyData[m].cost.toLocaleString()}</div></div>
                     <div><div class="text-[10px] text-gray-400">預估營業稅(5%)</div><div class="text-orange-600 font-bold">$${monthlyData[m].taxTotal.toLocaleString()}</div></div>
                     <div><div class="text-[10px] text-gray-400">真實稅後實賺毛利</div><div class="text-green-600 font-bold font-black">$${Math.round(monthlyData[m].profit).toLocaleString()}</div></div>
@@ -645,7 +637,6 @@
         content.innerHTML = html;
     }
 
-    // 匯出結案訂單時支援「發票狀態」與正確毛利欄位
     function exportCompletedOrdersCSV() {
         try {
             const completedRecords = records.filter(r => r && r.status === 'completed');
@@ -657,7 +648,7 @@
 
             const baseHeadersFront = ["訂單ID", "日期時間", "客戶姓名", "電話", "客戶來源", "負責業務", "發票狀態"];
             const dynamicCatHeaders = catOrder.map(cat => `【${cat}】`);
-            const baseHeadersBack = ["總金額", "折扣金額", "未稅/不開票銷售額", "營業稅(5%)", "零件總成本", "稅後實賺毛利", "預收訂金", "待收尾款", "付款狀態", "取貨地址", "保固備註", "內部備註"];
+            const baseHeadersBack = ["總金額", "折扣金額", "銷售額(未稅/免稅)", "營業稅(5%)", "零件總成本", "稅後實賺毛利", "預收訂金", "待收尾款", "付款狀態", "取貨地址", "保固備註", "內部備註"];
 
             const allHeaders = [...baseHeadersFront, ...dynamicCatHeaders, ...baseHeadersBack];
 
@@ -741,7 +732,7 @@
         try {
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(currentTsvText).then(() => {
-                    alert('📋 已成功複製結案配單表！\n請開啟 Google 試算表，點擊【A1 格子】貼上，CPU、主機板、顯示卡等資料就會自動對齊拆分成專屬欄位！');
+                    alert('📋 已成功複製結案配單表！\n請開啟 Google 試算表，點擊【A1 格子】貼上，資料就會自動對齊拆分成專屬欄位！');
                 }).catch(() => fallbackCopyTsv());
             } else {
                 fallbackCopyTsv();
