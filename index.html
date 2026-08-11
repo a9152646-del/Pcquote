@@ -141,6 +141,18 @@
                             <input type="text" id="custAddr" placeholder="📦 地址 / 取貨方式" class="md:col-span-4">
                             <input type="text" id="custWarranty" placeholder="🛡️ 保固備註" class="md:col-span-4 font-bold text-blue-600">
                             <textarea id="orderMemo" placeholder="📝 內部備註" class="md:col-span-4 h-20 w-full"></textarea>
+
+                            <!-- 需求：預收訂金與待收尾款試算（做在備註正下方） -->
+                            <div class="md:col-span-4 bg-orange-50/80 p-3 rounded-xl border border-orange-200 grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
+                                <div class="flex items-center gap-2">
+                                    <label class="text-xs font-black text-orange-700 whitespace-nowrap">💵 預收訂金：</label>
+                                    <input type="number" id="depositAmt" placeholder="0" class="w-full font-black text-orange-600 border-orange-300 bg-white" value="0" oninput="calculate()">
+                                </div>
+                                <div class="flex items-center justify-between md:justify-end gap-2">
+                                    <span class="text-xs font-black text-red-600">🔴 待收尾款：</span>
+                                    <span id="ui-balanceAmt" class="text-xl font-black text-red-600">$0</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -201,7 +213,7 @@
         <div id="templateModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[10000] backdrop-blur-md"><div class="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl"><div class="p-5 border-b flex justify-between items-center bg-indigo-50"><h3 class="font-black text-indigo-700">📁 載入範本</h3><button onclick="document.getElementById('templateModal').classList.add('hidden')" class="text-3xl">×</button></div><div id="templateList" class="overflow-y-auto flex-1 p-5 space-y-3"></div></div></div>
     </div>
 
-    <!-- 長按存圖預覽 Modal（依要求刪除點此下載按鈕，保留長按儲存） -->
+    <!-- 長按存圖預覽 Modal（保留長按儲存與新分頁開啟） -->
     <div id="imgPreviewModal" class="hidden fixed inset-0 bg-black/80 z-[60000] flex flex-col items-center justify-center p-4">
         <div class="bg-white rounded-2xl p-4 max-w-lg w-full max-h-[90vh] flex flex-col items-center space-y-3 shadow-2xl">
             <div class="flex justify-between items-center w-full border-b pb-2">
@@ -230,7 +242,6 @@
     let collapsedCats = {}; 
     let generatedImgUrl = "";
 
-    // 截圖生成與彈窗 logic
     function downloadScreenshot(e) {
         const captureEl = document.getElementById('captureArea');
         if(!captureEl) return;
@@ -242,7 +253,6 @@
         if (btn) btn.innerText = '⏳ 圖片生成中...';
 
         window.scrollTo(0, 0);
-
         if (nav) nav.style.opacity = '0';
 
         setTimeout(() => {
@@ -264,7 +274,6 @@
                     if (blob) {
                         const file = new File([blob], fileName, { type: 'image/png' });
 
-                        // 優先嘗試調用原生系統分享（若支援）
                         if (navigator.canShare && navigator.canShare({ files: [file] })) {
                             try {
                                 await navigator.share({
@@ -278,7 +287,6 @@
                         }
                     }
 
-                    // 展示長按存圖視窗
                     generatedImgUrl = canvas.toDataURL('image/png');
                     showImagePreviewModal(generatedImgUrl);
 
@@ -308,6 +316,7 @@
         }
     }
 
+    // 試算邏輯 (連動訂金與尾款)
     function calculate() {
         try {
             let subP = 0, subC = 0, disc = parseFloat(document.getElementById('discountAmt')?.value || 0);
@@ -337,6 +346,13 @@
             const taxedProfit = finalTaxedTotal - subC; 
             const preTaxProfit = preTaxTotal - subC; 
             
+            // 訂金與尾款計算
+            const depositAmt = parseFloat(document.getElementById('depositAmt')?.value || 0);
+            const balanceAmt = finalTaxedTotal - depositAmt;
+            if (document.getElementById('ui-balanceAmt')) {
+                document.getElementById('ui-balanceAmt').innerText = `$${balanceAmt.toLocaleString()}`;
+            }
+
             document.getElementById('ui-totalCost').innerText = `$${subC.toLocaleString()}`; 
             document.getElementById('ui-taxedTotal').innerText = `$${finalTaxedTotal.toLocaleString()}`; 
             document.getElementById('ui-preTaxTotal').innerText = `$${preTaxTotal.toLocaleString()}`; 
@@ -403,10 +419,16 @@
     function toggleAdminMode() { const i = document.getElementById('adminToggle').checked; if(i) document.getElementById('mainBody').classList.remove('hide-admin-box'); else document.getElementById('mainBody').classList.add('hide-admin-box'); }
     function toggleSSTotalMode() { const i = document.getElementById('ssTotalToggle').checked; if(i) document.getElementById('mainBody').classList.remove('ss-hide-totals'); else document.getElementById('mainBody').classList.add('ss-hide-totals'); }
 
+    // 儲存訂單（含訂金）
     function saveRecord(st) { 
         const id = editingRecordId ? String(editingRecordId) : String(Date.now()); 
         const oldR = records.find(x => String(x.id) === id);
         const status = st === 'current' ? (oldR ? (oldR.status || 'draft') : 'draft') : st;
+        const depositVal = parseFloat(document.getElementById('depositAmt').value || 0);
+        
+        let defaultPayStatus = (editingRecordId && oldR) ? (oldR.payStatus || "未付款") : "未付款";
+        if (depositVal > 0 && defaultPayStatus === "未付款") defaultPayStatus = "已付訂金";
+
         const rawData = { 
             id: id, 
             time: (oldR ? oldR.time : new Date().toLocaleString()), 
@@ -416,8 +438,9 @@
             custAddr: document.getElementById('custAddr').value || "", 
             custWarranty: document.getElementById('custWarranty').value || "", 
             seller: document.getElementById('infoSeller').value || "朱冠穎", 
-            payStatus: (editingRecordId && oldR) ? (oldR.payStatus || "未付款") : "未付款",
+            payStatus: defaultPayStatus,
             orderMemo: document.getElementById('orderMemo').value || "", 
+            deposit: depositVal, // 寫入訂金
             selections: currentSelections || {}, 
             total: document.getElementById('ui-totalSale').innerText || "$0", 
             discount: document.getElementById('discountAmt').value || 0, 
@@ -477,6 +500,17 @@
             }
             
             const memoHtml = r.orderMemo ? `<div class="text-xs text-gray-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200 mt-2 font-bold whitespace-pre-wrap">📝 備註：${r.orderMemo}</div>` : '';
+            
+            // 訂金與待收尾款標籤
+            const totalVal = parseInt(r.total.replace(/[^0-9.-]+/g,"")) || 0;
+            const activeTotal = (r.noCard && r.noCard !== "") ? parseFloat(r.noCard) : totalVal;
+            const depositVal = Number(r.deposit || 0);
+            const balanceVal = activeTotal - depositVal;
+            const depositHtml = depositVal > 0 ? `
+                <div class="text-[11px] text-orange-600 font-bold mt-1">💵 預收訂金：$${depositVal.toLocaleString()}</div>
+                <div class="text-[12px] text-red-600 font-black">🔴 待收尾款：$${balanceVal.toLocaleString()}</div>
+            ` : '';
+
             const div = document.createElement('div'); div.className = "p-4 border-2 rounded-xl bg-white shadow-sm space-y-3";
             const shipmentBtn = (status === 'order' || status === 'completed') ? `<button onclick="openShipmentModal('${r.id}')" class="flex-1 py-2 bg-gray-50 text-gray-500 text-[10px] rounded-lg font-black border">🚚 出貨管理</button>` : '';
             const noCardVal = (r.noCard && r.noCard !== "") ? Number(r.noCard).toLocaleString() : null;
@@ -498,6 +532,7 @@
                     <div class="text-base font-black">${r.name || '無名氏'}</div>
                     <div class="text-blue-600 font-black text-lg">${r.total}</div>
                     ${noCardVal ? `<div class="text-[11px] text-orange-600 font-black mt-1">💳 無卡：$${noCardVal}</div>` : ''}
+                    ${depositHtml}
                     <div class="mt-1">${unshippedHtml}</div>
                 </div>
                 <div class="text-right flex flex-col items-end gap-2">
@@ -548,7 +583,18 @@
             monthlyData[monthKey].count += 1; 
         }); 
         
-        content.innerHTML = Object.keys(monthlyData).sort((a,b)=>b.localeCompare(a)).map(m => `
+        let html = `
+        <div class="flex justify-between items-center bg-white p-4 rounded-2xl border shadow-sm mb-4">
+            <div>
+                <h2 class="font-black text-gray-800 text-base">📊 營運數據與報表</h2>
+                <p class="text-xs text-gray-400">匯出 CSV 檔可直接用 Excel 開啟，方便報稅與對帳</p>
+            </div>
+            <button onclick="exportCompletedOrdersCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-black text-xs shadow flex items-center gap-1">
+                📊 匯出 Excel / CSV 報表
+            </button>
+        </div>`;
+
+        html += Object.keys(monthlyData).sort((a,b)=>b.localeCompare(a)).map(m => `
             <div class="stats-card">
                 <div class="text-lg font-black text-gray-800 mb-2">${m} 績效彙整</div>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -559,6 +605,53 @@
                 </div>
                 <div class="mt-2 text-[10px] text-gray-400 italic">※ 共 ${monthlyData[m].count} 筆正式/結案訂單</div>
             </div>`).join('');
+        
+        content.innerHTML = html;
+    }
+
+    // 需求：一鍵匯出 Excel / CSV 報表功能 (帶 BOM 防 Excel 簡/繁體亂碼)
+    function exportCompletedOrdersCSV() {
+        const validRecords = records.filter(r => r.status === 'completed' || r.status === 'order');
+        if (validRecords.length === 0) {
+            alert('目前尚無正式或結案訂單可供匯出！');
+            return;
+        }
+
+        let csvContent = "\uFEFF"; // UTF-8 BOM
+        csvContent += "訂單ID,日期時間,客戶姓名,電話,客戶來源,負責業務,總金額(含稅),未稅金額(5%前),營業稅(5%),零件成本,稅後實賺毛利,預收訂金,待收尾款,處理進度,付款狀態,內部備註\n";
+
+        validRecords.forEach(r => {
+            const totalVal = parseInt(r.total.replace(/[^0-9.-]+/g,"")) || 0;
+            const noCardAmt = (r.noCard && r.noCard !== "") ? parseFloat(r.noCard) : 0;
+            const activeRev = noCardAmt > 0 ? noCardAmt : totalVal;
+            const preTax = Math.round(activeRev / 1.05);
+            const tax = Math.round(activeRev - preTax);
+
+            let itemCost = 0;
+            for(let cat in r.selections) {
+                (r.selections[cat] || []).forEach(s => {
+                    let c = (s.c !== undefined) ? Number(s.c) : 0;
+                    if(!s.c) { const item = (inv[cat] || [])[s.idx]; if(item) c = Number(item.c || 0); }
+                    itemCost += (c * (s.qty || 1));
+                });
+            }
+            const profit = preTax - itemCost;
+            const deposit = Number(r.deposit || 0);
+            const balance = activeRev - deposit;
+            const memo = (r.orderMemo || '').replace(/"/g, '""').replace(/\n/g, ' ');
+            const name = (r.name || '無名氏').replace(/"/g, '""');
+
+            csvContent += `"${r.id}","${r.time}","${name}","${r.custPhone||''}","${r.custSource||''}","${r.seller||''}","${totalVal}","${preTax}","${tax}","${itemCost}","${profit}","${deposit}","${balance}","${r.progress||''}","${r.payStatus||''}","${memo}"\n`;
+        });
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `神奇海螺電競_結案報表_${new Date().toISOString().slice(0,10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 
     function showTab(t) { document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden')); document.getElementById('tab-'+t).classList.remove('hidden'); document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('tab-active')); document.getElementById('btn-'+t).classList.add('tab-active'); const fsBtn = document.getElementById('floatingSaveBtn'); if(t === 'inventory') { fsBtn.classList.remove('hidden'); fsBtn.style.display = 'flex'; renderInventoryEditor(); } else { fsBtn.classList.add('hidden'); fsBtn.style.display = 'none'; } renderRecords(); if(t==='stats') renderStats(); }
@@ -578,6 +671,7 @@
         document.getElementById('custAddr').value = r.custAddr || ''; 
         document.getElementById('custWarranty').value = r.custWarranty || ''; 
         document.getElementById('orderMemo').value = r.orderMemo || ''; 
+        document.getElementById('depositAmt').value = r.deposit || 0; // 載入訂金
 
         const sellerSelect = document.getElementById('infoSeller');
         const targetSeller = r.seller || '朱冠穎';
@@ -601,6 +695,7 @@
         currentSelections = {}; 
         document.querySelectorAll('#tab-calc input, #tab-calc textarea').forEach(i=>i.value=""); 
         document.getElementById('discountAmt').value = 0; 
+        document.getElementById('depositAmt').value = 0; 
         document.getElementById('custSource').selectedIndex = 0;
         document.getElementById('infoSeller').selectedIndex = 0;
         renderConfig(); 
@@ -650,7 +745,22 @@
 
     function togglePick(idx) { if(!currentSelections[currentCat]) currentSelections[currentCat] = []; const i = currentSelections[currentCat].findIndex(s => s.idx === idx); if(i > -1) { currentSelections[currentCat].splice(i,1); } else { const t = (inv[currentCat] || [])[idx]; currentSelections[currentCat].push({idx, qty:1, isGift:false, p: Number(t.p||0), c: Number(t.c||0)}); } renderConfig(); renderModalList(); }
     function updateSubItem(idx, type, val) { const sel = currentSelections[currentCat].find(s => s.idx === idx); if(type==='qty') sel.qty = Math.max(1, sel.qty + val); renderConfig(); renderModalList(); }
-    function copyQuoteAsText() { let text = `🐚【神奇海螺電競 | 專業報價】\n日期：${new Date().toLocaleDateString()}\n------------------------------\n`; catOrder.forEach(cat => { (currentSelections[cat] || []).forEach(sel => { let target = (inv[cat] || [])[sel.idx]; if (target) text += `[${cat}] ${target.name}${sel.qty > 1 ? ` x ${sel.qty}` : ''}${sel.isGift?' (贈品)':''}\n`; }); }); text += `------------------------------\n`; if (document.getElementById('discountAmt').value > 0) text += `折扣：-$${Number(document.getElementById('discountAmt').value).toLocaleString()}\n`; text += `總計：${document.getElementById('ui-totalSale').innerText} (含稅)`; navigator.clipboard.writeText(text).then(() => alert('📋 已複製文字報價！')); }
+    
+    function copyQuoteAsText() { 
+        let text = `🐚【神奇海螺電競 | 專業報價】\n日期：${new Date().toLocaleDateString()}\n------------------------------\n`; 
+        catOrder.forEach(cat => { (currentSelections[cat] || []).forEach(sel => { let target = (inv[cat] || [])[sel.idx]; if (target) text += `[${cat}] ${target.name}${sel.qty > 1 ? ` x ${sel.qty}` : ''}${sel.isGift?' (贈品)':''}\n`; }); }); 
+        text += `------------------------------\n`; 
+        if (document.getElementById('discountAmt').value > 0) text += `折扣：-$${Number(document.getElementById('discountAmt').value).toLocaleString()}\n`; 
+        text += `總計：${document.getElementById('ui-totalSale').innerText} (含稅)\n`; 
+        
+        const deposit = parseFloat(document.getElementById('depositAmt')?.value || 0);
+        if (deposit > 0) {
+            const totalVal = parseInt(document.getElementById('ui-totalSale').innerText.replace(/[^0-9.-]+/g,"")) || 0;
+            text += `預收訂金：$${deposit.toLocaleString()}\n待收尾款：$${(totalVal - deposit).toLocaleString()} (交機/取貨付清)`;
+        }
+        navigator.clipboard.writeText(text).then(() => alert('📋 已複製文字報價！')); 
+    }
+    
     function toggleGift(idx) { const sel = currentSelections[currentCat].find(s => s.idx === idx); if(sel) { sel.isGift = !sel.isGift; renderConfig(); renderModalList(); } }
 
     function openShipmentModal(id) { 
