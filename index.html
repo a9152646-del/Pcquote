@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        /* 嚴格保留：iPhone 專屬間距設定 */
+        /* iPhone 專屬間距設定 */
         body { background-color: #f8fafc; font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; padding-top: 105px !important; padding-bottom: 300px !important; font-size: 14px; color: #334155; line-height: 1.5; }
         .tab-active { border-bottom: 3px solid #3b82f6; color: #3b82f6; font-weight: bold; }
         .card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
@@ -78,8 +78,8 @@
 
         /* 試算表預覽表格樣式 */
         .preview-table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; }
-        .preview-table th { background-color: #3b82f6; color: white; padding: 6px 8px; font-weight: bold; white-space: nowrap; border: 1px solid #2563eb; }
-        .preview-table td { padding: 6px 8px; border: 1px solid #e2e8f0; white-space: nowrap; max-width: 300px; overflow: hidden; text-overflow: ellipsis; }
+        .preview-table th { background-color: #2563eb; color: white; padding: 6px 8px; font-weight: bold; white-space: nowrap; border: 1px solid #1d4ed8; }
+        .preview-table td { padding: 6px 8px; border: 1px solid #e2e8f0; white-space: nowrap; max-width: 250px; overflow: hidden; text-overflow: ellipsis; }
         .preview-table tr:nth-child(even) { background-color: #f8fafc; }
     </style>
 </head>
@@ -239,22 +239,22 @@
         </div>
     </div>
 
-    <!-- 全新修復：含電腦配件明細與分欄預覽 Modal -->
+    <!-- 結案訂單專屬：零件大項獨立開欄 匯出視窗 -->
     <div id="csvPreviewModal" class="hidden fixed inset-0 bg-black/80 z-[60000] flex flex-col items-center justify-center p-4">
-        <div class="bg-white rounded-2xl p-4 max-w-2xl w-full max-h-[90vh] flex flex-col items-center space-y-3 shadow-2xl">
+        <div class="bg-white rounded-2xl p-4 max-w-4xl w-full max-h-[90vh] flex flex-col items-center space-y-3 shadow-2xl">
             <div class="flex justify-between items-center w-full border-b pb-2">
-                <h3 class="font-black text-gray-800 text-base">📊 電腦配件與營運報表</h3>
+                <h3 class="font-black text-gray-800 text-base">🏁 結案訂單配單與財務清單 (零件獨立分欄)</h3>
                 <button onclick="document.getElementById('csvPreviewModal').classList.add('hidden')" class="text-2xl font-bold text-gray-500 px-2">×</button>
             </div>
             <div class="text-xs text-blue-600 font-bold bg-blue-50 w-full p-2.5 rounded text-center leading-relaxed">
-                ✨ 已為您繪製包含<b>【電腦配件明細】</b>與<b>【金額試算】</b>的完整表格！<br>點擊下方「複製試算表格式」後，對準 Google 試算表 <b>A1 格貼上</b>即可！
+                ✨ **已為您過濾【僅限結案訂單】**！且 CPU、主機板、顯示卡等零件已**自動獨立拆分成專屬欄位**！<br>點擊「複製試算表格式」後，對準 Google 試算表 <b>A1 格貼上</b>即可完美自動分欄。
             </div>
             
-            <!-- 即時視覺化表格預覽區 -->
-            <div id="tablePreviewContainer" class="w-full h-64 overflow-auto border rounded bg-white p-1"></div>
+            <!-- 表格預覽 -->
+            <div id="tablePreviewContainer" class="w-full h-72 overflow-auto border rounded bg-white p-1"></div>
 
             <div class="grid grid-cols-3 gap-2 w-full pt-1">
-                <button onclick="copyTsvText()" class="bg-emerald-600 text-white py-3 rounded-xl font-black text-xs shadow">📋 複製試算表格式</button>
+                <button onclick="copyTsvText()" class="bg-emerald-600 text-white py-3 rounded-xl font-black text-xs shadow">📋 複製試算表格式 (自動分欄)</button>
                 <button onclick="openCsvInNewTab()" class="bg-indigo-600 text-white py-3 rounded-xl font-black text-xs shadow">🔗 新分頁全螢幕開啟</button>
                 <button onclick="document.getElementById('csvPreviewModal').classList.add('hidden')" class="bg-gray-600 text-white py-3 rounded-xl font-black text-xs shadow">關閉視窗</button>
             </div>
@@ -593,11 +593,11 @@
         let html = `
         <div class="flex justify-between items-center bg-white p-4 rounded-2xl border shadow-sm mb-4">
             <div>
-                <h2 class="font-black text-gray-800 text-base">📊 營運數據與報表</h2>
-                <p class="text-xs text-gray-400">含全套電腦規格配件、單價與總財務匯出</p>
+                <h2 class="font-black text-gray-800 text-base">📊 結案訂單配單總表</h2>
+                <p class="text-xs text-gray-400">僅匯出【結案訂單】，零件依 CPU/主機板/顯示卡...自動拆分獨立欄位</p>
             </div>
             <button onclick="exportCompletedOrdersCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-black text-xs shadow flex items-center gap-1">
-                📊 匯出 Excel / 試算表
+                📊 匯出 結案訂單全配單表
             </button>
         </div>`;
 
@@ -616,21 +616,28 @@
         content.innerHTML = html;
     }
 
-    // 重構升級版：包含全套電腦規格配件與財務細節的 TSV + HTML 報表匯出
+    // 關鍵改造：僅針對【結案訂單 (completed)】，並動態將 catOrder (CPU, 主機板, 顯示卡...) 拆解為獨立專屬欄位！
     function exportCompletedOrdersCSV() {
         try {
-            if (!records || records.length === 0) {
-                alert('目前系統中尚無任何訂單紀錄可供匯出！');
+            // 嚴格僅過濾 結案訂單
+            const completedRecords = records.filter(r => r && r.status === 'completed');
+            
+            if (completedRecords.length === 0) {
+                alert('目前系統中尚無任何【結案】狀態的訂單紀錄！');
                 return;
             }
 
-            const headers = ["訂單ID", "日期時間", "客戶姓名", "電話", "客戶來源", "負責業務", "🖥️ 電腦規格與選購配件明細", "總金額(含稅)", "折扣金額", "未稅金額(5%前)", "營業稅(5%)", "零件總成本", "稅後實賺毛利", "預收訂金", "待收尾款", "單據狀態", "處理進度", "付款狀態", "取貨地址", "保固備註", "內部備註"];
+            // 動態組裝表頭：基本資料 + (每個零件類別獨佔一欄) + 財務與備註
+            const baseHeadersFront = ["訂單ID", "日期時間", "客戶姓名", "電話", "客戶來源", "負責業務"];
+            const dynamicCatHeaders = catOrder.map(cat => `【${cat}】`);
+            const baseHeadersBack = ["總金額(含稅)", "折扣金額", "未稅金額(5%前)", "營業稅(5%)", "零件總成本", "稅後實賺毛利", "預收訂金", "待收尾款", "付款狀態", "取貨地址", "保固備註", "內部備註"];
 
-            let tsvContent = headers.join('\t') + '\n';
+            const allHeaders = [...baseHeadersFront, ...dynamicCatHeaders, ...baseHeadersBack];
+
+            let tsvContent = allHeaders.join('\t') + '\n';
             let htmlRows = '';
 
-            records.forEach(r => {
-                if (!r) return;
+            completedRecords.forEach(r => {
                 const totalVal = parseInt(String(r.total || '0').replace(/[^0-9.-]+/g,"")) || 0;
                 const discountVal = Number(r.discount || 0);
                 const noCardAmt = (r.noCard && r.noCard !== "") ? parseFloat(r.noCard) : 0;
@@ -639,29 +646,26 @@
                 const tax = Math.round(activeRev - preTax);
 
                 let itemCost = 0;
-                let partsList = [];
                 const selections = r.selections || {};
 
-                // 抓取全套電腦配件細節與價格
-                catOrder.forEach(cat => {
+                // 依據 catOrder 依序擷取該大項的零件名稱與價格
+                const catCells = catOrder.map(cat => {
                     const selList = selections[cat];
                     if (Array.isArray(selList) && selList.length > 0) {
-                        selList.forEach(s => {
-                            if (!s) return;
+                        return selList.map(s => {
+                            if (!s) return '';
                             let target = (inv[cat] || [])[s.idx];
                             let itemName = target ? target.name : '未知零件';
                             let itemPrice = (s.p !== undefined) ? Number(s.p) : (target ? Number(target.p||0) : 0);
                             let itemC = (s.c !== undefined) ? Number(s.c) : (target ? Number(target.c||0) : 0);
                             let qty = s.qty || 1;
-                            let isGiftStr = s.isGift ? '(贈品)' : '';
-                            
                             itemCost += (itemC * qty);
-                            partsList.push(`[${cat}] ${itemName}${qty > 1 ? ' x' + qty : ''} $${itemPrice.toLocaleString()}${isGiftStr}`);
-                        });
+                            return `${itemName}${qty > 1 ? ' x' + qty : ''} ($${itemPrice.toLocaleString()})${s.isGift?'[贈]':''}`;
+                        }).join(' ; ');
                     }
+                    return '-'; // 若該項目未選用則填入短線
                 });
 
-                const partsDetailStr = partsList.length > 0 ? partsList.join(' ; ') : '無選購配件';
                 const profit = preTax - itemCost;
                 const deposit = Number(r.deposit || 0);
                 const balance = activeRev - deposit;
@@ -671,31 +675,27 @@
                 const phone = String(r.custPhone || '');
                 const source = String(r.custSource || '');
                 const seller = String(r.seller || '');
-                const progress = String(r.progress || '');
                 const payStatus = String(r.payStatus || '');
                 const addr = String(r.custAddr || '');
                 const warranty = String(r.custWarranty || '');
 
-                const statusMap = { 'draft': '草稿', 'order': '正式訂單', 'completed': '結案' };
-                const statusStr = statusMap[r.status] || String(r.status || '草稿');
+                const frontCells = [r.id||'', r.time||'', name, phone, source, seller];
+                const backCells = [totalVal, discountVal, preTax, tax, itemCost, profit, deposit, balance, payStatus, addr, warranty, memo];
 
-                const rowData = [r.id||'', r.time||'', name, phone, source, seller, partsDetailStr, totalVal, discountVal, preTax, tax, itemCost, profit, deposit, balance, statusStr, progress, payStatus, addr, warranty, memo];
+                const fullRow = [...frontCells, ...catCells, ...backCells];
                 
-                tsvContent += rowData.join('\t') + '\n';
-
-                htmlRows += `<tr>${rowData.map(cell => `<td>${cell}</td>`).join('')}</tr>`;
+                tsvContent += fullRow.join('\t') + '\n';
+                htmlRows += `<tr>${fullRow.map(cell => `<td>${cell}</td>`).join('')}</tr>`;
             });
 
             currentTsvText = tsvContent;
 
-            // 建立完整的網頁 HTML 表格結構
             currentHtmlTable = `
                 <table class="preview-table">
-                    <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+                    <thead><tr>${allHeaders.map(h => `<th>${h}</th>`).join('')}</tr></thead>
                     <tbody>${htmlRows}</tbody>
                 </table>`;
 
-            // 渲染至 Modal 彈窗內
             const previewBox = document.getElementById('tablePreviewContainer');
             if (previewBox) previewBox.innerHTML = currentHtmlTable;
 
@@ -712,7 +712,7 @@
         try {
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(currentTsvText).then(() => {
-                    alert('📋 已成功複製試算表格式！\n請開啟 Google 試算表，點擊【A1 格子】貼上，資料與配件細節就會自動對齊拆分成多欄！');
+                    alert('📋 已成功複製結案配單表！\n請開啟 Google 試算表，點擊【A1 格子】貼上，CPU、主機板、顯示卡等資料就會自動對齊拆分成專屬欄位！');
                 }).catch(() => fallbackCopyTsv());
             } else {
                 fallbackCopyTsv();
@@ -732,7 +732,6 @@
         alert('📋 已成功複製！請至 Google 試算表對準 A1 格貼上即可！');
     }
 
-    // 解決新分頁開啟空白：直接寫入完整的 HTML 與 獨立排版 Table 網頁
     function openCsvInNewTab() {
         if (!currentHtmlTable) return;
         const newWin = window.open('', '_blank');
@@ -742,22 +741,22 @@
                 <html lang="zh-TW">
                 <head>
                     <meta charset="utf-8">
-                    <title>神奇海螺電競 - 完整營運暨電腦配件報表</title>
+                    <title>神奇海螺電競 - 結案訂單完整配單與財務總表</title>
                     <style>
                         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; background: #f8fafc; color: #1e293b; }
                         h2 { color: #1e40af; margin-bottom: 8px; }
                         p { font-size: 13px; color: #64748b; margin-bottom: 16px; }
                         .table-wrapper { overflow-x: auto; background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
                         table { width: 100%; border-collapse: collapse; font-size: 12px; }
-                        th { background-color: #2563eb; color: white; padding: 10px 12px; text-align: left; white-space: nowrap; font-weight: bold; }
-                        td { padding: 10px 12px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+                        th { background-color: #2563eb; color: white; padding: 10px 12px; text-align: left; white-space: nowrap; font-weight: bold; border: 1px solid #1d4ed8; }
+                        td { padding: 10px 12px; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #f1f5f9; white-space: nowrap; }
                         tr:nth-child(even) { background-color: #f8fafc; }
                         tr:hover { background-color: #f1f5f9; }
                     </style>
                 </head>
                 <body>
-                    <h2>🐚 神奇海螺電競 - 完整營運暨電腦配件報表</h2>
-                    <p>💡 提示：您可以直接滑動游標全選表格內容複製，或按 Ctrl+A 全選後貼入 Excel / Google 試算表！</p>
+                    <h2>🏁 神奇海螺電競 - 結案訂單完整配單與財務總表</h2>
+                    <p>💡 提示：按 Ctrl+A 全選或滑動選取表格後複製，可直接貼入 Excel / Google 試算表！</p>
                     <div class="table-wrapper">
                         ${currentHtmlTable}
                     </div>
