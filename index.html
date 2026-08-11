@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v10.00</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v11.00</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,6 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
+        /* iPhone 專屬間距設定 */
         body { background-color: #f8fafc; font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; padding-top: 105px !important; padding-bottom: 300px !important; font-size: 14px; color: #334155; line-height: 1.5; }
         .tab-active { border-bottom: 3px solid #3b82f6; color: #3b82f6; font-weight: bold; }
         .card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
@@ -79,6 +80,9 @@
         .preview-table th { background-color: #2563eb; color: white; padding: 6px 8px; font-weight: bold; white-space: nowrap; border: 1px solid #1d4ed8; }
         .preview-table td { padding: 6px 8px; border: 1px solid #e2e8f0; white-space: nowrap; max-width: 250px; overflow: hidden; text-overflow: ellipsis; }
         .preview-table tr:nth-child(even) { background-color: #f8fafc; }
+
+        /* 方案切換頁籤樣式 */
+        .plan-tab-active { background-color: #2563eb !important; color: white !important; font-weight: 900 !important; }
     </style>
 </head>
 <body class="p-2 md:p-4" id="mainBody">
@@ -104,7 +108,8 @@
     <div class="max-w-7xl mx-auto w-full px-1" id="captureArea">
         <div id="screenshot-header" style="display: none;" class="text-center border-b-4 border-blue-600 pb-2 mb-2">
             <div class="text-xl font-black text-blue-900 tracking-widest">《報價單》</div>
-            <div id="ss-time" class="text-[8px] text-gray-400 mt-1 font-mono font-bold"></div>
+            <div id="ss-plan-name" class="text-xs font-black text-blue-600 mt-1"></div>
+            <div id="ss-time" class="text-[8px] text-gray-400 mt-0.5 font-mono font-bold"></div>
         </div>
         
         <div class="flex border-b-2 mb-4 no-screenshot overflow-x-auto bg-white sticky top-0 z-50 rounded-t">
@@ -117,11 +122,28 @@
         </div>
 
         <div id="tab-calc" class="page-content">
+            <!-- 🌟 多方案 A/B 菜單控制 Bar 🌟 -->
+            <div class="no-screenshot bg-blue-900 text-white p-2.5 rounded-xl mb-3 flex flex-wrap items-center justify-between gap-2 shadow-md">
+                <div class="flex items-center gap-1.5 overflow-x-auto">
+                    <span class="text-xs font-black mr-1 text-blue-200">📑 方案切換：</span>
+                    <button onclick="switchPlan('A')" id="plan-btn-A" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-800 text-blue-100 transition-all plan-tab-active">方案 A</button>
+                    <button onclick="switchPlan('B')" id="plan-btn-B" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-800 text-blue-100 transition-all">方案 B</button>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <button onclick="copyCurrentPlanToOther()" class="bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-black shadow-sm flex items-center gap-1">
+                        ➕ 複製到另一方案
+                    </button>
+                    <button onclick="copyDualPlanQuoteText()" class="bg-cyan-500 hover:bg-cyan-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-black shadow-sm flex items-center gap-1">
+                        📋 雙方案 (A/B) LINE 報價
+                    </button>
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
                 <div class="lg:col-span-3 space-y-3">
                     <div class="flex gap-2 no-screenshot mb-2">
                         <button onclick="openTemplateModal()" class="flex-[2] bg-indigo-600 text-white py-3 rounded-xl font-black shadow-md">📂 載入範本</button>
-                        <button onclick="copyQuoteAsText()" class="flex-[3] bg-cyan-500 text-white py-3 rounded-xl font-black shadow-md">📋 複製 Line 文字報價</button>
+                        <button onclick="copyQuoteAsText()" class="flex-[3] bg-cyan-500 text-white py-3 rounded-xl font-black shadow-md">📋 複製當前方案 LINE 報價</button>
                     </div>
                     <div class="card p-2 !bg-gray-100/50">
                         <div id="configRows" class="space-y-3"></div>
@@ -143,7 +165,7 @@
                                 <button onclick="addCustomSeller()" class="bg-gray-200 px-3 rounded border">+</button>
                             </div>
 
-                            <!-- 🌟 新增：顯眼的【發票開立狀態】選擇框 🌟 -->
+                            <!-- 發票開立狀態選擇框 -->
                             <div class="md:col-span-4 bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-xl border-2 border-blue-300 flex flex-col md:flex-row items-center justify-between gap-2 shadow-sm">
                                 <label class="text-xs font-black text-blue-900 flex items-center gap-1">🧾 發票開立狀態：</label>
                                 <select id="custInvoice" onchange="calculate()" class="w-full md:w-auto font-black text-blue-800 bg-white border-2 border-blue-400 rounded-lg p-2 text-xs outline-none shadow-sm cursor-pointer">
@@ -192,7 +214,7 @@
                         </div>
 
                         <div class="space-y-2">
-                            <button onclick="saveRecord('current')" class="w-full bg-blue-600 text-white py-3 rounded-lg font-black shadow-lg">💾 儲存修訂</button>
+                            <button onclick="saveRecord('current')" class="w-full bg-blue-600 text-white py-3 rounded-lg font-black shadow-lg">以當前方案成立訂單 💾</button>
                             <button onclick="saveTemplate()" class="w-full bg-gray-700 text-white py-3 rounded-lg font-bold">📂 存為範本</button>
                             <button onclick="enterScreenshotMode()" class="w-full bg-orange-500 text-white py-3 rounded-lg font-black">📸 截圖模式</button>
                         </div>
@@ -272,11 +294,58 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let inv = {}; let catOrder = []; let records = []; let templates = {}; let currentSelections = {}; let editingRecordId = null; let currentCat = "";
+    let inv = {}; let catOrder = []; let records = []; let templates = {}; let editingRecordId = null; let currentCat = "";
     let collapsedCats = {}; 
     let generatedImgUrl = "";
     let currentTsvText = "";
     let currentHtmlTable = "";
+
+    // 🌟 多方案 A/B 資料結構變數 🌟
+    let currentPlan = 'A';
+    let plansData = {
+        'A': { selections: {}, discount: 0, manualTotal: '', noCard: '', deposit: 0 },
+        'B': { selections: {}, discount: 0, manualTotal: '', noCard: '', deposit: 0 }
+    };
+    let currentSelections = {}; // 指向當前方案的 selections
+
+    // 儲存當前輸入框資料到暫存方案
+    function saveCurrentInputsToPlan() {
+        plansData[currentPlan] = {
+            selections: JSON.parse(JSON.stringify(currentSelections)),
+            discount: document.getElementById('discountAmt')?.value || 0,
+            manualTotal: document.getElementById('manualTotal')?.value || '',
+            noCard: document.getElementById('noCardTotal')?.value || '',
+            deposit: document.getElementById('depositAmt')?.value || 0
+        };
+    }
+
+    // 切換方案 A / B
+    function switchPlan(planKey) {
+        saveCurrentInputsToPlan();
+        currentPlan = planKey;
+        
+        document.getElementById('plan-btn-A').classList.remove('plan-tab-active');
+        document.getElementById('plan-btn-B').classList.remove('plan-tab-active');
+        document.getElementById(`plan-btn-${planKey}`).classList.add('plan-tab-active');
+
+        // 載入該方案資料
+        const p = plansData[planKey];
+        currentSelections = JSON.parse(JSON.stringify(p.selections || {}));
+        document.getElementById('discountAmt').value = p.discount || 0;
+        document.getElementById('manualTotal').value = p.manualTotal || '';
+        document.getElementById('noCardTotal').value = p.noCard || '';
+        document.getElementById('depositAmt').value = p.deposit || 0;
+
+        renderConfig();
+    }
+
+    // 一鍵複製當前方案到另一方案
+    function copyCurrentPlanToOther() {
+        saveCurrentInputsToPlan();
+        const targetPlan = (currentPlan === 'A') ? 'B' : 'A';
+        plansData[targetPlan] = JSON.parse(JSON.stringify(plansData[currentPlan]));
+        alert(`📋 已成功將【方案 ${currentPlan}】完整複製到【方案 ${targetPlan}】！\n您可以直接切換到方案 ${targetPlan} 進行配件修改。`);
+    }
 
     function downloadScreenshot(e) {
         const captureEl = document.getElementById('captureArea');
@@ -441,6 +510,7 @@
     function toggleSSTotalMode() { const i = document.getElementById('ssTotalToggle').checked; if(i) document.getElementById('mainBody').classList.remove('ss-hide-totals'); else document.getElementById('mainBody').classList.add('ss-hide-totals'); }
 
     function saveRecord(st) { 
+        saveCurrentInputsToPlan();
         const id = editingRecordId ? String(editingRecordId) : String(Date.now()); 
         const oldR = records.find(x => String(x.id) === id);
         const status = st === 'current' ? (oldR ? (oldR.status || 'draft') : 'draft') : st;
@@ -472,7 +542,7 @@
             notShipped: (oldR ? (oldR.notShipped || {}) : {}) 
         }; 
         db.ref('records/' + id).update(rawData).then(() => { 
-            alert('💾 儲存修訂成功！'); 
+            alert(`💾 以【方案 ${currentPlan}】成功成立訂單！`); 
             resetForm(); 
             showTab(status === 'draft' ? 'drafts' : (status === 'order' ? 'orders' : 'completed')); 
         });
@@ -796,6 +866,7 @@
         if(!r) { alert('找不到該筆紀錄，請重新整理頁面。'); return; }
         editingRecordId = id; 
         currentSelections = JSON.parse(JSON.stringify(r.selections || {})); 
+        plansData[currentPlan].selections = currentSelections;
         
         document.getElementById('custName').value = r.name || ''; 
         document.getElementById('custPhone').value = r.custPhone || ''; 
@@ -834,6 +905,14 @@
     function resetForm() { 
         editingRecordId = null; 
         currentSelections = {}; 
+        plansData = {
+            'A': { selections: {}, discount: 0, manualTotal: '', noCard: '', deposit: 0 },
+            'B': { selections: {}, discount: 0, manualTotal: '', noCard: '', deposit: 0 }
+        };
+        currentPlan = 'A';
+        document.getElementById('plan-btn-A').classList.add('plan-tab-active');
+        document.getElementById('plan-btn-B').classList.remove('plan-tab-active');
+
         document.querySelectorAll('#tab-calc input, #tab-calc textarea').forEach(i=>i.value=""); 
         document.getElementById('discountAmt').value = 0; 
         document.getElementById('depositAmt').value = 0; 
@@ -844,7 +923,19 @@
     }
 
     function goBack() { resetForm(); showTab('calc'); }
-    function enterScreenshotMode() { document.getElementById('ss-time').innerText = '日期：' + new Date().toLocaleString(); document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value).toLocaleString(); document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText; document.getElementById('ss-warranty-info').innerText = document.getElementById('custWarranty').value ? `🛡️ 保固：${document.getElementById('custWarranty').value}` : ''; document.getElementById('mainBody').classList.add('screenshot-mode'); document.getElementById('screenshot-header').style.display = 'block'; document.getElementById('screenshot-footer').style.display = 'block'; document.getElementById('screenshotNav').classList.remove('hidden'); renderConfig(); window.scrollTo(0,0); }
+    function enterScreenshotMode() { 
+        document.getElementById('ss-time').innerText = '日期：' + new Date().toLocaleString(); 
+        document.getElementById('ss-plan-name').innerText = `【方案 ${currentPlan} 報價】`;
+        document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value).toLocaleString(); 
+        document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText; 
+        document.getElementById('ss-warranty-info').innerText = document.getElementById('custWarranty').value ? `🛡️ 保固：${document.getElementById('custWarranty').value}` : ''; 
+        document.getElementById('mainBody').classList.add('screenshot-mode'); 
+        document.getElementById('screenshot-header').style.display = 'block'; 
+        document.getElementById('screenshot-footer').style.display = 'block'; 
+        document.getElementById('screenshotNav').classList.remove('hidden'); 
+        renderConfig(); 
+        window.scrollTo(0,0); 
+    }
     function exitScreenshotMode() { document.getElementById('mainBody').classList.remove('screenshot-mode'); document.getElementById('screenshot-header').style.display = 'none'; document.getElementById('screenshot-footer').style.display = 'none'; document.getElementById('screenshotNav').classList.add('hidden'); renderConfig(); }
     function toggleAllCats(s) { catOrder.forEach(c => { collapsedCats[c] = s; }); renderInventoryEditor(); }
     function toggleSup(cat, idx, s) { if(!inv[cat][idx].sups) inv[cat][idx].sups = []; const i = inv[cat][idx].sups.indexOf(s); if(i > -1) inv[cat][idx].sups.splice(i, 1); else inv[cat][idx].sups.push(s); renderInventoryEditor(); }
@@ -889,7 +980,7 @@
     function updateSubItem(idx, type, val) { const sel = currentSelections[currentCat].find(s => s.idx === idx); if(type==='qty') sel.qty = Math.max(1, sel.qty + val); renderConfig(); renderModalList(); }
     
     function copyQuoteAsText() { 
-        let text = `🐚【神奇海螺電競 | 專業報價】\n日期：${new Date().toLocaleDateString()}\n------------------------------\n`; 
+        let text = `🐚【神奇海螺電競 | 方案 ${currentPlan} 專業報價】\n日期：${new Date().toLocaleDateString()}\n------------------------------\n`; 
         catOrder.forEach(cat => { (currentSelections[cat] || []).forEach(sel => { let target = (inv[cat] || [])[sel.idx]; if (target) text += `[${cat}] ${target.name}${sel.qty > 1 ? ` x ${sel.qty}` : ''}${sel.isGift?' (贈品)':''}\n`; }); }); 
         text += `------------------------------\n`; 
         if (document.getElementById('discountAmt').value > 0) text += `折扣：-$${Number(document.getElementById('discountAmt').value).toLocaleString()}\n`; 
@@ -900,7 +991,50 @@
             const totalVal = parseInt(document.getElementById('ui-totalSale').innerText.replace(/[^0-9.-]+/g,"")) || 0;
             text += `預收訂金：$${deposit.toLocaleString()}\n待收尾款：$${(totalVal - deposit).toLocaleString()} (交機/取貨付清)`;
         }
-        navigator.clipboard.writeText(text).then(() => alert('📋 已複製文字報價！')); 
+        navigator.clipboard.writeText(text).then(() => alert(`📋 已複製【方案 ${currentPlan}】文字報價！`)); 
+    }
+
+    // 生成雙方案 A/B 對比報價文字
+    function copyDualPlanQuoteText() {
+        saveCurrentInputsToPlan();
+        
+        function buildSingleText(pKey) {
+            const p = plansData[pKey];
+            let subP = 0;
+            let listStr = "";
+            catOrder.forEach(cat => {
+                (p.selections[cat] || []).forEach(sel => {
+                    let target = (inv[cat] || [])[sel.idx];
+                    if (target) {
+                        let price = (sel.p !== undefined) ? sel.p : target.p;
+                        if(!sel.isGift) subP += (price * (sel.qty||1));
+                        listStr += `  • [${cat}] ${target.name}${sel.qty>1?` x${sel.qty}`:''}${sel.isGift?' (贈品)':''}\n`;
+                    }
+                });
+            });
+            const baseTotal = (p.manualTotal !== "" && !isNaN(parseFloat(p.manualTotal))) ? parseFloat(p.manualTotal) : (subP - (p.discount||0));
+            const finalTotal = (p.noCard && p.noCard !== "") ? parseFloat(p.noCard) : baseTotal;
+            return { listStr, finalTotal };
+        }
+
+        const resA = buildSingleText('A');
+        const resB = buildSingleText('B');
+
+        const diff = resB.finalTotal - resA.finalTotal;
+        let diffStr = (diff > 0) ? `(方案 B 較高 +$${diff.toLocaleString()})` : (diff < 0 ? `(方案 B 較省 -$${Math.abs(diff).toLocaleString()})` : `(兩方案金額相同)`);
+
+        let text = `🐚【神奇海螺電競 | 雙方案報價對比】\n日期：${new Date().toLocaleDateString()}\n`;
+        text += `==============================\n`;
+        text += `🔹【方案 A 內容】\n${resA.listStr || '  (未選擇項目)\n'}`;
+        text += `👉 方案 A 總計：$${resA.finalTotal.toLocaleString()}\n`;
+        text += `------------------------------\n`;
+        text += `🔸【方案 B 內容】\n${resB.listStr || '  (未選擇項目)\n'}`;
+        text += `👉 方案 B 總計：$${resB.finalTotal.toLocaleString()}\n`;
+        text += `==============================\n`;
+        text += `💡 兩方案價差：${diffStr}\n`;
+        text += `歡迎告訴我們您偏好哪一個方案，我們立即為您備貨與安排組裝！`;
+
+        navigator.clipboard.writeText(text).then(() => alert('📋 已成功複製【雙方案 A/B LINE 對比報價】！可直接貼給客戶看！'));
     }
     
     function toggleGift(idx) { const sel = currentSelections[currentCat].find(s => s.idx === idx); if(sel) { sel.isGift = !sel.isGift; renderConfig(); renderModalList(); } }
@@ -935,7 +1069,7 @@
     }
 
     function openTemplateModal() { const list = document.getElementById('templateList'); list.innerHTML = ''; Object.keys(templates).forEach(id => { const t = templates[id]; list.innerHTML += `<div class="p-4 border-2 rounded-xl mb-3 flex justify-between items-center bg-white shadow-sm" onclick="applyTemplate('${id}')"><div class="font-black text-gray-700 text-xs">${t.name}</div><div class="flex gap-2"><button class="bg-blue-600 text-white px-3 py-1 rounded-lg text-[10px]" onclick="applyTemplate('${id}')">套用</button><button class="bg-red-100 text-red-500 px-3 py-1 rounded-lg text-[10px]" onclick="event.stopPropagation(); db.ref('templates/'+'${id}').remove()">刪除</button></div></div>`; }); document.getElementById('templateModal').classList.remove('hidden'); }
-    function applyTemplate(id) { currentSelections = JSON.parse(JSON.stringify(templates[id].selections)); document.getElementById('discountAmt').value = templates[id].discount || 0; document.getElementById('manualTotal').value = templates[id].manualTotal || ''; renderConfig(); document.getElementById('templateModal').classList.add('hidden'); }
+    function applyTemplate(id) { currentSelections = JSON.parse(JSON.stringify(templates[id].selections)); plansData[currentPlan].selections = currentSelections; document.getElementById('discountAmt').value = templates[id].discount || 0; document.getElementById('manualTotal').value = templates[id].manualTotal || ''; renderConfig(); document.getElementById('templateModal').classList.add('hidden'); }
     function saveTemplate() { const name = prompt("範本名稱："); if (!name) return; db.ref('templates/' + Date.now()).update({ name, selections: currentSelections, discount: document.getElementById('discountAmt').value, manualTotal: document.getElementById('manualTotal').value }); }
     function addCustomSeller() { const n = prompt("業務名稱："); if(n) { const s = document.getElementById('infoSeller'); const o = document.createElement('option'); o.value=n; o.text=n; o.selected=true; s.add(o); } }
 
