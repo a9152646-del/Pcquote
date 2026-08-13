@@ -6,7 +6,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v16.03</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v16.04</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -316,6 +316,17 @@
         'B': { selections: {}, discount: 0, manualTotal: '', noCard: '', deposit: 0 }
     };
     let currentSelections = {};
+
+    function getMonthKey(timeStr) {
+        if (!timeStr) return '其他';
+        const match = String(timeStr).match(/(\d{4})[\/\-](\d{1,2})/);
+        if (match) {
+            const year = match[1];
+            const month = match[2].padStart(2, '0');
+            return `${year}/${month}`;
+        }
+        return '其他';
+    }
 
     function saveCurrentInputsToPlan() {
         plansData[currentPlan] = {
@@ -725,23 +736,19 @@
         const content = document.getElementById('statsContent'); 
         if(!content) return; 
 
-        // 收集所有月份與人員
         let allMonthsSet = new Set();
         let allSellersSet = new Set(["朱冠穎", "江苙翔", "江鈞宇"]);
 
         records.forEach(r => {
             if(!r || r.status === 'draft') return;
-            const dateParts = String(r.time || '').split('/'); 
-            if(dateParts.length >= 2) {
-                allMonthsSet.add(`${dateParts[0]}/${dateParts[1]}`);
-            }
+            const monthKey = getMonthKey(r.time);
+            allMonthsSet.add(monthKey);
             if(r.seller) allSellersSet.add(r.seller);
         });
 
         let monthsList = Array.from(allMonthsSet).sort((a,b)=>b.localeCompare(a));
         let sellersList = Array.from(allSellersSet);
 
-        // 取得目前畫面選擇的篩選值 (若元素存在)
         const selectedMonth = document.getElementById('filterStatsMonth')?.value || 'ALL';
         const selectedSeller = document.getElementById('filterStatsSeller')?.value || 'ALL';
 
@@ -753,12 +760,9 @@
 
         records.forEach(r => { 
             if(!r || r.status === 'draft') return; 
-            const dateParts = String(r.time || '').split('/'); 
-            const monthKey = (dateParts.length >= 2) ? `${dateParts[0]}/${dateParts[1]}` : '其他'; 
+            const monthKey = getMonthKey(r.time);
             
-            // 套用月份篩選
             if(selectedMonth !== 'ALL' && monthKey !== selectedMonth) return;
-            // 套用人員篩選 (針對結案與統計)
             const sName = r.seller || "朱冠穎";
             if(selectedSeller !== 'ALL' && sName !== selectedSeller) return;
 
@@ -875,7 +879,6 @@
                 <div class="mt-2 text-[10px] text-gray-400 italic">※ 共 ${monthlyData[m].count} 筆正式/結案訂單</div>
             </div>`).join('');
 
-        // 顯示符合篩選條件的結案訂單明細列表
         html += `
         <div class="card p-4 mt-4 space-y-3">
             <h3 class="font-black text-gray-800 text-sm">🏁 符合條件的結案訂單明細 (${filteredCompletedRecords.length} 筆)</h3>
@@ -907,8 +910,7 @@
 
             const completedRecords = records.filter(r => {
                 if (!r || r.status !== 'completed') return false;
-                const dateParts = String(r.time || '').split('/'); 
-                const monthKey = (dateParts.length >= 2) ? `${dateParts[0]}/${dateParts[1]}` : '其他'; 
+                const monthKey = getMonthKey(r.time);
                 if (selectedMonth !== 'ALL' && monthKey !== selectedMonth) return false;
                 const sName = r.seller || "朱冠穎";
                 if (selectedSeller !== 'ALL' && sName !== selectedSeller) return false;
