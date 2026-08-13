@@ -6,7 +6,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>神奇海螺電競 | 報價與庫存系統 v16.14 (大字體版)</title>
+    <title>神奇海螺電競 | 報價與庫存系統 v16.15</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -34,7 +34,7 @@
         }
         .hidden { display: none !important; }
         
-        /* 🏆 頂部導覽頁籤：大字體、舒適間距、完全不卡動態島 */
+        /* 🏆 頂部導覽頁籤 */
         .top-nav-bar {
             position: sticky;
             top: 0;
@@ -52,7 +52,6 @@
             gap: 6px;
         }
 
-        /* 導覽頁籤按鈕 (大字好按) */
         .tab-btn { 
             padding: 8px 14px !important;
             font-size: 14px !important; 
@@ -73,7 +72,7 @@
         }
         .plan-tab-active { background-color: #2563eb !important; color: #ffffff !important; font-weight: 800 !important; border-color: #2563eb !important; }
 
-        /* 表單與輸入框：恢復 44px 高度與 14px 舒適字體 */
+        /* 表單與輸入框 */
         input[type="text"], input[type="number"], select {
             height: 44px !important;
             line-height: 44px !important;
@@ -104,7 +103,6 @@
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); 
         }
         
-        /* 標籤顯示控制 */
         .price-tag { color: #64748b; font-weight: 600; font-size: 12px; margin-left: 6px; }
         .cost-tag { color: #e11d48; font-weight: 700; font-size: 12px; margin-left: 6px; }
         
@@ -113,7 +111,6 @@
         body.hide-admin-box #sellerBox { display: none !important; }
         body.ss-hide-totals .ss-total-row { display: none !important; }
         
-        /* 狀態色彩 */
         .status-red { background-color: #fff1f2 !important; color: #be123c !important; border: 1px solid #fecdd3 !important; }
         .status-yellow { background-color: #fefce8 !important; color: #a16207 !important; border: 1px solid #fef08a !important; } 
         .status-blue { background-color: #eff6ff !important; color: #1d4ed8 !important; border: 1px solid #bfdbfe !important; }
@@ -128,7 +125,6 @@
         .drag-handle { cursor: grab; color: #94a3b8; padding: 4px; font-size: 18px; user-select: none; display: flex; align-items: center; justify-content: center; }
         .drag-handle:active { cursor: grabbing; color: #2563eb; }
 
-        /* 報價單項目列 */
         .item-row { padding: 12px 14px !important; margin-bottom: 8px !important; background: #ffffff; border: 1px solid #e2e8f0 !important; border-radius: 12px !important; transition: border-color 0.15s; }
         .item-row:hover { border-color: #94a3b8 !important; }
         
@@ -139,22 +135,78 @@
         .screenshot-mode #screenshot-footer { padding: 8px 12px !important; display: block !important; }
         .screenshot-mode .top-nav-bar { display: none !important; }
 
-        /* 庫存零件項目 */
-        .inv-item-row { background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+        /* 🏆 品項庫全新防爆排版 CSS */
+        .inv-item-row { 
+            background: #ffffff; 
+            border-radius: 12px; 
+            border: 1px solid #cbd5e1; 
+            margin-bottom: 10px; 
+            padding: 12px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
+        }
         .inv-item-main { display: flex; align-items: center; gap: 8px; }
         .inv-name-area { flex: 1; min-width: 0; }
-        .inv-name-input { width: 100%; border: none !important; background: transparent !important; font-weight: 700; font-size: 14px; padding: 0 !important; color: #0f172a; word-break: break-all; resize: none; min-height: 24px; overflow: hidden; display: block; line-height: 1.4; }
-        .inv-control-bar { display: flex; align-items: center; justify-content: space-between; padding-top: 6px; border-top: 1px solid #f1f5f9; }
-        .price-group { display: flex; gap: 6px; align-items: center; }
-        .val-box { display: flex; align-items: center; gap: 4px; background: #f8fafc; padding: 4px 8px; border-radius: 8px; border: 1px solid #cbd5e1; flex-shrink: 0; }
-        .val-label { font-size: 11px; font-weight: 800; color: #64748b; }
-        .val-input { border: none !important; background: transparent !important; width: 52px; font-weight: 800; font-size: 13px; text-align: right; padding: 0 !important; height: 26px !important; line-height: 26px !important; }
-        .p-input { color: #2563eb; } 
-        .c-input { color: #e11d48 !important; font-weight: 800 !important; } 
+        .inv-name-input { 
+            width: 100%; 
+            border: none !important; 
+            background: transparent !important; 
+            font-weight: 700; 
+            font-size: 15px !important; 
+            padding: 0 !important; 
+            color: #0f172a; 
+            word-break: break-all; 
+            resize: none; 
+            min-height: 26px; 
+            overflow: hidden; 
+            display: block; 
+            line-height: 1.4; 
+        }
+        .val-box { 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+            background: #f8fafc; 
+            padding: 6px 10px; 
+            border-radius: 10px; 
+            border: 1px solid #cbd5e1; 
+            width: 100%; 
+        }
+        .val-label { font-size: 13px; font-weight: 800; white-space: nowrap; }
+        .val-input { 
+            border: none !important; 
+            background: transparent !important; 
+            width: 100% !important; 
+            font-weight: 800; 
+            font-size: 16px !important; 
+            text-align: right; 
+            padding: 0 !important; 
+            height: 30px !important; 
+            line-height: 30px !important; 
+            outline: none !important; 
+            box-shadow: none !important; 
+        }
+        .p-input { color: #2563eb !important; }
+        .c-input { color: #e11d48 !important; }
 
-        .sup-btn { font-size: 11px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid #cbd5e1; color: #64748b; font-weight: 800; transition: all 0.15s; background: white; flex-shrink: 0; }
+        .sup-btn { 
+            font-size: 12px; 
+            width: 32px; 
+            height: 32px; 
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center; 
+            border-radius: 8px; 
+            border: 1px solid #cbd5e1; 
+            color: #64748b; 
+            font-weight: 800; 
+            transition: all 0.15s; 
+            background: white; 
+        }
         .sup-btn.active { background: #2563eb; color: white; border-color: #2563eb; }
-        .stock-btn { font-size: 12px; padding: 4px 10px; border-radius: 8px; font-weight: 800; border: 1px solid #cbd5e1; cursor: pointer; min-width: 50px; flex-shrink: 0; }
+        .stock-btn { font-size: 13px; padding: 6px 14px; border-radius: 10px; font-weight: 800; border: 1px solid #cbd5e1; cursor: pointer; }
         .stock-btn.active { background: #10b981; color: white; border-color: #10b981; }
         .stock-btn.oos { background: #f43f5e; color: white; border-color: #f43f5e; }
 
@@ -176,7 +228,7 @@
 </head>
 <body id="mainBody">
 
-    <!-- 頂部導覽頁籤 (防擋大字版) -->
+    <!-- 頂部導覽頁籤 -->
     <div class="top-nav-bar no-screenshot">
         <button onclick="showTab('calc')" id="btn-calc" class="tab-btn tab-active">🖥️ 報價</button>
         <button onclick="showTab('drafts')" id="btn-drafts" class="tab-btn">📂 草稿</button>
@@ -590,19 +642,47 @@
         });
     }
 
+    /* 🏆 全新優化品項編輯器（大字體、絕不暴衝） */
     function renderInventoryEditor() { 
         const area = document.getElementById('inventoryEditor'); if (!area) return; const scrollPos = window.scrollY; area.innerHTML = ''; 
         const head = document.getElementById('inventoryHeader'); 
         if(head) head.innerHTML = `<div class="flex justify-between items-center"><h2 class="font-bold text-sm text-slate-800">⚙️ 雲端品項管理</h2><div class="flex gap-2"><button onclick="addNewCategory()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer">+ 大項</button><button onclick="saveInventory()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer">💾 同步</button></div></div><div class="flex gap-2"><button onclick="toggleAllCats(true)" class="flex-1 bg-slate-100 text-slate-600 py-1.5 rounded-xl text-xs font-bold cursor-pointer">收合 ↑</button><button onclick="toggleAllCats(false)" class="flex-1 bg-slate-100 text-slate-600 py-1.5 rounded-xl text-xs font-bold cursor-pointer">展開 ↓</button></div>`; 
         catOrder.forEach((cat, cIdx) => { 
-            const isCollapsed = collapsedCats[cat]; const sec = document.createElement('div'); sec.className = "bg-slate-50 p-3 rounded-xl border border-slate-200 mb-2.5 category-drag-item"; sec.dataset.catname = cat; 
-            sec.innerHTML = `<div class="flex justify-between items-center ${isCollapsed?'':'mb-2'}"><div class="flex items-center gap-2"><span class="drag-handle cat-drag-handle">≡</span><input class="font-bold text-sm text-slate-800 border-none bg-transparent p-0 w-36" value="${cat}" onchange="renameCat(${cIdx}, this.value)"></div><div class="flex items-center gap-1.5"><button onclick="collapsedCats['${cat}']=!collapsedCats['${cat}'];renderInventoryEditor();" class="px-2.5 py-1 bg-white border border-slate-200 rounded-lg font-bold text-xs text-slate-600 shadow-xs cursor-pointer">${isCollapsed?'展開 +':'收合 -'}</button><button onclick="removeCat(${cIdx})" class="text-slate-300 hover:text-rose-500 text-lg cursor-pointer">×</button></div></div><div id="edit-${cat}" class="space-y-2 item-drag-container ${isCollapsed?'hidden':''}" data-cat="${cat}"></div><button onclick="addInvItem('${cat}')" class="w-full text-xs font-bold bg-white mt-2.5 py-2 rounded-xl border border-dashed border-slate-300 text-slate-500 hover:text-slate-700 cursor-pointer ${isCollapsed?'hidden':''}">+ 新增零件</button>`; 
+            const isCollapsed = collapsedCats[cat]; const sec = document.createElement('div'); sec.className = "bg-slate-50 p-3 rounded-xl border border-slate-200 mb-3 category-drag-item"; sec.dataset.catname = cat; 
+            sec.innerHTML = `<div class="flex justify-between items-center ${isCollapsed?'':'mb-2.5'}"><div class="flex items-center gap-2"><span class="drag-handle cat-drag-handle">≡</span><input class="font-bold text-sm text-slate-800 border-none bg-transparent p-0 w-36" value="${cat}" onchange="renameCat(${cIdx}, this.value)"></div><div class="flex items-center gap-1.5"><button onclick="collapsedCats['${cat}']=!collapsedCats['${cat}'];renderInventoryEditor();" class="px-2.5 py-1 bg-white border border-slate-200 rounded-lg font-bold text-xs text-slate-600 shadow-xs cursor-pointer">${isCollapsed?'展開 +':'收合 -'}</button><button onclick="removeCat(${cIdx})" class="text-slate-300 hover:text-rose-500 text-lg cursor-pointer">×</button></div></div><div id="edit-${cat}" class="space-y-2 item-drag-container ${isCollapsed?'hidden':''}" data-cat="${cat}"></div><button onclick="addInvItem('${cat}')" class="w-full text-xs font-bold bg-white mt-2.5 py-2 rounded-xl border border-dashed border-slate-300 text-slate-500 hover:text-slate-700 cursor-pointer ${isCollapsed?'hidden':''}">+ 新增零件</button>`; 
             area.appendChild(sec); 
             if(!isCollapsed) {
                 (inv[cat] || []).forEach((item, idx) => { 
                     const row = document.createElement('div'); row.className = `inv-item-row item-drag-row`; row.dataset.originalidx = idx; 
                     const sups = ['原', '速', '裕']; let supHtml = sups.map(s => `<button onclick="toggleSup('${cat}', ${idx}, '${s}')" class="sup-btn ${(item.sups||[]).includes(s)?'active':''}">${s}</button>`).join(''); 
-                    row.innerHTML = `<div class="inv-item-main"><span class="drag-handle item-drag-handle">≡</span><div class="inv-name-area"><textarea class="inv-name-input" rows="1">${item.name}</textarea></div><button onclick="removeInvItem('${cat}', ${idx})" class="text-slate-300 hover:text-rose-500 text-lg px-1 flex-shrink-0 cursor-pointer">×</button></div><div class="inv-control-bar"><div class="price-group"><div class="val-box"><span class="val-label">售</span><input type="number" class="val-input p-input" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)"></div><div class="val-box"><span class="val-label">本</span><input type="number" class="val-input c-input" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)"></div><div class="flex gap-1.5 mx-1">${supHtml}</div><button onclick="inv['${cat}'][${idx}].outOfStock=!inv['${cat}'][${idx}].outOfStock;renderInventoryEditor();" class="stock-btn ${item.outOfStock?'oos':'active'} cursor-pointer">${item.outOfStock?'缺貨':'供應'}</button></div></div>`; 
+                    row.innerHTML = `
+                        <div class="inv-item-main">
+                            <span class="drag-handle item-drag-handle">≡</span>
+                            <div class="inv-name-area"><textarea class="inv-name-input" rows="1">${item.name}</textarea></div>
+                            <button onclick="removeInvItem('${cat}', ${idx})" class="text-slate-300 hover:text-rose-500 text-xl px-1 flex-shrink-0 cursor-pointer">×</button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 mt-1">
+                            <div class="val-box">
+                                <span class="val-label text-blue-600">售</span>
+                                <span class="text-slate-400 text-xs font-bold">$</span>
+                                <input type="number" class="val-input p-input" value="${item.p}" onchange="inv['${cat}'][${idx}].p=Number(this.value)">
+                            </div>
+                            <div class="val-box">
+                                <span class="val-label text-rose-600">本</span>
+                                <span class="text-slate-400 text-xs font-bold">$</span>
+                                <input type="number" class="val-input c-input" value="${item.c||0}" onchange="inv['${cat}'][${idx}].c=Number(this.value)">
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between pt-1 border-t border-slate-100 mt-1">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-xs font-bold text-slate-400">廠商：</span>
+                                ${supHtml}
+                            </div>
+                            <button onclick="inv['${cat}'][${idx}].outOfStock=!inv['${cat}'][${idx}].outOfStock;renderInventoryEditor();" class="stock-btn ${item.outOfStock?'oos':'active'} cursor-pointer">
+                                ${item.outOfStock?'缺貨':'供應中'}
+                            </button>
+                        </div>
+                    `; 
                     document.getElementById(`edit-${cat}`).appendChild(row); 
                     const ta = row.querySelector('textarea'); setTimeout(() => { ta.style.height = 'auto'; ta.style.height = (ta.scrollHeight) + 'px'; }, 10);
                     ta.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; inv[cat][idx].name = this.value; });
@@ -737,7 +817,6 @@
         });
     }
 
-    /* 軟刪除與回收桶邏輯 */
     function moveToTrash(id) {
         const r = records.find(x => String(x.id) === String(id));
         if(!r) return;
@@ -775,7 +854,6 @@
         }
     }
 
-    /* 渲染訂單列表 */
     function renderRecords() {
         const lists = { 
             'draft': document.getElementById('draftList'), 
@@ -876,7 +954,6 @@
                 }
 
                 div.innerHTML = `
-                <!-- 第一列：姓名與價格 -->
                 <div class="flex justify-between items-start gap-2">
                     <div>
                         <div class="text-xs text-slate-400 flex items-center gap-1.5 mb-0.5">
@@ -891,7 +968,6 @@
                     </div>
                 </div>
 
-                <!-- 第二列：三個下拉選單水平並排 -->
                 <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100">
                     <select onchange="db.ref('records/' + '${r.id}' + '/seller').set(this.value)" class="text-xs font-bold px-1.5 py-0 rounded-xl bg-slate-50 text-slate-700 border border-slate-200 outline-none cursor-pointer h-9 w-full text-center">${sellerOptsHtml}</select>
                     <select onchange="db.ref('records/' + '${r.id}' + '/progress').set(this.value)" class="text-xs font-bold px-1.5 py-0 rounded-xl ${getStatusClass(r.progress)} cursor-pointer h-9 w-full text-center">${pOpts}</select>
@@ -901,7 +977,6 @@
                 ${unshippedHtml}
                 ${memoHtml}
 
-                <!-- 第三列：操作按鈕一字排開 -->
                 <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
                     <button onclick="editRecord('${r.id}')" class="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-xl font-bold cursor-pointer text-center">✏️ 編輯</button>
                     ${shipmentBtn}
