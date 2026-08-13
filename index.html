@@ -6,7 +6,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v16.06</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v16.07</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -732,6 +732,16 @@
         });
     }
 
+    function jumpToCompletedOrder(id, searchTerm) {
+        showTab('completed');
+        const searchInput = document.getElementById('search-completed');
+        if (searchInput) {
+            searchInput.value = searchTerm;
+            renderRecords();
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     function renderStats() {
         const content = document.getElementById('statsContent'); 
         if(!content) return; 
@@ -812,7 +822,7 @@
         <div class="bg-white p-4 rounded-2xl border shadow-sm mb-4 space-y-4">
             <div class="flex justify-between items-center flex-wrap gap-3 border-b pb-3">
                 <div>
-                    <h2 class="font-black text-gray-800 text-base">📊 月度結算與業務抽成戰情室 v16.06</h2>
+                    <h2 class="font-black text-gray-800 text-base">📊 月度結算與業務抽成戰情室 v16.07</h2>
                     <p class="text-xs text-gray-400">公司 60% ｜ 業務 40% 自動結算 (支援跨月歷史保留與人員篩選)</p>
                 </div>
                 <button onclick="exportCompletedOrdersCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-black text-xs shadow flex items-center gap-1 cursor-pointer">
@@ -881,21 +891,23 @@
 
         html += `
         <div class="card p-4 mt-4 space-y-3">
-            <h3 class="font-black text-gray-800 text-sm">🏁 符合條件的結案訂單明細 (${filteredCompletedRecords.length} 筆) <span class="text-xs text-blue-500 font-normal ml-2">💡 點擊下方任意訂單可直接載入檢視</span></h3>
+            <h3 class="font-black text-gray-800 text-sm">🏁 符合條件的結案訂單明細 (${filteredCompletedRecords.length} 筆)</h3>
             <div class="space-y-2 max-h-96 overflow-y-auto">
         `;
         if(filteredCompletedRecords.length === 0) {
             html += `<div class="text-center text-gray-400 py-6 text-xs font-bold">目前無符合條件的結案訂單</div>`;
         } else {
             filteredCompletedRecords.sort((a,b)=>b.id-a.id).forEach(r => {
+                const searchKey = (r.name || r.custPhone || '').replace(/'/g, "\\'");
                 html += `
-                <div onclick="editRecord('${r.id}')" class="p-3 border rounded-xl bg-gray-50 hover:bg-blue-50 hover:border-blue-400 transition-all flex justify-between items-center text-xs cursor-pointer shadow-sm">
+                <div onclick="editRecord('${r.id}')" class="p-3 border rounded-xl bg-gray-50 hover:bg-blue-50 hover:border-blue-400 transition-all flex flex-col md:flex-row md:items-center justify-between gap-2 cursor-pointer shadow-sm">
                     <div>
-                        <div class="font-black text-gray-800">${r.time} ｜ ${r.name || '無名氏'} (${r.custPhone || '無電話'})</div>
-                        <div class="text-gray-500 mt-0.5">業務：<span class="font-bold text-blue-600">${r.seller || '朱冠穎'}</span> ｜ 總金額：<span class="font-black text-indigo-600">${r.total}</span></div>
+                        <div class="font-black text-gray-800 text-xs">${r.time} ｜ ${r.name || '無名氏'} (${r.custPhone || '無電話'})</div>
+                        <div class="text-gray-500 text-[11px] mt-0.5">業務：<span class="font-bold text-blue-600">${r.seller || '朱冠穎'}</span> ｜ 總金額：<span class="font-black text-indigo-600">${r.total}</span></div>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <span class="bg-blue-600 text-white px-2.5 py-1 rounded-lg font-black text-[10px]">查看訂單</span>
+                    <div class="flex items-center gap-1.5 self-end md:self-auto">
+                        <button onclick="event.stopPropagation(); jumpToCompletedOrder('${r.id}', '${searchKey}')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-2.5 py-1.5 rounded-lg font-black text-[10px]">🔍 結案卡片</button>
+                        <button onclick="event.stopPropagation(); editRecord('${r.id}')" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 rounded-lg font-black text-[10px]">✏️ 載入報價</button>
                     </div>
                 </div>`;
             });
@@ -1048,7 +1060,9 @@
         for(let i=0; i<sellerSelect.options.length; i++) { if(sellerSelect.options[i].value === targetSeller) { hasOption = true; break; } }
         if(!hasOption) { const opt = document.createElement('option'); opt.value = targetSeller; opt.text = targetSeller; sellerSelect.add(opt); }
         sellerSelect.value = targetSeller;
-        renderConfig(); showTab('calc'); 
+        renderConfig(); 
+        showTab('calc'); 
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function resetForm() { 
