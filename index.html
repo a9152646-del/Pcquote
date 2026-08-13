@@ -2,8 +2,11 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v15.00</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v16.01</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -545,14 +548,15 @@
         if(!r) return;
         const optionsContainer = document.getElementById('planSelectOptions');
         optionsContainer.innerHTML = '';
-        const hasPlans = r.plans && (Object.keys(r.plans.A.selections).length > 0 || Object.keys(r.plans.B.selections).length > 0);
+        
+        const hasPlans = r.plans && r.plans.A && r.plans.B && (Object.keys(r.plans.A.selections || {}).length > 0 || Object.keys(r.plans.B.selections || {}).length > 0);
 
         if (hasPlans) {
             ['A', 'B'].forEach(pKey => {
-                const p = r.plans[pKey];
+                const p = r.plans[pKey] || {};
                 let subP = 0;
                 catOrder.forEach(cat => {
-                    (p.selections[cat] || []).forEach(s => {
+                    ((p.selections || {})[cat] || []).forEach(s => {
                         let target = (inv[cat] || [])[s.idx];
                         if (target && !s.isGift) subP += ((s.p !== undefined ? s.p : target.p) * (s.qty||1));
                     });
@@ -582,10 +586,10 @@
         const r = records.find(x => String(x.id) === String(id));
         if(!r || !r.plans) return;
 
-        const chosenPlan = r.plans[chosenPlanKey];
+        const chosenPlan = r.plans[chosenPlanKey] || {};
         let subP = 0;
         catOrder.forEach(cat => {
-            (chosenPlan.selections[cat] || []).forEach(s => {
+            ((chosenPlan.selections || {})[cat] || []).forEach(s => {
                 let target = (inv[cat] || [])[s.idx];
                 if (target && !s.isGift) subP += ((s.p !== undefined ? s.p : target.p) * (s.qty||1));
             });
@@ -595,7 +599,7 @@
 
         const updateData = {
             status: 'order',
-            selections: chosenPlan.selections,
+            selections: chosenPlan.selections || {},
             discount: chosenPlan.discount || 0,
             manualTotal: chosenPlan.manualTotal || '',
             noCard: chosenPlan.noCard || '',
@@ -640,7 +644,7 @@
             let unshippedHtml = "";
             if (r.notShipped) {
                 Object.keys(r.notShipped).forEach(cat => {
-                    const selectionsInCat = r.selections[cat] || [];
+                    const selectionsInCat = (r.selections || {})[cat] || [];
                     (r.notShipped[cat] || []).forEach(idxInOrder => {
                         const sel = selectionsInCat[idxInOrder];
                         if (sel) {
@@ -663,7 +667,10 @@
             ` : '';
 
             const invBadge = (r.hasInvoice === 'no') ? `<span class="bg-gray-100 text-gray-600 text-[10px] px-1.5 py-0.5 rounded font-black border border-gray-300">免發票</span>` : `<span class="bg-blue-50 text-blue-600 text-[10px] px-1.5 py-0.5 rounded font-black border border-blue-200">含稅5%</span>`;
-            const planBadge = (r.plans && r.status === 'draft') ? `<span class="bg-indigo-100 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded font-black border border-indigo-200">雙方案 A/B</span>` : '';
+            
+            // 🌟 關鍵修復：只有當訂單確實擁有 A 或 B 方案資料時，才顯示雙方案標記！
+            const hasValidPlans = r.plans && r.plans.A && r.plans.B && (Object.keys(r.plans.A.selections || {}).length > 0 || Object.keys(r.plans.B.selections || {}).length > 0);
+            const planBadge = (hasValidPlans && status === 'draft') ? `<span class="bg-indigo-100 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded font-black border border-indigo-200">雙方案 A/B</span>` : '';
 
             const div = document.createElement('div'); div.className = "p-4 border-2 rounded-xl bg-white shadow-sm space-y-3";
             const shipmentBtn = (status === 'order' || status === 'completed') ? `<button onclick="openShipmentModal('${r.id}')" class="flex-1 py-2 bg-gray-50 text-gray-500 text-[10px] rounded-lg font-black border cursor-pointer">🚚 出貨管理</button>` : '';
@@ -706,7 +713,6 @@
         });
     }
 
-    // 🌟 核心優化：渲染【📊 統計與業務抽成戰情室】
     function renderStats() {
         const content = document.getElementById('statsContent'); 
         if(!content) return; 
@@ -753,7 +759,6 @@
             monthlyData[monthKey].profit += orderProfit; 
             monthlyData[monthKey].count += 1; 
 
-            // 統計【結案訂單】的業務個人抽成
             if (r.status === 'completed') {
                 const sName = r.seller || "朱冠穎";
                 if (!sellerStats[sName]) sellerStats[sName] = { profit: 0, count: 0 };
@@ -773,7 +778,6 @@
             </button>
         </div>`;
 
-        // 渲染業務 3 人抽成看板
         html += `<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">`;
         
         Object.keys(sellerStats).forEach(name => {
@@ -804,7 +808,6 @@
 
         html += `</div>`;
 
-        // 渲染月份績效
         html += Object.keys(monthlyData).sort((a,b)=>b.localeCompare(a)).map(m => `
             <div class="stats-card">
                 <div class="text-lg font-black text-gray-800 mb-2">${m} 績效彙整</div>
