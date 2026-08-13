@@ -6,7 +6,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>神奇海螺電競 | 報價與庫存系統 v16.16 (品項固化與庫存多選版)</title>
+    <title>神奇海螺電競 | 報價與庫存系統 v16.17 (品項ID雙重鎖定版)</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -39,7 +39,7 @@
         }
         .hidden { display: none !important; }
         
-        /* 🏆 頂部導覽頁籤 */
+        /* 頂部導覽頁籤 */
         .top-nav-bar {
             position: sticky;
             top: 0;
@@ -141,7 +141,7 @@
         .screenshot-mode #screenshot-footer { padding: 8px 12px !important; display: block !important; }
         .screenshot-mode .top-nav-bar { display: none !important; }
 
-        /* 🏆 品項庫防爆 CSS */
+        /* 品項庫防爆 CSS */
         .inv-item-card { 
             background: #ffffff; 
             border-radius: 12px; 
@@ -430,7 +430,7 @@
 
         <div id="tab-stats" class="page-content hidden"><div id="statsContent" class="space-y-3.5"></div></div>
         
-        <!-- 品項庫分頁 (全新多選批量工具) -->
+        <!-- 品項庫分頁 (多選批量工具) -->
         <div id="tab-inventory" class="page-content hidden">
             <!-- 批量操作懸浮區 -->
             <div id="batchActionBar" class="hidden bg-slate-900 text-white p-3 rounded-xl mb-3 flex flex-wrap items-center justify-between gap-2 shadow-lg sticky top-14 z-50">
@@ -540,6 +540,57 @@
     };
     let currentSelections = {};
 
+    /* 🏆 自動賦予品項庫永久唯一 ID (UUID) 防跑位 */
+    function ensureInventoryIds() {
+        let changed = false;
+        if (!inv) return;
+        catOrder.forEach(cat => {
+            if (Array.isArray(inv[cat])) {
+                inv[cat].forEach(item => {
+                    if (item && !item.id) {
+                        item.id = 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+                        changed = true;
+                    }
+                });
+            }
+        });
+        if (changed) {
+            db.ref('inventory').set(inv);
+        }
+    }
+
+    /* 🏆 智慧品項提取器 (優先以 ID 匹配，次選名稱，後備價格成本比對) */
+    function getItemFromSel(cat, sel) {
+        if (!sel) return { name: '未知零件', p: 0, c: 0 };
+        const catItems = inv[cat] || [];
+
+        // 1. 如果有 ID，用 ID 精確找品項 (最準確，不管怎麼換位子都抓得到)
+        if (sel.itemId) {
+            const found = catItems.find(x => x.id === sel.itemId);
+            if (found) return found;
+        }
+
+        // 2. 如果選單紀錄已有固化名稱，優先顯示該名稱
+        if (sel.name) {
+            const foundByName = catItems.find(x => x.name === sel.name);
+            if (foundByName) return foundByName;
+            return { name: sel.name, p: sel.p || 0, c: sel.c || 0, id: sel.itemId };
+        }
+
+        // 3. 舊訂單救援：比對價格與成本匹配品項
+        if (sel.p !== undefined) {
+            const matchPriceCost = catItems.find(x => Number(x.p) === Number(sel.p) && Number(x.c || 0) === Number(sel.c || 0));
+            if (matchPriceCost) return matchPriceCost;
+        }
+
+        // 4. 最後後備方案：索引值 lookup
+        if (sel.idx !== undefined && catItems[sel.idx]) {
+            return catItems[sel.idx];
+        }
+
+        return { name: sel.name || '未知零件', p: sel.p || 0, c: sel.c || 0 };
+    }
+
     function getMonthKey(timeStr) {
         if (!timeStr) return '其他';
         const match = String(timeStr).match(/(\d{4})[\/\-](\d{1,2})/);
@@ -631,8 +682,9 @@
             catOrder.forEach(cat => {
                 (currentSelections[cat] || []).forEach(s => {
                     let p = 0, c = 0; 
-                    if (s.p !== undefined && s.c !== undefined) { p = Number(s.p || 0); c = Number(s.c || 0); } 
-                    else { const item = (inv[cat] || [])[s.idx]; if(item) { p = Number(item.p || 0); c = Number(item.c || 0); } }
+                    const item = getItemFromSel(cat, s);
+                    p = (s.p !== undefined) ? Number(s.p) : Number(item.p || 0);
+                    c = (s.c !== undefined) ? Number(s.c) : Number(item.c || 0);
                     if(!s.isGift) subP += (p * (s.qty || 1)); subC += (c * (s.qty || 1));
                 });
             });
@@ -677,18 +729,18 @@
         } catch(e) {}
     }
 
-    /* 🏆 固化品項名稱 rendering */
+    /* 🏆 渲染目前配置選單 */
     function renderConfig() {
         const container = document.getElementById('configRows'); if(!container) return;
         const isSS = document.getElementById('mainBody').classList.contains('screenshot-mode'); 
         container.innerHTML = '';
         catOrder.forEach(cat => {
             const items = currentSelections[cat] || []; if (isSS && items.length === 0) return;
-            const badges = items.map((sel, sIdx) => {
-                let target = (inv[cat] || [])[sel.idx];
-                const dispName = sel.name || (target ? target.name : '未知零件');
-                const dispP = (sel.p !== undefined) ? sel.p : (target ? target.p : 0);
-                const dispC = (sel.c !== undefined) ? sel.c : (target ? target.c : 0);
+            const badges = items.map((sel) => {
+                const item = getItemFromSel(cat, sel);
+                const dispName = sel.name || item.name;
+                const dispP = (sel.p !== undefined) ? sel.p : item.p;
+                const dispC = (sel.c !== undefined) ? sel.c : (item.c || 0);
                 return `<div class="selected-badge flex-col mb-1">${sel.isGift?'[贈] ':''}<div>${dispName}${sel.qty>1?`<span class="bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-full ml-1 text-xs font-bold">x${sel.qty}</span>`:''} <span class="price-tag">($${Number(dispP).toLocaleString()})</span><span class="cost-tag">(本:$${Number(dispC).toLocaleString()})</span></div></div>`;
             }).join('');
             container.innerHTML += `<div class="item-row cursor-pointer" onclick="openSelection('${cat}')"><div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">${cat}</div><div class="flex flex-col">${badges || '<span class="text-slate-300 italic text-xs">未選中項目...</span>'}</div></div>`;
@@ -705,15 +757,31 @@
         document.querySelectorAll('.item-drag-container').forEach(c => {
             if (c.sortableInstance) c.sortableInstance.destroy();
             const cat = c.dataset.cat;
-            c.sortableInstance = new Sortable(c, { handle: '.item-drag-handle', animation: 250, delay: 150, delayOnTouchOnly: true, forceFallback: true, onEnd: function() { const rows = Array.from(c.querySelectorAll('.item-drag-row')); const old = [...(inv[cat] || [])]; inv[cat] = rows.map(r => old[parseInt(r.dataset.originalidx)]); renderInventoryEditor(); }});
+            c.sortableInstance = new Sortable(c, { 
+                handle: '.item-drag-handle', 
+                animation: 250, 
+                delay: 150, 
+                delayOnTouchOnly: true, 
+                forceFallback: true, 
+                onEnd: function() { 
+                    const rows = Array.from(c.querySelectorAll('.item-drag-row')); 
+                    const old = [...(inv[cat] || [])]; 
+                    inv[cat] = rows.map(r => {
+                        const id = r.dataset.itemid;
+                        return old.find(x => x.id === id) || old[parseInt(r.dataset.originalidx)];
+                    }); 
+                    renderInventoryEditor(); 
+                }
+            });
         });
     }
 
-    /* 🏆 全新重構品項庫編輯器 (含勾選框與全選) */
+    /* 🏆 品項庫編輯器 (帶 itemid 屬性) */
     function renderInventoryEditor() { 
+        ensureInventoryIds();
         const area = document.getElementById('inventoryEditor'); if (!area) return; const scrollPos = window.scrollY; area.innerHTML = ''; 
         const head = document.getElementById('inventoryHeader'); 
-        if(head) head.innerHTML = `<div class="flex justify-between items-center"><h2 class="font-bold text-sm text-slate-800">⚙️ 雲端品項管理 <span class="text-xs text-blue-600 font-bold">(v16.16 多選版)</span></h2><div class="flex gap-2"><button onclick="addNewCategory()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer">+ 大項</button><button onclick="saveInventory()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer">💾 同步</button></div></div><div class="flex gap-2"><button onclick="toggleAllCats(true)" class="flex-1 bg-slate-100 text-slate-600 py-1.5 rounded-xl text-xs font-bold cursor-pointer">收合 ↑</button><button onclick="toggleAllCats(false)" class="flex-1 bg-slate-100 text-slate-600 py-1.5 rounded-xl text-xs font-bold cursor-pointer">展開 ↓</button></div>`; 
+        if(head) head.innerHTML = `<div class="flex justify-between items-center"><h2 class="font-bold text-sm text-slate-800">⚙️ 雲端品項管理 <span class="text-xs text-blue-600 font-bold">(v16.17 防跑位版)</span></h2><div class="flex gap-2"><button onclick="addNewCategory()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer">+ 大項</button><button onclick="saveInventory()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer">💾 同步</button></div></div><div class="flex gap-2"><button onclick="toggleAllCats(true)" class="flex-1 bg-slate-100 text-slate-600 py-1.5 rounded-xl text-xs font-bold cursor-pointer">收合 ↑</button><button onclick="toggleAllCats(false)" class="flex-1 bg-slate-100 text-slate-600 py-1.5 rounded-xl text-xs font-bold cursor-pointer">展開 ↓</button></div>`; 
         
         catOrder.forEach((cat, cIdx) => { 
             const isCollapsed = collapsedCats[cat]; const sec = document.createElement('div'); sec.className = "bg-slate-50 p-3 rounded-xl border border-slate-200 mb-3 category-drag-item"; sec.dataset.catname = cat; 
@@ -721,11 +789,10 @@
             area.appendChild(sec); 
             if(!isCollapsed) {
                 (inv[cat] || []).forEach((item, idx) => { 
-                    const row = document.createElement('div'); row.className = `inv-item-card item-drag-row`; row.dataset.originalidx = idx; 
+                    const row = document.createElement('div'); row.className = `inv-item-card item-drag-row`; row.dataset.originalidx = idx; row.dataset.itemid = item.id;
                     const sups = ['原', '速', '裕']; let supHtml = sups.map(s => `<button onclick="toggleSup('${cat}', ${idx}, '${s}')" class="sup-btn ${(item.sups||[]).includes(s)?'active':''}">${s}</button>`).join(''); 
                     
                     row.innerHTML = `
-                        <!-- 第一層：勾選框、標題與操作 -->
                         <div class="inv-card-top">
                             <input type="checkbox" class="inv-batch-check w-4 h-4 rounded cursor-pointer flex-shrink-0" data-cat="${cat}" data-idx="${idx}" onchange="updateBatchBar()">
                             <span class="drag-handle item-drag-handle">≡</span>
@@ -735,7 +802,6 @@
                             <button onclick="removeInvItem('${cat}', ${idx})" class="inv-del-btn">×</button>
                         </div>
 
-                        <!-- 第二層：售價與成本雙欄 -->
                         <div class="inv-card-prices">
                             <div class="price-box">
                                 <span class="p-label text-blue-600">售 $</span>
@@ -747,7 +813,6 @@
                             </div>
                         </div>
 
-                        <!-- 第三層：廠商與庫存狀態 -->
                         <div class="inv-card-bottom">
                             <div class="sup-group">
                                 <span class="sup-title">廠商：</span>
@@ -768,7 +833,7 @@
         setTimeout(() => { initDragAndDrop(); updateBatchBar(); window.scrollTo(0, scrollPos); }, 50);
     }
 
-    /* 🏆 批量操作工具列邏輯 */
+    /* 批量操作工具列邏輯 */
     function updateBatchBar() {
         const checked = document.querySelectorAll('.inv-batch-check:checked');
         const bar = document.getElementById('batchActionBar');
@@ -880,11 +945,11 @@
     }
 
     function toggleItemPriceMode() { const i = document.getElementById('itemPriceToggle').checked; if(i) document.getElementById('mainBody').classList.remove('hide-item-prices'); else document.getElementById('mainBody').classList.add('hide-item-prices'); }
-    function toggleItemCostMode() { const i = document.getElementById('itemCostToggle').checked; if(i) document.getElementById('mainBody').classList.remove('hide-item-costs'); else document.getElementById('mainBody').classList.add('hide-item-costs'); }
+    function toggleItemCostMode() { const i = document.getElementById('itemCostToggle').checked; if(i) document.getElementById('itemCostToggle').checked; if(i) document.getElementById('mainBody').classList.remove('hide-item-costs'); else document.getElementById('mainBody').classList.add('hide-item-costs'); }
     function toggleAdminMode() { const i = document.getElementById('adminToggle').checked; if(i) document.getElementById('mainBody').classList.remove('hide-admin-box'); else document.getElementById('mainBody').classList.add('hide-admin-box'); }
     function toggleSSTotalMode() { const i = document.getElementById('ssTotalToggle').checked; if(i) document.getElementById('mainBody').classList.remove('ss-hide-totals'); else document.getElementById('mainBody').classList.add('ss-hide-totals'); }
 
-    /* 🏆 儲存時自動補全名稱固化 */
+    /* 🏆 儲存訂單時進行品項雙重固化快照 */
     function saveRecord(st) { 
         saveCurrentInputsToPlan();
         const id = editingRecordId ? String(editingRecordId) : String(Date.now()); 
@@ -897,12 +962,37 @@
 
         const currentDisplayTotal = document.getElementById('ui-totalSale').innerText || "$0";
 
-        // 確保目前 selection 內的品項都有帶上名稱 (固化)
+        // 對 A/B 方案內的所有品項補全 ID 與名稱獨立快照
+        ['A', 'B'].forEach(pKey => {
+            if (plansData[pKey] && plansData[pKey].selections) {
+                catOrder.forEach(cat => {
+                    const selList = plansData[pKey].selections[cat];
+                    if (Array.isArray(selList)) {
+                        selList.forEach(s => {
+                            const item = getItemFromSel(cat, s);
+                            if (item) {
+                                s.name = s.name || item.name;
+                                if (item.id) s.itemId = s.itemId || item.id;
+                                if (s.p === undefined) s.p = Number(item.p || 0);
+                                if (s.c === undefined) s.c = Number(item.c || 0);
+                            }
+                        });
+                    }
+                });
+            }
+        });
+
+        // 當前方案Selections補全
         catOrder.forEach(cat => {
             if (currentSelections[cat]) {
                 currentSelections[cat].forEach(s => {
-                    let target = (inv[cat] || [])[s.idx];
-                    if (target && !s.name) s.name = target.name;
+                    const item = getItemFromSel(cat, s);
+                    if (item) {
+                        s.name = s.name || item.name;
+                        if (item.id) s.itemId = s.itemId || item.id;
+                        if (s.p === undefined) s.p = Number(item.p || 0);
+                        if (s.c === undefined) s.c = Number(item.c || 0);
+                    }
                 });
             }
         });
@@ -957,7 +1047,7 @@
                 let subP = 0;
                 catOrder.forEach(cat => {
                     ((p.selections || {})[cat] || []).forEach(s => {
-                        let target = (inv[cat] || [])[s.idx];
+                        let target = getItemFromSel(cat, s);
                         if (target && !s.isGift) subP += ((s.p !== undefined ? s.p : target.p) * (s.qty||1));
                     });
                 });
@@ -991,7 +1081,7 @@
         let subP = 0;
         catOrder.forEach(cat => {
             ((chosenPlan.selections || {})[cat] || []).forEach(s => {
-                let target = (inv[cat] || [])[s.idx];
+                let target = getItemFromSel(cat, s);
                 if (target && !s.isGift) subP += ((s.p !== undefined ? s.p : target.p) * (s.qty||1));
             });
         });
@@ -1052,7 +1142,7 @@
         }
     }
 
-    /* 🏆 固化品項名稱 rendering */
+    /* 🏆 渲染訂單卡片列表 */
     function renderRecords() {
         const lists = { 
             'draft': document.getElementById('draftList'), 
@@ -1094,8 +1184,8 @@
                     (r.notShipped[cat] || []).forEach(idxInOrder => {
                         const sel = selectionsInCat[idxInOrder];
                         if (sel) {
-                            const target = (inv[cat] || [])[sel.idx];
-                            const dispName = sel.name || (target ? target.name : '未知零件');
+                            const target = getItemFromSel(cat, sel);
+                            const dispName = sel.name || target.name;
                             unshippedHtml += `<div class="text-xs text-rose-600 font-bold">🔴 未出貨：[${cat}] ${dispName}</div>`;
                         }
                     });
@@ -1250,8 +1340,8 @@
                 if(Array.isArray(selList)) {
                     selList.forEach(s => { 
                         if(!s) return;
-                        let c = (s.c !== undefined) ? Number(s.c) : 0; 
-                        if(!s.c && inv && inv[cat]) { const item = inv[cat][s.idx]; if(item) c = Number(item.c || 0); } 
+                        let item = getItemFromSel(cat, s);
+                        let c = (s.c !== undefined) ? Number(s.c) : Number(item.c || 0); 
                         itemCost += (c * (s.qty || 1)); 
                     });
                 }
@@ -1370,7 +1460,7 @@
         content.innerHTML = html;
     }
 
-    /* 🏆 固化品項名稱 CSV 輸出 */
+    /* 🏆 CSV 匯出 */
     function exportCompletedOrdersCSV() {
         try {
             const selectedMonth = document.getElementById('filterStatsMonth')?.value || 'ALL';
@@ -1413,10 +1503,10 @@
                     if (Array.isArray(selList) && selList.length > 0) {
                         return selList.map(s => {
                             if (!s) return '';
-                            let target = (inv[cat] || [])[s.idx];
-                            let itemName = s.name || (target ? target.name : '未知零件');
-                            let itemPrice = (s.p !== undefined) ? Number(s.p) : (target ? Number(target.p||0) : 0);
-                            let itemC = (s.c !== undefined) ? Number(s.c) : (target ? Number(target.c||0) : 0);
+                            let target = getItemFromSel(cat, s);
+                            let itemName = s.name || target.name;
+                            let itemPrice = (s.p !== undefined) ? Number(s.p) : Number(target.p||0);
+                            let itemC = (s.c !== undefined) ? Number(s.c) : Number(target.c||0);
                             let qty = s.qty || 1;
                             itemCost += (itemC * qty);
                             return `${itemName}${qty > 1 ? ' x' + qty : ''} ($${itemPrice.toLocaleString()})${s.isGift?'[贈]':''}`;
@@ -1552,10 +1642,10 @@
     function toggleSup(cat, idx, s) { if(!inv[cat][idx].sups) inv[cat][idx].sups = []; const i = inv[cat][idx].sups.indexOf(s); if(i > -1) inv[cat][idx].sups.splice(i, 1); else inv[cat][idx].sups.push(s); renderInventoryEditor(); }
     function renameCat(idx, n) { const o = catOrder[idx]; inv[n] = inv[o]; delete inv[o]; catOrder[idx] = n; }
     function addNewCategory() { const n = prompt("大項名稱："); if(n) { catOrder.push(n); inv[n] = []; renderInventoryEditor(); } }
-    function addInvItem(c) { if(!inv[c]) inv[c] = []; inv[c].push({name: "新零件", p: 0, c: 0, outOfStock: false, sups: []}); renderInventoryEditor(); }
+    function addInvItem(c) { if(!inv[c]) inv[c] = []; inv[c].push({id: 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6), name: "新零件", p: 0, c: 0, outOfStock: false, sups: []}); renderInventoryEditor(); }
     function removeInvItem(cat, idx) { if(confirm('刪除？')) { inv[cat].splice(idx, 1); renderInventoryEditor(); } }
     function removeCat(idx) { if(confirm('刪除大項？')) { delete inv[catOrder[idx]]; catOrder.splice(idx,1); renderInventoryEditor(); } }
-    function saveInventory() { if(confirm('同步雲端？')) { db.ref('inventory').set(inv); db.ref('catOrder').set(catOrder); alert('同步成功'); } }
+    function saveInventory() { if(confirm('同步雲端？')) { ensureInventoryIds(); db.ref('inventory').set(inv); db.ref('catOrder').set(catOrder); alert('同步成功'); } }
     function getStatusClass(p) { const map = {"待處理":"status-red", "已叫貨":"status-yellow", "組裝中":"status-blue", "測試中":"status-orange", "已完工":"status-purple", "已寄出":"status-green"}; return map[p] || ""; }
     
     function openSelection(cat) { 
@@ -1577,42 +1667,51 @@
 
         (inv[currentCat] || []).forEach((item, idx) => { 
             if (searchKey && !item.name.toLowerCase().includes(searchKey)) return;
-            const sel = (currentSelections[currentCat] || []).find(s => s.idx === idx); 
+            const sel = (currentSelections[currentCat] || []).find(s => (s.itemId && item.id && s.itemId === item.id) || s.idx === idx); 
             list.innerHTML += `<div class="p-2.5 border rounded-xl flex justify-between items-center mb-1.5 ${sel?'border-blue-500 bg-blue-50/50':'border-slate-200 bg-white'} ${item.outOfStock?'opacity-30 pointer-events-none':''}" onclick="togglePick(${idx})"><div class="flex-1"><div class="font-bold text-slate-800 text-xs">${item.name}</div><div class="flex items-center gap-2 mt-0.5"><span class="text-blue-600 font-bold text-xs">$${Number(item.p).toLocaleString()}</span><span class="text-rose-600 font-bold text-xs bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">成本: $${Number(item.c||0).toLocaleString()}</span></div></div>${sel ? `<div class="flex flex-col items-end gap-1" onclick="event.stopPropagation()"><div class="flex items-center gap-1"><button onclick="updateSubItem(${idx}, 'qty', -1)" class="bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded-lg font-bold text-xs cursor-pointer">-</button><span class="text-xs font-bold w-5 text-center">${sel.qty}</span><button onclick="updateSubItem(${idx}, 'qty', 1)" class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded-lg font-bold text-xs cursor-pointer">+</button></div><button onclick="toggleGift(${idx})" class="text-xs px-1.5 py-0.5 rounded-md ${sel.isGift?'bg-rose-600 text-white':'bg-slate-100 text-slate-500'} font-bold cursor-pointer">🎁 贈品</button></div>`:''}</div>`; 
         }); 
         if(list.innerHTML === '') list.innerHTML = `<div class="text-center text-slate-400 py-3 font-bold text-xs">查無符合名稱的零件</div>`;
     }
 
-    /* 🏆 選擇品項時同步鎖定品項名稱 (固化) */
+    /* 🏆 勾選品項時帶入 ID 與快照 */
     function togglePick(idx) { 
         if(!currentSelections[currentCat]) currentSelections[currentCat] = []; 
-        const i = currentSelections[currentCat].findIndex(s => s.idx === idx); 
+        const t = (inv[currentCat] || [])[idx]; 
+        const i = currentSelections[currentCat].findIndex(s => (s.itemId && t && s.itemId === t.id) || s.idx === idx); 
         if(i > -1) { 
             currentSelections[currentCat].splice(i,1); 
         } else { 
-            const t = (inv[currentCat] || [])[idx]; 
-            currentSelections[currentCat].push({
-                idx, 
-                name: t.name, 
-                qty: 1, 
-                isGift: false, 
-                p: Number(t.p||0), 
-                c: Number(t.c||0)
-            }); 
+            if(t) {
+                currentSelections[currentCat].push({
+                    idx, 
+                    itemId: t.id || '',
+                    name: t.name, 
+                    qty: 1, 
+                    isGift: false, 
+                    p: Number(t.p||0), 
+                    c: Number(t.c||0)
+                }); 
+            }
         } 
         renderConfig(); 
         renderModalList(); 
     }
 
-    function updateSubItem(idx, type, val) { const sel = currentSelections[currentCat].find(s => s.idx === idx); if(type==='qty') sel.qty = Math.max(1, sel.qty + val); renderConfig(); renderModalList(); }
+    function updateSubItem(idx, type, val) { 
+        const t = (inv[currentCat] || [])[idx];
+        const sel = currentSelections[currentCat].find(s => (s.itemId && t && s.itemId === t.id) || s.idx === idx); 
+        if(sel && type==='qty') sel.qty = Math.max(1, sel.qty + val); 
+        renderConfig(); 
+        renderModalList(); 
+    }
     
-    /* 🏆 固化品項名稱 LINE 文字報價 */
+    /* 🏆 複製 LINE 文字報價 */
     function copyQuoteAsText() { 
         let text = `🐚【神奇海螺電競 | 方案 ${currentPlan} 專業報價】\n日期：${new Date().toLocaleDateString()}\n------------------------------\n`; 
         catOrder.forEach(cat => { 
             (currentSelections[cat] || []).forEach(sel => { 
-                let target = (inv[cat] || [])[sel.idx]; 
-                let dispName = sel.name || (target ? target.name : '');
+                let target = getItemFromSel(cat, sel); 
+                let dispName = sel.name || target.name;
                 if (dispName) text += `[${cat}] ${dispName}${sel.qty > 1 ? ` x ${sel.qty}` : ''}${sel.isGift?' (贈品)':''}\n`; 
             }); 
         }); 
@@ -1627,7 +1726,7 @@
         navigator.clipboard.writeText(text).then(() => alert(`📋 已複製【方案 ${currentPlan}】文字報價！`)); 
     }
 
-    /* 🏆 固化品項名稱 雙方案 LINE 文字對比 */
+    /* 🏆 複製雙方案對比 */
     function copyDualPlanQuoteText() {
         saveCurrentInputsToPlan();
         function buildSingleText(pKey) {
@@ -1635,10 +1734,10 @@
             let subP = 0; let listStr = "";
             catOrder.forEach(cat => {
                 (p.selections[cat] || []).forEach(sel => {
-                    let target = (inv[cat] || [])[sel.idx];
-                    let dispName = sel.name || (target ? target.name : '');
+                    let target = getItemFromSel(cat, sel);
+                    let dispName = sel.name || target.name;
                     if (dispName) {
-                        let price = (sel.p !== undefined) ? sel.p : (target ? target.p : 0);
+                        let price = (sel.p !== undefined) ? sel.p : target.p;
                         if(!sel.isGift) subP += (price * (sel.qty||1));
                         listStr += `  • [${cat}] ${dispName}${sel.qty>1?` x${sel.qty}`:''}${sel.isGift?' (贈品)':''}\n`;
                     }
@@ -1658,9 +1757,13 @@
         navigator.clipboard.writeText(text).then(() => alert('📋 已成功複製【雙方案 A/B LINE 對比報價】！'));
     }
     
-    function toggleGift(idx) { const sel = currentSelections[currentCat].find(s => s.idx === idx); if(sel) { sel.isGift = !sel.isGift; renderConfig(); renderModalList(); } }
+    function toggleGift(idx) { 
+        const t = (inv[currentCat] || [])[idx];
+        const sel = currentSelections[currentCat].find(s => (s.itemId && t && s.itemId === t.id) || s.idx === idx); 
+        if(sel) { sel.isGift = !sel.isGift; renderConfig(); renderModalList(); } 
+    }
 
-    /* 🏆 固化品項名稱 出貨 Modal */
+    /* 🏆 出貨 Modal */
     function openShipmentModal(id) { 
         const r = records.find(x => String(x.id) === String(id)); 
         if(!r || !r.selections) return; 
@@ -1668,8 +1771,8 @@
         const ns = r.notShipped || {}; 
         catOrder.forEach(cat => { 
             (r.selections[cat] || []).forEach((sel, idxInOrder) => { 
-                let target = (inv[cat] || [])[sel.idx]; 
-                let dispName = sel.name || (target ? target.name : '');
+                let target = getItemFromSel(cat, sel); 
+                let dispName = sel.name || target.name;
                 if (dispName) { 
                     const isNS = ns[cat] && ns[cat].includes(idxInOrder); 
                     list.innerHTML += `<label class="flex items-center gap-2 p-2.5 border rounded-xl bg-white ${isNS?'border-rose-400 bg-rose-50/50':'border-slate-200'}"><input type="checkbox" class="w-4 h-4 rounded" ${isNS?'checked':''} onchange="updateItemShipment('${id}', '${cat}', ${idxInOrder}, this.checked)"><div class="flex-1 text-xs font-bold text-slate-800">${dispName}</div></label>`; 
@@ -1692,7 +1795,7 @@
     function saveTemplate() { const name = prompt("範本名稱："); if (!name) return; db.ref('templates/' + Date.now()).update({ name, selections: currentSelections, discount: document.getElementById('discountAmt').value, manualTotal: document.getElementById('manualTotal').value }); }
     function addCustomSeller() { const n = prompt("業務名稱："); if(n) { const s = document.getElementById('infoSeller'); const o = document.createElement('option'); o.value=n; o.text=n; o.selected=true; s.add(o); } }
 
-    db.ref('inventory').on('value', s => { if(s.exists()) inv = s.val(); renderConfig(); if(!document.getElementById('tab-inventory').classList.contains('hidden')) renderInventoryEditor(); });
+    db.ref('inventory').on('value', s => { if(s.exists()) inv = s.val(); ensureInventoryIds(); renderConfig(); if(!document.getElementById('tab-inventory').classList.contains('hidden')) renderInventoryEditor(); });
     db.ref('catOrder').on('value', s => { if(s.exists()) catOrder = s.val(); renderConfig(); });
     db.ref('records').on('value', s => { records = []; if(s.exists()) { const data = s.val(); for(let id in data) records.push(data[id]); } renderRecords(); if(!document.getElementById('tab-stats').classList.contains('hidden')) renderStats(); });
     db.ref('templates').on('value', s => { templates = s.exists() ? s.val() : {}; });
