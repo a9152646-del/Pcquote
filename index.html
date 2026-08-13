@@ -6,7 +6,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v16.02</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v16.03</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -543,23 +543,16 @@
         });
     }
 
-    // 🌟 強化防護版：轉正式訂單處理函式
     function promptConvertToOrder(id) {
         const r = records.find(x => String(x.id) === String(id));
-        if(!r) {
-            alert('找不到該筆草稿紀錄');
-            return;
-        }
+        if(!r) { alert('找不到該筆草稿紀錄'); return; }
         
-        // 檢查是否有完整的雙方案資料；若無，直接詢問並轉為正式訂單
         const hasValidPlans = r.plans && r.plans.A && r.plans.B && (Object.keys(r.plans.A.selections || {}).length > 0 || Object.keys(r.plans.B.selections || {}).length > 0);
 
         if (hasValidPlans) {
             const optionsContainer = document.getElementById('planSelectOptions');
             if(!optionsContainer) {
-                if(confirm('確定要轉為正式訂單嗎？')) {
-                    db.ref('records/' + id + '/status').set('order');
-                }
+                if(confirm('確定要轉為正式訂單嗎？')) db.ref('records/' + id + '/status').set('order');
                 return;
             }
             optionsContainer.innerHTML = '';
@@ -732,17 +725,43 @@
         const content = document.getElementById('statsContent'); 
         if(!content) return; 
 
+        // 收集所有月份與人員
+        let allMonthsSet = new Set();
+        let allSellersSet = new Set(["朱冠穎", "江苙翔", "江鈞宇"]);
+
+        records.forEach(r => {
+            if(!r || r.status === 'draft') return;
+            const dateParts = String(r.time || '').split('/'); 
+            if(dateParts.length >= 2) {
+                allMonthsSet.add(`${dateParts[0]}/${dateParts[1]}`);
+            }
+            if(r.seller) allSellersSet.add(r.seller);
+        });
+
+        let monthsList = Array.from(allMonthsSet).sort((a,b)=>b.localeCompare(a));
+        let sellersList = Array.from(allSellersSet);
+
+        // 取得目前畫面選擇的篩選值 (若元素存在)
+        const selectedMonth = document.getElementById('filterStatsMonth')?.value || 'ALL';
+        const selectedSeller = document.getElementById('filterStatsSeller')?.value || 'ALL';
+
         let monthlyData = {};
-        let sellerStats = { 
-            "朱冠穎": { profit: 0, count: 0 }, 
-            "江苙翔": { profit: 0, count: 0 }, 
-            "江鈞宇": { profit: 0, count: 0 } 
-        };
+        let sellerStats = {};
+        sellersList.forEach(s => { sellerStats[s] = { profit: 0, count: 0 }; });
+
+        let filteredCompletedRecords = [];
 
         records.forEach(r => { 
             if(!r || r.status === 'draft') return; 
             const dateParts = String(r.time || '').split('/'); 
             const monthKey = (dateParts.length >= 2) ? `${dateParts[0]}/${dateParts[1]}` : '其他'; 
+            
+            // 套用月份篩選
+            if(selectedMonth !== 'ALL' && monthKey !== selectedMonth) return;
+            // 套用人員篩選 (針對結案與統計)
+            const sName = r.seller || "朱冠穎";
+            if(selectedSeller !== 'ALL' && sName !== selectedSeller) return;
+
             if(!monthlyData[monthKey]) monthlyData[monthKey] = { revenue: 0, cost: 0, taxTotal: 0, profit: 0, count: 0 }; 
             
             const noCardAmt = (r.noCard && r.noCard !== "") ? parseFloat(r.noCard) : 0;
@@ -775,27 +794,48 @@
             monthlyData[monthKey].count += 1; 
 
             if (r.status === 'completed') {
-                const sName = r.seller || "朱冠穎";
+                filteredCompletedRecords.push(r);
                 if (!sellerStats[sName]) sellerStats[sName] = { profit: 0, count: 0 };
                 sellerStats[sName].profit += orderProfit;
                 sellerStats[sName].count += 1;
             }
         }); 
         
+        let monthOptionsHtml = `<option value="ALL">📅 全部月份 (歷史總覽)</option>` + monthsList.map(m => `<option value="${m}" ${selectedMonth===m?'selected':''}>📅 ${m}</option>`).join('');
+        let sellerOptionsHtml = `<option value="ALL">👤 全部人員</option>` + sellersList.map(s => `<option value="${s}" ${selectedSeller===s?'selected':''}>👤 ${s}</option>`).join('');
+
         let html = `
-        <div class="flex justify-between items-center bg-white p-4 rounded-2xl border shadow-sm mb-4 flex-wrap gap-3">
-            <div>
-                <h2 class="font-black text-gray-800 text-base">📊 結案訂單配單總表 & 業務抽成戰情室</h2>
-                <p class="text-xs text-gray-400">公司 60% ｜ 業務 40% 自動結算 (朱冠穎、江苙翔、江鈞宇)</p>
+        <div class="bg-white p-4 rounded-2xl border shadow-sm mb-4 space-y-4">
+            <div class="flex justify-between items-center flex-wrap gap-3 border-b pb-3">
+                <div>
+                    <h2 class="font-black text-gray-800 text-base">📊 月度結算與業務抽成戰情室</h2>
+                    <p class="text-xs text-gray-400">公司 60% ｜ 業務 40% 自動結算 (支援跨月歷史保留與人員篩選)</p>
+                </div>
+                <button onclick="exportCompletedOrdersCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-black text-xs shadow flex items-center gap-1 cursor-pointer">
+                    📊 匯出篩選後結案清單 (CSV)
+                </button>
             </div>
-            <button onclick="exportCompletedOrdersCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-black text-xs shadow flex items-center gap-1 cursor-pointer">
-                📊 匯出 結案訂單全配單表
-            </button>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="flex items-center gap-2">
+                    <label class="text-xs font-black text-gray-600 whitespace-nowrap">📅 選擇月份：</label>
+                    <select id="filterStatsMonth" onchange="renderStats()" class="w-full font-black text-blue-700 bg-blue-50/50 border-2 border-blue-200 rounded-xl p-2.5 text-xs outline-none cursor-pointer">
+                        ${monthOptionsHtml}
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-xs font-black text-gray-600 whitespace-nowrap">👤 選擇人員：</label>
+                    <select id="filterStatsSeller" onchange="renderStats()" class="w-full font-black text-indigo-700 bg-indigo-50/50 border-2 border-indigo-200 rounded-xl p-2.5 text-xs outline-none cursor-pointer">
+                        ${sellerOptionsHtml}
+                    </select>
+                </div>
+            </div>
         </div>`;
 
         html += `<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">`;
         
         Object.keys(sellerStats).forEach(name => {
+            if(selectedSeller !== 'ALL' && name !== selectedSeller) return;
             const sData = sellerStats[name];
             const commission = Math.round(sData.profit * 0.4); 
             const companyShare = Math.round(sData.profit * 0.6); 
@@ -824,7 +864,7 @@
         html += `</div>`;
 
         html += Object.keys(monthlyData).sort((a,b)=>b.localeCompare(a)).map(m => `
-            <div class="stats-card">
+            <div class="stats-card mb-3">
                 <div class="text-lg font-black text-gray-800 mb-2">${m} 績效彙整</div>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div><div class="text-[10px] text-gray-400">銷售額 (未稅/免稅)</div><div class="text-blue-600 font-bold">$${monthlyData[m].revenue.toLocaleString()}</div></div>
@@ -834,14 +874,48 @@
                 </div>
                 <div class="mt-2 text-[10px] text-gray-400 italic">※ 共 ${monthlyData[m].count} 筆正式/結案訂單</div>
             </div>`).join('');
+
+        // 顯示符合篩選條件的結案訂單明細列表
+        html += `
+        <div class="card p-4 mt-4 space-y-3">
+            <h3 class="font-black text-gray-800 text-sm">🏁 符合條件的結案訂單明細 (${filteredCompletedRecords.length} 筆)</h3>
+            <div class="space-y-2 max-h-96 overflow-y-auto">
+        `;
+        if(filteredCompletedRecords.length === 0) {
+            html += `<div class="text-center text-gray-400 py-6 text-xs font-bold">目前無符合條件的結案訂單</div>`;
+        } else {
+            filteredCompletedRecords.sort((a,b)=>b.id-a.id).forEach(r => {
+                html += `
+                <div class="p-3 border rounded-xl bg-gray-50 flex justify-between items-center text-xs">
+                    <div>
+                        <div class="font-black text-gray-800">${r.time} ｜ ${r.name || '無名氏'} (${r.custPhone || '無電話'})</div>
+                        <div class="text-gray-500 mt-0.5">業務：<span class="font-bold text-blue-600">${r.seller || '朱冠穎'}</span> ｜ 總金額：<span class="font-black text-indigo-600">${r.total}</span></div>
+                    </div>
+                    <span class="bg-gray-200 text-gray-700 px-2 py-1 rounded font-black text-[10px]">已結案</span>
+                </div>`;
+            });
+        }
+        html += `</div></div>`;
         
         content.innerHTML = html;
     }
 
     function exportCompletedOrdersCSV() {
         try {
-            const completedRecords = records.filter(r => r && r.status === 'completed');
-            if (completedRecords.length === 0) { alert('目前無【結案】狀態紀錄！'); return; }
+            const selectedMonth = document.getElementById('filterStatsMonth')?.value || 'ALL';
+            const selectedSeller = document.getElementById('filterStatsSeller')?.value || 'ALL';
+
+            const completedRecords = records.filter(r => {
+                if (!r || r.status !== 'completed') return false;
+                const dateParts = String(r.time || '').split('/'); 
+                const monthKey = (dateParts.length >= 2) ? `${dateParts[0]}/${dateParts[1]}` : '其他'; 
+                if (selectedMonth !== 'ALL' && monthKey !== selectedMonth) return false;
+                const sName = r.seller || "朱冠穎";
+                if (selectedSeller !== 'ALL' && sName !== selectedSeller) return false;
+                return true;
+            });
+
+            if (completedRecords.length === 0) { alert('目前無符合篩選條件的【結案】紀錄可供匯出！'); return; }
 
             const baseHeadersFront = ["訂單ID", "日期時間", "客戶姓名", "電話", "客戶來源", "負責業務", "發票狀態"];
             const dynamicCatHeaders = catOrder.map(cat => `【${cat}】`);
