@@ -6,7 +6,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>神奇海螺電競 | 報價與庫存系統 v16.17 (品項ID雙重鎖定版)</title>
+    <title>神奇海螺電競 | 報價與庫存系統 v16.19 (品項完全解耦防跑位版)</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -430,7 +430,7 @@
 
         <div id="tab-stats" class="page-content hidden"><div id="statsContent" class="space-y-3.5"></div></div>
         
-        <!-- 品項庫分頁 (多選批量工具) -->
+        <!-- 品項庫分頁 -->
         <div id="tab-inventory" class="page-content hidden">
             <!-- 批量操作懸浮區 -->
             <div id="batchActionBar" class="hidden bg-slate-900 text-white p-3 rounded-xl mb-3 flex flex-wrap items-center justify-between gap-2 shadow-lg sticky top-14 z-50">
@@ -438,7 +438,7 @@
                     <span>☑️ 已選擇 <span id="batchSelectCount" class="text-sm font-black text-white">0</span> 項</span>
                 </div>
                 <div class="flex items-center gap-2 flex-wrap">
-                    <button onclick="promptBatchMove()" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer">📦 批量移至大項</button>
+                    <button onclick="openBatchMoveModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer">📍 批量移至指定位置</button>
                     <button onclick="batchSetStock(false)" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer">🟢 設為供應中</button>
                     <button onclick="batchSetStock(true)" class="bg-rose-600 hover:bg-rose-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer">🔴 設為缺貨</button>
                     <button onclick="batchDeleteItems()" class="bg-slate-700 hover:bg-rose-800 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer">🗑️ 批量刪除</button>
@@ -449,6 +449,34 @@
             <div class="card p-3.5">
                 <div id="inventoryHeader" class="flex flex-col gap-2.5 mb-3"></div>
                 <div id="inventoryEditor" class="space-y-2.5"></div>
+            </div>
+        </div>
+
+        <!-- 📍 批量移至指定位置 Modal -->
+        <div id="batchMoveModal" class="hidden fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 z-[20001] backdrop-blur-xs">
+            <div class="bg-white rounded-2xl max-w-md w-full p-4 shadow-2xl space-y-3 border border-slate-200">
+                <h3 class="font-bold text-slate-800 text-sm border-b pb-2 flex items-center gap-1">📍 批量移動至指定位置</h3>
+                <div class="space-y-3 text-xs">
+                    <div>
+                        <label class="font-bold text-slate-700 block mb-1">1. 選擇目標大項：</label>
+                        <select id="bmTargetCat" onchange="updateBmTargetItems()" class="w-full font-bold text-slate-800 bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs outline-none cursor-pointer"></select>
+                    </div>
+                    <div>
+                        <label class="font-bold text-slate-700 block mb-1">2. 選擇定位零件：</label>
+                        <select id="bmTargetItem" class="w-full font-bold text-slate-800 bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs outline-none cursor-pointer"></select>
+                    </div>
+                    <div>
+                        <label class="font-bold text-slate-700 block mb-1">3. 插入方式：</label>
+                        <select id="bmPlacement" class="w-full font-bold text-slate-800 bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs outline-none cursor-pointer">
+                            <option value="before">👈 插在該零件【前面】</option>
+                            <option value="after">👉 插在該零件【後面】</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 pt-3 border-t">
+                    <button onclick="document.getElementById('batchMoveModal').classList.add('hidden')" class="px-3.5 py-2 bg-slate-100 text-slate-700 font-bold text-xs rounded-xl cursor-pointer">取消</button>
+                    <button onclick="executeBatchMovePosition()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl cursor-pointer shadow-xs">確定移動</button>
+                </div>
             </div>
         </div>
 
@@ -540,7 +568,7 @@
     };
     let currentSelections = {};
 
-    /* 🏆 自動賦予品項庫永久唯一 ID (UUID) 防跑位 */
+    /* 🏆 自動賦予品項庫永久唯一 ID (UUID) */
     function ensureInventoryIds() {
         let changed = false;
         if (!inv) return;
@@ -559,33 +587,56 @@
         }
     }
 
-    /* 🏆 智慧品項提取器 (優先以 ID 匹配，次選名稱，後備價格成本比對) */
+    /* 🏆 舊訂單資料修復與洗檔 (徹底消除 idx 依賴，永久鎖定名稱與價格) */
+    function sanitizeRecords() {
+        if (!records || records.length === 0) return;
+        records.forEach(r => {
+            if (!r) return;
+            if (r.selections) fixSelectionData(r.selections);
+            if (r.plans) {
+                ['A', 'B'].forEach(pKey => {
+                    if (r.plans[pKey] && r.plans[pKey].selections) {
+                        fixSelectionData(r.plans[pKey].selections);
+                    }
+                });
+            }
+        });
+    }
+
+    function fixSelectionData(selObj) {
+        if (!selObj) return;
+        Object.keys(selObj).forEach(cat => {
+            if (Array.isArray(selObj[cat])) {
+                selObj[cat].forEach(s => {
+                    if (!s) return;
+                    // 如果沒有存名稱，但有舊位置，立刻從當前庫存修復填入真實名稱
+                    if (!s.name && s.idx !== undefined && inv && inv[cat] && inv[cat][s.idx]) {
+                        s.name = inv[cat][s.idx].name;
+                        if (s.p === undefined) s.p = Number(inv[cat][s.idx].p || 0);
+                        if (s.c === undefined) s.c = Number(inv[cat][s.idx].c || 0);
+                        if (inv[cat][s.idx].id) s.itemId = inv[cat][s.idx].id;
+                    }
+                });
+            }
+        });
+    }
+
+    /* 🏆 智慧品項提取器 (完全解耦，優先只看名稱/ID，絕不看 idx) */
     function getItemFromSel(cat, sel) {
         if (!sel) return { name: '未知零件', p: 0, c: 0 };
         const catItems = inv[cat] || [];
 
-        // 1. 如果有 ID，用 ID 精確找品項 (最準確，不管怎麼換位子都抓得到)
+        // 1. 如果有 ID 匹配
         if (sel.itemId) {
             const found = catItems.find(x => x.id === sel.itemId);
-            if (found) return found;
+            if (found) return { name: sel.name || found.name, p: (sel.p !== undefined ? sel.p : found.p), c: (sel.c !== undefined ? sel.c : found.c), id: found.id };
         }
 
-        // 2. 如果選單紀錄已有固化名稱，優先顯示該名稱
+        // 2. 如果有真實名稱，直接回傳名稱 (絕對不受選單排序影響)
         if (sel.name) {
             const foundByName = catItems.find(x => x.name === sel.name);
-            if (foundByName) return foundByName;
+            if (foundByName) return { name: sel.name, p: (sel.p !== undefined ? sel.p : foundByName.p), c: (sel.c !== undefined ? sel.c : foundByName.c), id: foundByName.id };
             return { name: sel.name, p: sel.p || 0, c: sel.c || 0, id: sel.itemId };
-        }
-
-        // 3. 舊訂單救援：比對價格與成本匹配品項
-        if (sel.p !== undefined) {
-            const matchPriceCost = catItems.find(x => Number(x.p) === Number(sel.p) && Number(x.c || 0) === Number(sel.c || 0));
-            if (matchPriceCost) return matchPriceCost;
-        }
-
-        // 4. 最後後備方案：索引值 lookup
-        if (sel.idx !== undefined && catItems[sel.idx]) {
-            return catItems[sel.idx];
         }
 
         return { name: sel.name || '未知零件', p: sel.p || 0, c: sel.c || 0 };
@@ -776,12 +827,12 @@
         });
     }
 
-    /* 🏆 品項庫編輯器 (帶 itemid 屬性) */
+    /* 🏆 品項庫編輯器 */
     function renderInventoryEditor() { 
         ensureInventoryIds();
         const area = document.getElementById('inventoryEditor'); if (!area) return; const scrollPos = window.scrollY; area.innerHTML = ''; 
         const head = document.getElementById('inventoryHeader'); 
-        if(head) head.innerHTML = `<div class="flex justify-between items-center"><h2 class="font-bold text-sm text-slate-800">⚙️ 雲端品項管理 <span class="text-xs text-blue-600 font-bold">(v16.17 防跑位版)</span></h2><div class="flex gap-2"><button onclick="addNewCategory()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer">+ 大項</button><button onclick="saveInventory()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer">💾 同步</button></div></div><div class="flex gap-2"><button onclick="toggleAllCats(true)" class="flex-1 bg-slate-100 text-slate-600 py-1.5 rounded-xl text-xs font-bold cursor-pointer">收合 ↑</button><button onclick="toggleAllCats(false)" class="flex-1 bg-slate-100 text-slate-600 py-1.5 rounded-xl text-xs font-bold cursor-pointer">展開 ↓</button></div>`; 
+        if(head) head.innerHTML = `<div class="flex justify-between items-center"><h2 class="font-bold text-sm text-slate-800">⚙️ 雲端品項管理 <span class="text-xs text-blue-600 font-bold">(v16.19 完全防跑位版)</span></h2><div class="flex gap-2"><button onclick="addNewCategory()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer">+ 大項</button><button onclick="saveInventory()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer">💾 同步</button></div></div><div class="flex gap-2"><button onclick="toggleAllCats(true)" class="flex-1 bg-slate-100 text-slate-600 py-1.5 rounded-xl text-xs font-bold cursor-pointer">收合 ↑</button><button onclick="toggleAllCats(false)" class="flex-1 bg-slate-100 text-slate-600 py-1.5 rounded-xl text-xs font-bold cursor-pointer">展開 ↓</button></div>`; 
         
         catOrder.forEach((cat, cIdx) => { 
             const isCollapsed = collapsedCats[cat]; const sec = document.createElement('div'); sec.className = "bg-slate-50 p-3 rounded-xl border border-slate-200 mb-3 category-drag-item"; sec.dataset.catname = cat; 
@@ -860,50 +911,103 @@
         updateBatchBar();
     }
 
-    function promptBatchMove() {
-        const checked = document.querySelectorAll('.inv-batch-check:checked');
-        if(checked.length === 0) return;
-        
-        let catOptions = catOrder.map(c => `• ${c}`).join('\n');
-        const targetCat = prompt(`請輸入要移至的大項名稱：\n\n現有大項列表：\n${catOptions}`);
-        if(targetCat) {
-            if(!catOrder.includes(targetCat)) {
-                if(confirm(`大項【${targetCat}】不存在，是否要自動新建此大項？`)) {
-                    catOrder.push(targetCat);
-                    inv[targetCat] = [];
-                } else {
-                    return;
-                }
-            }
-            batchMoveToCategory(targetCat);
-        }
-    }
+    /* 📍 開啟「精確批量移動位置」Modal */
+    function openBatchMoveModal() {
+        const checkedCbs = Array.from(document.querySelectorAll('.inv-batch-check:checked'));
+        if (checkedCbs.length === 0) return;
 
-    function batchMoveToCategory(targetCat) {
-        if(!targetCat || !inv[targetCat]) return;
-        const checked = Array.from(document.querySelectorAll('.inv-batch-check:checked'));
-        if(checked.length === 0) return;
+        const catSelect = document.getElementById('bmTargetCat');
+        if (!catSelect) return;
+        catSelect.innerHTML = '';
 
-        let itemsByCat = {};
-        checked.forEach(cb => {
-            const c = cb.dataset.cat;
-            const i = parseInt(cb.dataset.idx);
-            if(!itemsByCat[c]) itemsByCat[c] = [];
-            itemsByCat[c].push(i);
+        const firstCat = checkedCbs[0].dataset.cat;
+        catOrder.forEach(c => {
+            catSelect.innerHTML += `<option value="${c}" ${c === firstCat ? 'selected' : ''}>${c}</option>`;
         });
 
-        let movedItems = [];
-        Object.keys(itemsByCat).forEach(c => {
-            itemsByCat[c].sort((a,b) => b - a);
-            itemsByCat[c].forEach(i => {
-                const item = inv[c].splice(i, 1)[0];
-                if(item) movedItems.unshift(item);
+        updateBmTargetItems();
+        document.getElementById('batchMoveModal').classList.remove('hidden');
+    }
+
+    /* 📍 更新可對齊的目標零件列表 */
+    function updateBmTargetItems() {
+        const targetCat = document.getElementById('bmTargetCat').value;
+        const itemSelect = document.getElementById('bmTargetItem');
+        if (!itemSelect || !targetCat) return;
+        itemSelect.innerHTML = '';
+
+        const checkedCbs = Array.from(document.querySelectorAll('.inv-batch-check:checked'));
+        const checkedIds = checkedCbs.map(cb => {
+            const c = cb.dataset.cat;
+            const i = parseInt(cb.dataset.idx);
+            return (inv[c] && inv[c][i]) ? inv[c][i].id : null;
+        }).filter(Boolean);
+
+        itemSelect.innerHTML += `<option value="__TOP__">🔝 移至【最頂部 (第 1 項)】</option>`;
+        itemSelect.innerHTML += `<option value="__BOTTOM__">🔚 移至【最底部】</option>`;
+
+        (inv[targetCat] || []).forEach((item, idx) => {
+            if (!checkedIds.includes(item.id)) {
+                itemSelect.innerHTML += `<option value="${item.id}">📍 [${idx + 1}] ${item.name}</option>`;
+            }
+        });
+    }
+
+    /* 📍 執行精確批量移動邏輯 */
+    function executeBatchMovePosition() {
+        const checkedCbs = Array.from(document.querySelectorAll('.inv-batch-check:checked'));
+        if (checkedCbs.length === 0) return;
+
+        const targetCat = document.getElementById('bmTargetCat').value;
+        const targetItemId = document.getElementById('bmTargetItem').value;
+        const placement = document.getElementById('bmPlacement').value;
+
+        let selectedItems = [];
+        checkedCbs.forEach(cb => {
+            const cat = cb.dataset.cat;
+            const idx = parseInt(cb.dataset.idx);
+            if (inv[cat] && inv[cat][idx]) {
+                selectedItems.push({ cat, item: inv[cat][idx] });
+            }
+        });
+
+        let removedByCat = {};
+        checkedCbs.forEach(cb => {
+            const cat = cb.dataset.cat;
+            const idx = parseInt(cb.dataset.idx);
+            if (!removedByCat[cat]) removedByCat[cat] = [];
+            removedByCat[cat].push(idx);
+        });
+
+        Object.keys(removedByCat).forEach(cat => {
+            removedByCat[cat].sort((a, b) => b - a);
+            removedByCat[cat].forEach(idx => {
+                inv[cat].splice(idx, 1);
             });
         });
 
-        inv[targetCat].push(...movedItems);
+        const itemsToInsert = selectedItems.map(x => x.item);
+
+        let insertIdx = 0;
+        if (targetItemId === '__TOP__') {
+            insertIdx = 0;
+        } else if (targetItemId === '__BOTTOM__') {
+            insertIdx = inv[targetCat].length;
+        } else {
+            const foundIdx = inv[targetCat].findIndex(x => x.id === targetItemId);
+            if (foundIdx !== -1) {
+                insertIdx = (placement === 'after') ? foundIdx + 1 : foundIdx;
+            } else {
+                insertIdx = inv[targetCat].length;
+            }
+        }
+
+        if (!inv[targetCat]) inv[targetCat] = [];
+        inv[targetCat].splice(insertIdx, 0, ...itemsToInsert);
+
+        document.getElementById('batchMoveModal').classList.add('hidden');
         renderInventoryEditor();
-        alert(`✅ 已成功將 ${movedItems.length} 個品項移至【${targetCat}】！`);
+        alert(`✅ 已成功將 ${itemsToInsert.length} 個品項精確移動至指定位置！`);
     }
 
     function batchSetStock(isOutOfStock) {
@@ -945,11 +1049,11 @@
     }
 
     function toggleItemPriceMode() { const i = document.getElementById('itemPriceToggle').checked; if(i) document.getElementById('mainBody').classList.remove('hide-item-prices'); else document.getElementById('mainBody').classList.add('hide-item-prices'); }
-    function toggleItemCostMode() { const i = document.getElementById('itemCostToggle').checked; if(i) document.getElementById('itemCostToggle').checked; if(i) document.getElementById('mainBody').classList.remove('hide-item-costs'); else document.getElementById('mainBody').classList.add('hide-item-costs'); }
+    function toggleItemCostMode() { const i = document.getElementById('itemCostToggle').checked; if(i) document.getElementById('mainBody').classList.remove('hide-item-costs'); else document.getElementById('mainBody').classList.add('hide-item-costs'); }
     function toggleAdminMode() { const i = document.getElementById('adminToggle').checked; if(i) document.getElementById('mainBody').classList.remove('hide-admin-box'); else document.getElementById('mainBody').classList.add('hide-admin-box'); }
     function toggleSSTotalMode() { const i = document.getElementById('ssTotalToggle').checked; if(i) document.getElementById('mainBody').classList.remove('ss-hide-totals'); else document.getElementById('mainBody').classList.add('ss-hide-totals'); }
 
-    /* 🏆 儲存訂單時進行品項雙重固化快照 */
+    /* 🏆 儲存訂單時進行品項雙重固化快照 (絕不存 idx) */
     function saveRecord(st) { 
         saveCurrentInputsToPlan();
         const id = editingRecordId ? String(editingRecordId) : String(Date.now()); 
@@ -1659,6 +1763,7 @@
     
     function closeModal() { document.getElementById('selectionModal').classList.add('hidden'); }
     
+    /* 🏆 彈窗比對：嚴格只看 ID 與名稱，絕不看 idx */
     function renderModalList() { 
         const list = document.getElementById('modalList'); 
         if(!list) return;
@@ -1667,31 +1772,35 @@
 
         (inv[currentCat] || []).forEach((item, idx) => { 
             if (searchKey && !item.name.toLowerCase().includes(searchKey)) return;
-            const sel = (currentSelections[currentCat] || []).find(s => (s.itemId && item.id && s.itemId === item.id) || s.idx === idx); 
+            const sel = (currentSelections[currentCat] || []).find(s => 
+                (s.itemId && item.id && s.itemId === item.id) || 
+                (s.name && item.name && s.name === item.name)
+            ); 
             list.innerHTML += `<div class="p-2.5 border rounded-xl flex justify-between items-center mb-1.5 ${sel?'border-blue-500 bg-blue-50/50':'border-slate-200 bg-white'} ${item.outOfStock?'opacity-30 pointer-events-none':''}" onclick="togglePick(${idx})"><div class="flex-1"><div class="font-bold text-slate-800 text-xs">${item.name}</div><div class="flex items-center gap-2 mt-0.5"><span class="text-blue-600 font-bold text-xs">$${Number(item.p).toLocaleString()}</span><span class="text-rose-600 font-bold text-xs bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">成本: $${Number(item.c||0).toLocaleString()}</span></div></div>${sel ? `<div class="flex flex-col items-end gap-1" onclick="event.stopPropagation()"><div class="flex items-center gap-1"><button onclick="updateSubItem(${idx}, 'qty', -1)" class="bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded-lg font-bold text-xs cursor-pointer">-</button><span class="text-xs font-bold w-5 text-center">${sel.qty}</span><button onclick="updateSubItem(${idx}, 'qty', 1)" class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded-lg font-bold text-xs cursor-pointer">+</button></div><button onclick="toggleGift(${idx})" class="text-xs px-1.5 py-0.5 rounded-md ${sel.isGift?'bg-rose-600 text-white':'bg-slate-100 text-slate-500'} font-bold cursor-pointer">🎁 贈品</button></div>`:''}</div>`; 
         }); 
         if(list.innerHTML === '') list.innerHTML = `<div class="text-center text-slate-400 py-3 font-bold text-xs">查無符合名稱的零件</div>`;
     }
 
-    /* 🏆 勾選品項時帶入 ID 與快照 */
+    /* 🏆 點選品項：直接把名稱、ID 與單價完全鎖進訂單選單中 */
     function togglePick(idx) { 
         if(!currentSelections[currentCat]) currentSelections[currentCat] = []; 
         const t = (inv[currentCat] || [])[idx]; 
-        const i = currentSelections[currentCat].findIndex(s => (s.itemId && t && s.itemId === t.id) || s.idx === idx); 
+        if (!t) return;
+        const i = currentSelections[currentCat].findIndex(s => 
+            (s.itemId && t.id && s.itemId === t.id) || 
+            (s.name && t.name && s.name === t.name)
+        ); 
         if(i > -1) { 
             currentSelections[currentCat].splice(i,1); 
         } else { 
-            if(t) {
-                currentSelections[currentCat].push({
-                    idx, 
-                    itemId: t.id || '',
-                    name: t.name, 
-                    qty: 1, 
-                    isGift: false, 
-                    p: Number(t.p||0), 
-                    c: Number(t.c||0)
-                }); 
-            }
+            currentSelections[currentCat].push({
+                itemId: t.id || '',
+                name: t.name, 
+                qty: 1, 
+                isGift: false, 
+                p: Number(t.p||0), 
+                c: Number(t.c||0)
+            }); 
         } 
         renderConfig(); 
         renderModalList(); 
@@ -1699,7 +1808,11 @@
 
     function updateSubItem(idx, type, val) { 
         const t = (inv[currentCat] || [])[idx];
-        const sel = currentSelections[currentCat].find(s => (s.itemId && t && s.itemId === t.id) || s.idx === idx); 
+        if (!t) return;
+        const sel = currentSelections[currentCat].find(s => 
+            (s.itemId && t.id && s.itemId === t.id) || 
+            (s.name && t.name && s.name === t.name)
+        ); 
         if(sel && type==='qty') sel.qty = Math.max(1, sel.qty + val); 
         renderConfig(); 
         renderModalList(); 
@@ -1759,7 +1872,11 @@
     
     function toggleGift(idx) { 
         const t = (inv[currentCat] || [])[idx];
-        const sel = currentSelections[currentCat].find(s => (s.itemId && t && s.itemId === t.id) || s.idx === idx); 
+        if (!t) return;
+        const sel = currentSelections[currentCat].find(s => 
+            (s.itemId && t.id && s.itemId === t.id) || 
+            (s.name && t.name && s.name === t.name)
+        ); 
         if(sel) { sel.isGift = !sel.isGift; renderConfig(); renderModalList(); } 
     }
 
@@ -1795,9 +1912,9 @@
     function saveTemplate() { const name = prompt("範本名稱："); if (!name) return; db.ref('templates/' + Date.now()).update({ name, selections: currentSelections, discount: document.getElementById('discountAmt').value, manualTotal: document.getElementById('manualTotal').value }); }
     function addCustomSeller() { const n = prompt("業務名稱："); if(n) { const s = document.getElementById('infoSeller'); const o = document.createElement('option'); o.value=n; o.text=n; o.selected=true; s.add(o); } }
 
-    db.ref('inventory').on('value', s => { if(s.exists()) inv = s.val(); ensureInventoryIds(); renderConfig(); if(!document.getElementById('tab-inventory').classList.contains('hidden')) renderInventoryEditor(); });
+    db.ref('inventory').on('value', s => { if(s.exists()) inv = s.val(); ensureInventoryIds(); sanitizeRecords(); renderConfig(); if(!document.getElementById('tab-inventory').classList.contains('hidden')) renderInventoryEditor(); });
     db.ref('catOrder').on('value', s => { if(s.exists()) catOrder = s.val(); renderConfig(); });
-    db.ref('records').on('value', s => { records = []; if(s.exists()) { const data = s.val(); for(let id in data) records.push(data[id]); } renderRecords(); if(!document.getElementById('tab-stats').classList.contains('hidden')) renderStats(); });
+    db.ref('records').on('value', s => { records = []; if(s.exists()) { const data = s.val(); for(let id in data) records.push(data[id]); } sanitizeRecords(); renderRecords(); if(!document.getElementById('tab-stats').classList.contains('hidden')) renderStats(); });
     db.ref('templates').on('value', s => { templates = s.exists() ? s.val() : {}; });
 
     window.onload = () => { showTab('calc'); toggleAdminMode(); toggleItemPriceMode(); toggleItemCostMode(); toggleSSTotalMode(); };
