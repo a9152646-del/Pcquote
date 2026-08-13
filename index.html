@@ -6,7 +6,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v16.08</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v16.09</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,44 +15,73 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        /* 全站統一基礎規範 */
-        body { background-color: #f8fafc; font-family: 'PingFang TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif; padding-top: 105px !important; padding-bottom: 300px !important; font-size: 14px; color: #334155; line-height: 1.5; }
+        /* 1. 徹底重置全球佈局與字體 */
+        *, ::before, ::after { box-sizing: border-box; }
+        body { 
+            background-color: #f8fafc; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+            font-size: 14px; 
+            color: #1e293b; 
+            line-height: 1.5;
+            padding-bottom: 80px;
+        }
         
-        /* 統一卡片與容器邊框與圓角 */
-        .card { background: #ffffff; border-radius: 16px; box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.03), 0 1px 2px -1px rgba(15, 23, 42, 0.03); border: 1px solid #e2e8f0; }
+        /* 2. 統一卡片與邊框規範 */
+        .card { 
+            background: #ffffff; 
+            border-radius: 16px; 
+            border: 1px solid #e2e8f0; 
+            box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+        }
         .hidden { display: none !important; }
         
-        /* 統一表單元件高度、圓角與對齊度 */
-        input[type="text"], input[type="number"], select, textarea {
+        /* 3. 像素級對齊：強制表單與按鈕等高 (42px) */
+        input[type="text"], input[type="number"], select {
+            height: 42px !important;
+            line-height: 42px !important;
             border: 1px solid #cbd5e1;
             border-radius: 12px;
-            padding: 8px 12px;
+            padding: 0 12px;
             font-size: 13px;
             outline: none;
             background-color: #ffffff;
-            transition: all 0.15s ease;
-            box-sizing: border-box;
-            height: 42px;
+            color: #1e293b;
+            transition: all 0.15s ease-in-out;
             width: 100%;
         }
-        textarea { height: auto !important; min-height: 80px; }
-        input:focus, select:focus, textarea:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        textarea {
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 13px;
+            outline: none;
+            background-color: #ffffff;
+            color: #1e293b;
+            width: 100%;
+            min-height: 80px;
+            resize: vertical;
+        }
+        input:focus, select:focus, textarea:focus { 
+            border-color: #2563eb !important; 
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); 
+        }
         
-        /* 分頁標籤樣式 */
+        /* 4. 分頁按鈕美化 */
         .tab-btn { border-bottom: 2px solid transparent; color: #64748b; font-weight: 600; transition: all 0.2s; }
-        .tab-active { border-bottom: 2px solid #2563eb; color: #2563eb; font-weight: 800; }
+        .tab-btn:hover { color: #1e293b; }
+        .tab-active { border-bottom: 2px solid #2563eb !important; color: #2563eb !important; font-weight: 800 !important; }
         .plan-tab-active { background-color: #2563eb !important; color: #ffffff !important; font-weight: 800 !important; border-color: #2563eb !important; }
         
-        /* 標籤對齊與樣式 */
-        .price-tag { color: #94a3b8; font-weight: 500; font-size: 12px; margin-left: 4px; }
-        .cost-tag { color: #f43f5e; font-weight: 700; font-size: 11px; margin-left: 6px; }
+        /* 標籤對齊 */
+        .price-tag { color: #64748b; font-weight: 600; font-size: 12px; margin-left: 4px; }
+        .cost-tag { color: #e11d48; font-weight: 700; font-size: 11px; margin-left: 6px; }
         
         body.hide-item-prices .price-tag { display: none !important; }
         body.hide-item-costs .cost-tag { display: none !important; }
         body.hide-admin-box #sellerBox { display: none !important; }
         body.ss-hide-totals .ss-total-row { display: none !important; }
         
-        /* 溫和語意化狀態色彩 */
+        /* 狀態顏色 */
         .status-red { background-color: #fff1f2 !important; color: #be123c !important; border: 1px solid #fecdd3 !important; }
         .status-yellow { background-color: #fefce8 !important; color: #a16207 !important; border: 1px solid #fef08a !important; } 
         .status-blue { background-color: #eff6ff !important; color: #1d4ed8 !important; border: 1px solid #bfdbfe !important; }
@@ -64,12 +93,12 @@
         .pay-deposit { background-color: #fff7ed !important; color: #c2410c !important; }
         .pay-paid { background-color: #ecfdf5 !important; color: #047857 !important; }
 
-        .drag-handle { cursor: grab; color: #cbd5e1; padding: 4px; font-size: 20px; user-select: none; display: flex; align-items: center; justify-content: center; touch-action: none; }
+        .drag-handle { cursor: grab; color: #94a3b8; padding: 4px; font-size: 18px; user-select: none; display: flex; align-items: center; justify-content: center; }
         .drag-handle:active { cursor: grabbing; color: #2563eb; }
 
-        /* 報價單項目對齊卡片 */
-        .item-row { padding: 14px 16px !important; margin-bottom: 10px !important; background: #ffffff; border: 1px solid #e2e8f0 !important; border-radius: 12px !important; transition: border-color 0.15s; }
-        .item-row:hover { border-color: #cbd5e1 !important; }
+        /* 報價單項目列 */
+        .item-row { padding: 12px 16px !important; margin-bottom: 8px !important; background: #ffffff; border: 1px solid #e2e8f0 !important; border-radius: 12px !important; transition: border-color 0.15s; }
+        .item-row:hover { border-color: #94a3b8 !important; }
         
         .screenshot-mode .item-row { padding: 8px 12px !important; margin-bottom: 0px !important; border-radius: 0px !important; border: none !important; border-bottom: 1px solid #f1f5f9 !important; box-shadow: none !important; width: 100% !important; }
         .screenshot-mode #configRows { display: block !important; }
@@ -78,33 +107,33 @@
         .screenshot-mode #screenshot-footer { padding: 6px 12px !important; display: block !important; }
 
         /* 庫存零件項目 */
-        .inv-item-row { background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+        .inv-item-row { background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
         .inv-item-main { display: flex; align-items: center; gap: 8px; }
         .inv-name-area { flex: 1; min-width: 0; }
-        .inv-name-input { width: 100%; border: none !important; background: transparent !important; font-weight: 700; font-size: 14px; padding: 2px 0 !important; color: #0f172a; word-break: break-all; resize: none; min-height: 24px; overflow: hidden; display: block; line-height: 1.4; }
-        .inv-control-bar { display: flex; align-items: center; justify-content: space-between; padding-top: 8px; border-top: 1px solid #f8fafc; }
+        .inv-name-input { width: 100%; border: none !important; background: transparent !important; font-weight: 700; font-size: 14px; padding: 0 !important; color: #0f172a; word-break: break-all; resize: none; min-height: 24px; overflow: hidden; display: block; line-height: 1.4; }
+        .inv-control-bar { display: flex; align-items: center; justify-content: space-between; padding-top: 6px; border-top: 1px solid #f1f5f9; }
         .price-group { display: flex; gap: 6px; align-items: center; }
-        .val-box { display: flex; align-items: center; gap: 2px; background: #f8fafc; padding: 2px 6px; border-radius: 8px; border: 1px solid #e2e8f0; flex-shrink: 0; }
-        .val-label { font-size: 10px; font-weight: 800; color: #94a3b8; }
-        .val-input { border: none !important; background: transparent !important; width: 48px; font-weight: 800; font-size: 13px; text-align: right; padding: 0 !important; height: 28px !important; }
+        .val-box { display: flex; align-items: center; gap: 2px; background: #f8fafc; padding: 2px 6px; border-radius: 8px; border: 1px solid #cbd5e1; flex-shrink: 0; }
+        .val-label { font-size: 10px; font-weight: 800; color: #64748b; }
+        .val-input { border: none !important; background: transparent !important; width: 48px; font-weight: 800; font-size: 13px; text-align: right; padding: 0 !important; height: 26px !important; line-height: 26px !important; }
         .p-input { color: #2563eb; } 
         .c-input { color: #e11d48 !important; font-weight: 800 !important; } 
 
-        .sup-btn { font-size: 10px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid #e2e8f0; color: #94a3b8; font-weight: 800; transition: all 0.15s; background: white; flex-shrink: 0; }
+        .sup-btn { font-size: 10px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid #cbd5e1; color: #64748b; font-weight: 800; transition: all 0.15s; background: white; flex-shrink: 0; }
         .sup-btn.active { background: #2563eb; color: white; border-color: #2563eb; }
-        .stock-btn { font-size: 11px; padding: 3px 8px; border-radius: 8px; font-weight: 800; border: 1px solid #e2e8f0; cursor: pointer; min-width: 50px; flex-shrink: 0; }
+        .stock-btn { font-size: 11px; padding: 2px 8px; border-radius: 8px; font-weight: 800; border: 1px solid #cbd5e1; cursor: pointer; min-width: 48px; flex-shrink: 0; }
         .stock-btn.active { background: #10b981; color: white; border-color: #10b981; }
         .stock-btn.oos { background: #f43f5e; color: white; border-color: #f43f5e; }
 
         .no-screenshot { display: block; }
         .screenshot-mode .no-screenshot { display: none !important; }
         
-        #screenshotNav { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 50000; display: flex; flex-direction: column; gap: 10px; width: 240px; }
+        #screenshotNav { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 50000; display: flex; flex-direction: column; gap: 8px; width: 240px; }
         
-        #adminToggleContainer { position: fixed; bottom: 25px; left: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
-        .floating-label { background: #ffffff; padding: 8px 14px; border-radius: 50px; box-shadow: 0 4px 12px rgba(15,23,42,0.08); border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        #adminToggleContainer { position: fixed; bottom: 20px; left: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 6px; }
+        .floating-label { background: #ffffff; padding: 6px 12px; border-radius: 50px; box-shadow: 0 2px 8px rgba(15,23,42,0.1); border: 1px solid #cbd5e1; display: flex; align-items: center; gap: 6px; cursor: pointer; }
         
-        .stats-card { background: white; padding: 16px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .stats-card { background: white; padding: 16px; border-radius: 16px; border: 1px solid #e2e8f0; }
 
         .preview-table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; }
         .preview-table th { background-color: #1e293b; color: white; padding: 8px; font-weight: 700; white-space: nowrap; border: 1px solid #334155; }
@@ -114,22 +143,24 @@
 </head>
 <body class="p-2 md:p-4" id="mainBody">
 
-    <div class="no-screenshot fixed right-4 bottom-10 z-[2000] flex flex-col gap-3">
-        <button id="floatingSaveBtn" onclick="saveInventory()" class="hidden bg-emerald-600 text-white shadow-lg w-12 h-12 rounded-full flex items-center justify-center text-xl cursor-pointer hover:bg-emerald-700 transition-all">💾</button>
-        <button onclick="if(confirm('重新整理系統？')) { window.location.reload(true); }" class="bg-slate-700 text-white shadow-lg w-12 h-12 rounded-full flex items-center justify-center text-xl cursor-pointer hover:bg-slate-800 transition-all">🔄</button>
-        <button onclick="goBack()" class="bg-slate-900 text-white shadow-lg w-12 h-12 rounded-full flex items-center justify-center text-xl cursor-pointer hover:bg-black transition-all">🔙</button>
+    <!-- 右下角懸浮按鈕 -->
+    <div class="no-screenshot fixed right-4 bottom-6 z-[2000] flex flex-col gap-2.5">
+        <button id="floatingSaveBtn" onclick="saveInventory()" class="hidden bg-emerald-600 text-white shadow-md w-11 h-11 rounded-full flex items-center justify-center text-lg cursor-pointer hover:bg-emerald-700 transition-all">💾</button>
+        <button onclick="if(confirm('重新整理系統？')) { window.location.reload(true); }" class="bg-slate-700 text-white shadow-md w-11 h-11 rounded-full flex items-center justify-center text-lg cursor-pointer hover:bg-slate-800 transition-all">🔄</button>
+        <button onclick="goBack()" class="bg-slate-900 text-white shadow-md w-11 h-11 rounded-full flex items-center justify-center text-lg cursor-pointer hover:bg-black transition-all">🔙</button>
     </div>
 
+    <!-- 左下角切換開關 -->
     <div id="adminToggleContainer" class="no-screenshot">
-        <label class="floating-label"><span class="text-xs font-bold text-blue-600">💰 各項售價</span><input type="checkbox" id="itemPriceToggle" checked onchange="toggleItemPriceMode()" class="w-4 h-4 cursor-pointer"></label>
-        <label class="floating-label"><span class="text-xs font-bold text-rose-500">🔴 各項成本</span><input type="checkbox" id="itemCostToggle" checked onchange="toggleItemCostMode()" class="w-4 h-4 cursor-pointer"></label>
+        <label class="floating-label"><span class="text-xs font-bold text-blue-600">💰 售價顯示</span><input type="checkbox" id="itemPriceToggle" checked onchange="toggleItemPriceMode()" class="w-4 h-4 cursor-pointer"></label>
+        <label class="floating-label"><span class="text-xs font-bold text-rose-600">🔴 成本顯示</span><input type="checkbox" id="itemCostToggle" checked onchange="toggleItemCostMode()" class="w-4 h-4 cursor-pointer"></label>
         <label class="floating-label"><span class="text-xs font-bold text-slate-700">📊 利潤統計</span><input type="checkbox" id="adminToggle" checked onchange="toggleAdminMode()" class="w-4 h-4 cursor-pointer"></label>
         <label class="floating-label"><span class="text-xs font-bold text-indigo-600">💵 截圖總額</span><input type="checkbox" id="ssTotalToggle" checked onchange="toggleSSTotalMode()" class="w-4 h-4 cursor-pointer"></label>
     </div>
 
     <div id="screenshotNav" class="hidden">
-        <button id="ssDownloadBtn" onclick="downloadScreenshot(event)" class="bg-blue-600 text-white py-3.5 rounded-2xl font-bold shadow-xl w-full text-base cursor-pointer hover:bg-blue-700">💾 存成圖片保存</button>
-        <button onclick="exitScreenshotMode()" class="bg-slate-800 text-white py-3.5 rounded-2xl font-bold shadow-xl w-full text-base cursor-pointer hover:bg-slate-900">🔙 返回報價單</button>
+        <button id="ssDownloadBtn" onclick="downloadScreenshot(event)" class="bg-blue-600 text-white py-3 rounded-2xl font-bold shadow-lg w-full text-sm cursor-pointer hover:bg-blue-700">💾 存成圖片保存</button>
+        <button onclick="exitScreenshotMode()" class="bg-slate-800 text-white py-3 rounded-2xl font-bold shadow-lg w-full text-sm cursor-pointer hover:bg-slate-900">🔙 返回報價單</button>
     </div>
 
     <div class="max-w-7xl mx-auto w-full px-1" id="captureArea">
@@ -139,7 +170,8 @@
             <div id="ss-time" class="text-[8px] text-slate-400 mt-0.5 font-mono"></div>
         </div>
         
-        <div class="flex border-b border-slate-200 mb-4 no-screenshot overflow-x-auto bg-white sticky top-0 z-50 rounded-t-xl px-2 pt-1">
+        <!-- 頂部導覽頁籤 -->
+        <div class="flex border-b border-slate-200 mb-4 no-screenshot overflow-x-auto bg-white sticky top-0 z-50 rounded-t-xl px-2 pt-1 shadow-sm">
             <button onclick="showTab('calc')" id="btn-calc" class="flex-1 px-4 py-3 tab-btn tab-active whitespace-nowrap cursor-pointer">🖥️ 報價</button>
             <button onclick="showTab('drafts')" id="btn-drafts" class="flex-1 px-4 py-3 tab-btn whitespace-nowrap cursor-pointer">📂 草稿</button>
             <button onclick="showTab('orders')" id="btn-orders" class="flex-1 px-4 py-3 tab-btn whitespace-nowrap cursor-pointer">✅ 正式</button>
@@ -148,7 +180,9 @@
             <button onclick="showTab('inventory')" id="btn-inventory" class="flex-1 px-4 py-3 tab-btn whitespace-nowrap cursor-pointer">⚙️ 品項</button>
         </div>
 
+        <!-- 報價單分頁 -->
         <div id="tab-calc" class="page-content">
+            <!-- 方案 A/B 邊框與內距對齊工具列 -->
             <div class="no-screenshot bg-slate-900 text-white p-3 rounded-2xl mb-4 flex flex-wrap items-center justify-between gap-3 shadow-sm border border-slate-800">
                 <div class="flex items-center gap-2 overflow-x-auto">
                     <span class="text-xs font-bold text-slate-300 whitespace-nowrap">📑 編輯方案：</span>
@@ -168,9 +202,10 @@
             <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
                 <div class="lg:col-span-3 space-y-4">
                     <div class="flex gap-2 no-screenshot">
-                        <button onclick="openTemplateModal()" class="flex-[2] bg-slate-800 hover:bg-slate-900 text-white py-2.5 rounded-xl font-bold shadow-sm cursor-pointer transition-all">📂 載入範本</button>
-                        <button onclick="copyQuoteAsText()" class="flex-[3] bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl font-bold shadow-sm cursor-pointer transition-all">📋 複製當前方案 LINE 報價</button>
+                        <button onclick="openTemplateModal()" class="flex-[2] bg-slate-800 hover:bg-slate-900 text-white h-[42px] rounded-xl font-bold shadow-sm cursor-pointer transition-all flex items-center justify-center">📂 載入範本</button>
+                        <button onclick="copyQuoteAsText()" class="flex-[3] bg-blue-600 hover:bg-blue-700 text-white h-[42px] rounded-xl font-bold shadow-sm cursor-pointer transition-all flex items-center justify-center">📋 複製當前方案 LINE 報價</button>
                     </div>
+                    
                     <div class="card p-3 !bg-slate-50/50">
                         <div id="configRows" class="space-y-2"></div>
                         <div id="screenshot-footer" class="text-right p-4 pt-2 border-t border-slate-200 space-y-1" style="display: none;">
@@ -180,16 +215,18 @@
                         </div>
                     </div>
                     
+                    <!-- 表單欄位極致對齊卡片 -->
                     <div class="card p-4 no-screenshot bg-white">
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                            <input type="text" id="custName" placeholder="👤 客戶姓名" class="font-bold">
-                            <input type="text" id="custPhone" placeholder="📞 電話">
-                            <select id="custSource"><option value="FB">FB</option><option value="IG">IG</option><option value="Line">Line</option><option value="蝦皮">蝦皮</option></select>
-                            <div class="flex gap-1">
-                                <select id="infoSeller" class="flex-1 font-bold text-blue-600 cursor-pointer">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-center">
+                            <div><input type="text" id="custName" placeholder="👤 客戶姓名" class="font-bold"></div>
+                            <div><input type="text" id="custPhone" placeholder="📞 電話"></div>
+                            <div><select id="custSource"><option value="FB">FB</option><option value="IG">IG</option><option value="Line">Line</option><option value="蝦皮">蝦皮</option></select></div>
+                            
+                            <div class="flex gap-1.5 h-[42px] items-center">
+                                <select id="infoSeller" class="flex-1 font-bold text-blue-600 cursor-pointer h-full">
                                     <option value="朱冠穎">朱冠穎</option><option value="江苙翔">江苙翔</option><option value="江鈞宇">江鈞宇</option>
                                 </select>
-                                <button onclick="addCustomSeller()" class="bg-slate-100 px-3 rounded-xl border border-slate-200 hover:bg-slate-200 cursor-pointer font-bold text-slate-600">+</button>
+                                <button onclick="addCustomSeller()" class="h-full px-3 bg-slate-100 hover:bg-slate-200 rounded-xl border border-slate-300 font-bold text-slate-700 cursor-pointer flex items-center justify-center flex-shrink-0">+</button>
                             </div>
 
                             <div class="md:col-span-4 bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-2">
@@ -200,11 +237,11 @@
                                 </select>
                             </div>
 
-                            <input type="text" id="custAddr" placeholder="📦 地址 / 取貨方式" class="md:col-span-4">
-                            <input type="text" id="custWarranty" placeholder="🛡️ 保固備註" class="md:col-span-4 font-bold text-blue-600">
-                            <textarea id="orderMemo" placeholder="📝 內部備註" class="md:col-span-4"></textarea>
+                            <div class="md:col-span-4"><input type="text" id="custAddr" placeholder="📦 地址 / 取貨方式"></div>
+                            <div class="md:col-span-4"><input type="text" id="custWarranty" placeholder="🛡️ 保固備註" class="font-bold text-blue-600"></div>
+                            <div class="md:col-span-4"><textarea id="orderMemo" placeholder="📝 內部備註"></textarea></div>
 
-                            <div class="md:col-span-4 bg-amber-50/50 p-3 rounded-xl border border-amber-200/80 grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
+                            <div class="md:col-span-4 bg-amber-50/60 p-3 rounded-xl border border-amber-200/80 grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
                                 <div class="flex items-center gap-2">
                                     <label class="text-xs font-bold text-amber-800 whitespace-nowrap">💵 預收訂金：</label>
                                     <input type="number" id="depositAmt" placeholder="0" class="w-full font-bold text-amber-700 border-amber-300 bg-white" value="0" oninput="calculate()">
@@ -218,6 +255,7 @@
                     </div>
                 </div>
 
+                <!-- 右側統計算牌區卡片 -->
                 <div class="lg:col-span-1 no-screenshot">
                     <div class="card p-4 sticky top-20 border-t-4 border-blue-600 space-y-4">
                         <div class="space-y-3">
@@ -240,9 +278,9 @@
                         </div>
 
                         <div class="space-y-2">
-                            <button onclick="saveRecord('current')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold shadow-sm cursor-pointer transition-all">💾 儲存修訂 (全存 A+B 方案)</button>
-                            <button onclick="saveTemplate()" class="w-full bg-slate-700 hover:bg-slate-800 text-white py-2.5 rounded-xl font-bold cursor-pointer transition-all">📂 存為範本</button>
-                            <button onclick="enterScreenshotMode()" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-xl font-bold cursor-pointer transition-all">📸 截圖模式</button>
+                            <button onclick="saveRecord('current')" class="w-full bg-blue-600 hover:bg-blue-700 text-white h-[42px] rounded-xl font-bold shadow-sm cursor-pointer transition-all flex items-center justify-center">💾 儲存修訂 (全存 A+B 方案)</button>
+                            <button onclick="saveTemplate()" class="w-full bg-slate-700 hover:bg-slate-800 text-white h-[42px] rounded-xl font-bold cursor-pointer transition-all flex items-center justify-center">📂 存為範本</button>
+                            <button onclick="enterScreenshotMode()" class="w-full bg-amber-600 hover:bg-amber-700 text-white h-[42px] rounded-xl font-bold cursor-pointer transition-all flex items-center justify-center">📸 截圖模式</button>
                         </div>
                     </div>
                 </div>
@@ -265,7 +303,7 @@
                 <input type="text" id="modalSearchInput" placeholder="🔍 搜尋此類別零件名稱..." class="w-full mb-3" oninput="renderModalList()">
                 <div id="modalList" class="space-y-2 overflow-y-auto flex-1 pb-4"></div>
                 <div class="pt-3 border-t border-slate-100">
-                    <button onclick="closeModal()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold text-base shadow-sm cursor-pointer">確定選擇並關閉</button>
+                    <button onclick="closeModal()" class="w-full bg-blue-600 hover:bg-blue-700 text-white h-[42px] rounded-xl font-bold text-sm shadow-sm cursor-pointer flex items-center justify-center">確定選擇並關閉</button>
                 </div>
             </div>
         </div>
@@ -282,7 +320,7 @@
             </div>
         </div>
 
-        <div id="shipmentModal" class="hidden fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 z-[10001] backdrop-blur-sm"><div class="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl border border-slate-200"><div class="p-4 border-b flex justify-between items-center bg-slate-50"><h3 class="font-bold text-slate-800 text-sm">🚚 出貨管理</h3><button onclick="document.getElementById('shipmentModal').classList.add('hidden')" class="text-2xl text-slate-400">×</button></div><div id="shipmentList" class="overflow-y-auto flex-1 p-4 space-y-2"></div><div class="p-4 border-t border-slate-100"><button onclick="document.getElementById('shipmentModal').classList.add('hidden')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-sm cursor-pointer">確定</button></div></div></div>
+        <div id="shipmentModal" class="hidden fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 z-[10001] backdrop-blur-sm"><div class="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl border border-slate-200"><div class="p-4 border-b flex justify-between items-center bg-slate-50"><h3 class="font-bold text-slate-800 text-sm">🚚 出貨管理</h3><button onclick="document.getElementById('shipmentModal').classList.add('hidden')" class="text-2xl text-slate-400">×</button></div><div id="shipmentList" class="overflow-y-auto flex-1 p-4 space-y-2"></div><div class="p-4 border-t border-slate-100"><button onclick="document.getElementById('shipmentModal').classList.add('hidden')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-[42px] rounded-xl font-bold text-sm cursor-pointer flex items-center justify-center">確定</button></div></div></div>
         <div id="templateModal" class="hidden fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 z-[10000] backdrop-blur-sm"><div class="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col shadow-2xl border border-slate-200"><div class="p-4 border-b flex justify-between items-center bg-slate-50"><h3 class="font-bold text-slate-800 text-sm">📁 載入範本</h3><button onclick="document.getElementById('templateModal').classList.add('hidden')" class="text-2xl text-slate-400">×</button></div><div id="templateList" class="overflow-y-auto flex-1 p-4 space-y-2"></div></div></div>
     </div>
 
@@ -300,8 +338,8 @@
                 <img id="previewImg" class="max-w-full h-auto rounded-lg shadow cursor-pointer" src="" alt="報價單預覽" />
             </div>
             <div class="grid grid-cols-2 gap-2 w-full pt-1">
-                <button onclick="openImageInNewTab()" class="bg-slate-800 hover:bg-slate-900 text-white py-2.5 rounded-xl font-bold text-xs shadow-sm cursor-pointer">🔗 新分頁開啟</button>
-                <button onclick="document.getElementById('imgPreviewModal').classList.add('hidden')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 py-2.5 rounded-xl font-bold text-xs cursor-pointer">關閉視窗</button>
+                <button onclick="openImageInNewTab()" class="bg-slate-800 hover:bg-slate-900 text-white h-[42px] rounded-xl font-bold text-xs shadow-sm cursor-pointer flex items-center justify-center">🔗 新分頁開啟</button>
+                <button onclick="document.getElementById('imgPreviewModal').classList.add('hidden')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 h-[42px] rounded-xl font-bold text-xs cursor-pointer flex items-center justify-center">關閉視窗</button>
             </div>
         </div>
     </div>
@@ -320,9 +358,9 @@
             <div id="tablePreviewContainer" class="w-full h-72 overflow-auto border rounded-xl bg-white p-1 border-slate-200"></div>
 
             <div class="grid grid-cols-3 gap-2 w-full pt-1">
-                <button onclick="copyTsvText()" class="bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold text-xs shadow-sm cursor-pointer">📋 複製試算表格式 (自動分欄)</button>
-                <button onclick="openCsvInNewTab()" class="bg-slate-800 hover:bg-slate-900 text-white py-2.5 rounded-xl font-bold text-xs shadow-sm cursor-pointer">🔗 新分頁全螢幕開啟</button>
-                <button onclick="document.getElementById('csvPreviewModal').classList.add('hidden')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 py-2.5 rounded-xl font-bold text-xs cursor-pointer">關閉視窗</button>
+                <button onclick="copyTsvText()" class="bg-emerald-600 hover:bg-emerald-700 text-white h-[42px] rounded-xl font-bold text-xs shadow-sm cursor-pointer flex items-center justify-center">📋 複製試算表格式 (自動分欄)</button>
+                <button onclick="openCsvInNewTab()" class="bg-slate-800 hover:bg-slate-900 text-white h-[42px] rounded-xl font-bold text-xs shadow-sm cursor-pointer flex items-center justify-center">🔗 新分頁全螢幕開啟</button>
+                <button onclick="document.getElementById('csvPreviewModal').classList.add('hidden')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 h-[42px] rounded-xl font-bold text-xs cursor-pointer flex items-center justify-center">關閉視窗</button>
             </div>
         </div>
     </div>
@@ -720,18 +758,18 @@
             const planBadge = (hasValidPlans && status === 'draft') ? `<span class="bg-indigo-50 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded-md font-bold border border-indigo-100">雙方案 A/B</span>` : '';
 
             const div = document.createElement('div'); div.className = "p-4 border border-slate-200 rounded-2xl bg-white shadow-sm space-y-3";
-            const shipmentBtn = (status === 'order' || status === 'completed') ? `<button onclick="openShipmentModal('${r.id}')" class="flex-1 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-600 text-[10px] rounded-xl font-bold border border-slate-200 cursor-pointer">🚚 出貨管理</button>` : '';
+            const shipmentBtn = (status === 'order' || status === 'completed') ? `<button onclick="openShipmentModal('${r.id}')" class="flex-1 h-[34px] bg-slate-50 hover:bg-slate-100 text-slate-600 text-[10px] rounded-xl font-bold border border-slate-200 cursor-pointer flex items-center justify-center">🚚 出貨管理</button>` : '';
             const noCardVal = (r.noCard && r.noCard !== "") ? Number(r.noCard).toLocaleString() : null;
             
             let actionButtons = "";
             if (status === 'draft') {
-                actionButtons = `<button onclick="promptConvertToOrder('${r.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-xl text-[10px] font-bold cursor-pointer">轉正式</button>`;
+                actionButtons = `<button onclick="promptConvertToOrder('${r.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 h-[34px] rounded-xl text-[10px] font-bold cursor-pointer flex items-center justify-center">轉正式</button>`;
             } else if (status === 'order') {
                 actionButtons = `
-                <button onclick="if(confirm('要將此訂單退回草稿嗎？')) db.ref('records/' + '${r.id}' + '/status').set('draft')" class="bg-amber-600 hover:bg-amber-700 text-white px-2 py-1 rounded-xl text-[10px] font-bold cursor-pointer">退回草稿</button>
-                <button onclick="if(confirm('結案？')) db.ref('records/' + '${r.id}' + '/status').set('completed')" class="bg-slate-700 hover:bg-slate-800 text-white px-2 py-1 rounded-xl text-[10px] font-bold cursor-pointer">結案</button>`;
+                <button onclick="if(confirm('要將此訂單退回草稿嗎？')) db.ref('records/' + '${r.id}' + '/status').set('draft')" class="bg-amber-600 hover:bg-amber-700 text-white px-2 h-[34px] rounded-xl text-[10px] font-bold cursor-pointer flex items-center justify-center">退回草稿</button>
+                <button onclick="if(confirm('結案？')) db.ref('records/' + '${r.id}' + '/status').set('completed')" class="bg-slate-700 hover:bg-slate-800 text-white px-2 h-[34px] rounded-xl text-[10px] font-bold cursor-pointer flex items-center justify-center">結案</button>`;
             } else if (status === 'completed') {
-                actionButtons = `<button onclick="if(confirm('要退回正式訂單重新處理嗎？')) db.ref('records/' + '${r.id}' + '/status').set('order')" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded-xl text-[10px] font-bold cursor-pointer">退回正式</button>`;
+                actionButtons = `<button onclick="if(confirm('要退回正式訂單重新處理嗎？')) db.ref('records/' + '${r.id}' + '/status').set('order')" class="bg-blue-600 hover:bg-blue-700 text-white px-2 h-[34px] rounded-xl text-[10px] font-bold cursor-pointer flex items-center justify-center">退回正式</button>`;
             }
 
             div.innerHTML = `<div class="flex justify-between items-start">
@@ -744,17 +782,17 @@
                     <div class="mt-1">${unshippedHtml}</div>
                 </div>
                 <div class="text-right flex flex-col items-end gap-2">
-                    <select onchange="db.ref('records/' + '${r.id}' + '/seller').set(this.value)" class="text-[10px] font-bold px-2 py-1 rounded-lg bg-slate-50 text-slate-700 border border-slate-200 outline-none cursor-pointer">${sellerOptsHtml}</select>
-                    <select onchange="db.ref('records/' + '${r.id}' + '/progress').set(this.value)" class="text-[10px] font-bold px-1.5 py-0.5 rounded-lg ${getStatusClass(r.progress)} cursor-pointer">${pOpts}</select>
-                    <select onchange="db.ref('records/' + '${r.id}' + '/payStatus').set(this.value)" class="text-[10px] font-bold px-2 py-1 rounded-lg ${getPayClass(r.payStatus)} cursor-pointer">${payOpts}</select>
+                    <select onchange="db.ref('records/' + '${r.id}' + '/seller').set(this.value)" class="text-[10px] font-bold px-2 py-1 rounded-lg bg-slate-50 text-slate-700 border border-slate-200 outline-none cursor-pointer h-7 leading-5">${sellerOptsHtml}</select>
+                    <select onchange="db.ref('records/' + '${r.id}' + '/progress').set(this.value)" class="text-[10px] font-bold px-1.5 py-0.5 rounded-lg ${getStatusClass(r.progress)} cursor-pointer h-7 leading-5">${pOpts}</select>
+                    <select onchange="db.ref('records/' + '${r.id}' + '/payStatus').set(this.value)" class="text-[10px] font-bold px-2 py-1 rounded-lg ${getPayClass(r.payStatus)} cursor-pointer h-7 leading-5">${payOpts}</select>
                 </div>
             </div>
             ${memoHtml}
-            <div class="flex gap-1.5 pt-3 border-t border-slate-100">
-                <button onclick="editRecord('${r.id}')" class="flex-1 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[10px] rounded-xl font-bold cursor-pointer">編輯</button>
+            <div class="flex gap-1.5 pt-3 border-t border-slate-100 items-center">
+                <button onclick="editRecord('${r.id}')" class="flex-1 h-[34px] bg-blue-600 hover:bg-blue-700 text-white text-[10px] rounded-xl font-bold cursor-pointer flex items-center justify-center">編輯</button>
                 ${shipmentBtn}
                 ${actionButtons}
-                <button onclick="if(confirm('確定刪除紀錄？')) db.ref('records/' + '${r.id}').remove()" class="text-slate-300 hover:text-rose-500 text-lg px-1 cursor-pointer">✕</button>
+                <button onclick="if(confirm('確定刪除紀錄？')) db.ref('records/' + '${r.id}').remove()" class="text-slate-300 hover:text-rose-500 text-lg px-2 cursor-pointer flex items-center justify-center">✕</button>
             </div>`;
             lists[status].appendChild(div);
         });
@@ -850,10 +888,10 @@
         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm mb-4 space-y-3">
             <div class="flex justify-between items-center flex-wrap gap-3 border-b border-slate-100 pb-3">
                 <div>
-                    <h2 class="font-bold text-slate-800 text-base">📊 月度結算與業務抽成戰情室 v16.08</h2>
+                    <h2 class="font-bold text-slate-800 text-base">📊 月度結算與業務抽成戰情室 v16.09</h2>
                     <p class="text-xs text-slate-400">公司 60% ｜ 業務 40% 自動結算 (支援跨月歷史保留與人員篩選)</p>
                 </div>
-                <button onclick="exportCompletedOrdersCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl font-bold text-xs shadow-sm flex items-center gap-1 cursor-pointer">
+                <button onclick="exportCompletedOrdersCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 h-[38px] rounded-xl font-bold text-xs shadow-sm flex items-center justify-center gap-1 cursor-pointer">
                     📊 匯出結案清單 (CSV)
                 </button>
             </div>
@@ -934,8 +972,8 @@
                         <div class="text-slate-500 text-[11px] mt-0.5">業務：<span class="font-bold text-blue-600">${r.seller || '朱冠穎'}</span> ｜ 總金額：<span class="font-bold text-slate-800">${r.total}</span></div>
                     </div>
                     <div class="flex items-center gap-1.5 self-end md:self-auto">
-                        <button onclick="event.stopPropagation(); jumpToCompletedOrder('${r.id}', '${searchKey}')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-2.5 py-1 rounded-lg font-bold text-[10px]">🔍 結案卡片</button>
-                        <button onclick="event.stopPropagation(); editRecord('${r.id}')" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded-lg font-bold text-[10px]">✏️ 載入報價</button>
+                        <button onclick="event.stopPropagation(); jumpToCompletedOrder('${r.id}', '${searchKey}')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-2.5 h-[30px] rounded-lg font-bold text-[10px] flex items-center justify-center">🔍 結案卡片</button>
+                        <button onclick="event.stopPropagation(); editRecord('${r.id}')" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 h-[30px] rounded-lg font-bold text-[10px] flex items-center justify-center">✏️ 載入報價</button>
                     </div>
                 </div>`;
             });
