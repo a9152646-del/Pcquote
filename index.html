@@ -6,7 +6,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>神奇海螺電競 | 報價與庫存系統 v16.19 (品項完全解耦防跑位版)</title>
+    <title>神奇海螺電競 | 報價與庫存系統 v16.20 (雙重移動防干擾版)</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -128,7 +128,18 @@
         .pay-deposit { background-color: #fff7ed !important; color: #c2410c !important; border: 1px solid #ffedd5 !important; }
         .pay-paid { background-color: #ecfdf5 !important; color: #047857 !important; border: 1px solid #a7f3d0 !important; }
 
-        .drag-handle { cursor: grab; color: #94a3b8; padding: 4px; font-size: 18px; user-select: none; display: flex; align-items: center; justify-content: center; }
+        /* 修復觸控拖曳手勢 */
+        .drag-handle { 
+            touch-action: none !important; 
+            cursor: grab; 
+            color: #94a3b8; 
+            padding: 4px; 
+            font-size: 18px; 
+            user-select: none; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
         .drag-handle:active { cursor: grabbing; color: #2563eb; }
 
         .item-row { padding: 12px 14px !important; margin-bottom: 8px !important; background: #ffffff; border: 1px solid #e2e8f0 !important; border-radius: 12px !important; transition: border-color 0.15s; }
@@ -157,7 +168,7 @@
             overflow: hidden;
             box-sizing: border-box !important;
         }
-        .inv-card-top { display: flex; align-items: center; gap: 8px; width: 100%; box-sizing: border-box; }
+        .inv-card-top { display: flex; align-items: center; gap: 6px; width: 100%; box-sizing: border-box; }
         .inv-title-wrap { flex: 1; min-width: 0; }
         .inv-name-textarea { 
             width: 100% !important; 
@@ -609,7 +620,6 @@
             if (Array.isArray(selObj[cat])) {
                 selObj[cat].forEach(s => {
                     if (!s) return;
-                    // 如果沒有存名稱，但有舊位置，立刻從當前庫存修復填入真實名稱
                     if (!s.name && s.idx !== undefined && inv && inv[cat] && inv[cat][s.idx]) {
                         s.name = inv[cat][s.idx].name;
                         if (s.p === undefined) s.p = Number(inv[cat][s.idx].p || 0);
@@ -626,13 +636,11 @@
         if (!sel) return { name: '未知零件', p: 0, c: 0 };
         const catItems = inv[cat] || [];
 
-        // 1. 如果有 ID 匹配
         if (sel.itemId) {
             const found = catItems.find(x => x.id === sel.itemId);
             if (found) return { name: sel.name || found.name, p: (sel.p !== undefined ? sel.p : found.p), c: (sel.c !== undefined ? sel.c : found.c), id: found.id };
         }
 
-        // 2. 如果有真實名稱，直接回傳名稱 (絕對不受選單排序影響)
         if (sel.name) {
             const foundByName = catItems.find(x => x.name === sel.name);
             if (foundByName) return { name: sel.name, p: (sel.p !== undefined ? sel.p : foundByName.p), c: (sel.c !== undefined ? sel.c : foundByName.c), id: foundByName.id };
@@ -799,11 +807,51 @@
         calculate();
     }
 
+    /* 🏆 上下按鈕移動功能 */
+    function moveItemUp(cat, idx) {
+        if (idx <= 0 || !inv[cat]) return;
+        const temp = inv[cat][idx];
+        inv[cat][idx] = inv[cat][idx - 1];
+        inv[cat][idx - 1] = temp;
+        renderInventoryEditor();
+    }
+
+    function moveItemDown(cat, idx) {
+        if (!inv[cat] || idx >= inv[cat].length - 1) return;
+        const temp = inv[cat][idx];
+        inv[cat][idx] = inv[cat][idx + 1];
+        inv[cat][idx + 1] = temp;
+        renderInventoryEditor();
+    }
+
+    function moveCatUp(cIdx) {
+        if (cIdx <= 0) return;
+        const temp = catOrder[cIdx];
+        catOrder[cIdx] = catOrder[cIdx - 1];
+        catOrder[cIdx - 1] = temp;
+        renderInventoryEditor();
+    }
+
+    function moveCatDown(cIdx) {
+        if (cIdx >= catOrder.length - 1) return;
+        const temp = catOrder[cIdx];
+        catOrder[cIdx] = catOrder[cIdx + 1];
+        catOrder[cIdx + 1] = temp;
+        renderInventoryEditor();
+    }
+
     function initDragAndDrop() {
         const main = document.getElementById('inventoryEditor');
         if(main) {
             if (main.sortableInstance) main.sortableInstance.destroy();
-            main.sortableInstance = new Sortable(main, { handle: '.cat-drag-handle', animation: 250, delay: 150, delayOnTouchOnly: true, forceFallback: true, onEnd: function() { catOrder = Array.from(main.querySelectorAll('.category-drag-item')).map(el => el.dataset.catname); }});
+            main.sortableInstance = new Sortable(main, { 
+                handle: '.cat-drag-handle', 
+                animation: 250, 
+                forceFallback: true, 
+                onEnd: function() { 
+                    catOrder = Array.from(main.querySelectorAll('.category-drag-item')).map(el => el.dataset.catname); 
+                }
+            });
         }
         document.querySelectorAll('.item-drag-container').forEach(c => {
             if (c.sortableInstance) c.sortableInstance.destroy();
@@ -811,8 +859,6 @@
             c.sortableInstance = new Sortable(c, { 
                 handle: '.item-drag-handle', 
                 animation: 250, 
-                delay: 150, 
-                delayOnTouchOnly: true, 
                 forceFallback: true, 
                 onEnd: function() { 
                     const rows = Array.from(c.querySelectorAll('.item-drag-row')); 
@@ -827,18 +873,37 @@
         });
     }
 
-    /* 🏆 品項庫編輯器 */
+    /* 🏆 品項庫編輯器 (含 ▲▼ 實體移動按鈕) */
     function renderInventoryEditor() { 
         ensureInventoryIds();
         const area = document.getElementById('inventoryEditor'); if (!area) return; const scrollPos = window.scrollY; area.innerHTML = ''; 
         const head = document.getElementById('inventoryHeader'); 
-        if(head) head.innerHTML = `<div class="flex justify-between items-center"><h2 class="font-bold text-sm text-slate-800">⚙️ 雲端品項管理 <span class="text-xs text-blue-600 font-bold">(v16.19 完全防跑位版)</span></h2><div class="flex gap-2"><button onclick="addNewCategory()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer">+ 大項</button><button onclick="saveInventory()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer">💾 同步</button></div></div><div class="flex gap-2"><button onclick="toggleAllCats(true)" class="flex-1 bg-slate-100 text-slate-600 py-1.5 rounded-xl text-xs font-bold cursor-pointer">收合 ↑</button><button onclick="toggleAllCats(false)" class="flex-1 bg-slate-100 text-slate-600 py-1.5 rounded-xl text-xs font-bold cursor-pointer">展開 ↓</button></div>`; 
+        if(head) head.innerHTML = `<div class="flex justify-between items-center"><h2 class="font-bold text-sm text-slate-800">⚙️ 雲端品項管理 <span class="text-xs text-blue-600 font-bold">(v16.20 雙重移動版)</span></h2><div class="flex gap-2"><button onclick="addNewCategory()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer">+ 大項</button><button onclick="saveInventory()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer">💾 同步</button></div></div><div class="flex gap-2"><button onclick="toggleAllCats(true)" class="flex-1 bg-slate-100 text-slate-600 py-1.5 rounded-xl text-xs font-bold cursor-pointer">收合 ↑</button><button onclick="toggleAllCats(false)" class="flex-1 bg-slate-100 text-slate-600 py-1.5 rounded-xl text-xs font-bold cursor-pointer">展開 ↓</button></div>`; 
         
         catOrder.forEach((cat, cIdx) => { 
             const isCollapsed = collapsedCats[cat]; const sec = document.createElement('div'); sec.className = "bg-slate-50 p-3 rounded-xl border border-slate-200 mb-3 category-drag-item"; sec.dataset.catname = cat; 
-            sec.innerHTML = `<div class="flex justify-between items-center ${isCollapsed?'':'mb-2.5'}"><div class="flex items-center gap-2"><span class="drag-handle cat-drag-handle">≡</span><input class="font-bold text-sm text-slate-800 border-none bg-transparent p-0 w-36" value="${cat}" onchange="renameCat(${cIdx}, this.value)"></div><div class="flex items-center gap-1.5"><button onclick="toggleSelectCat('${cat}')" class="px-2 py-1 bg-white border border-slate-200 rounded-lg font-bold text-xs text-blue-600 shadow-xs cursor-pointer">☑️ 全選</button><button onclick="collapsedCats['${cat}']=!collapsedCats['${cat}'];renderInventoryEditor();" class="px-2.5 py-1 bg-white border border-slate-200 rounded-lg font-bold text-xs text-slate-600 shadow-xs cursor-pointer">${isCollapsed?'展開 +':'收合 -'}</button><button onclick="removeCat(${cIdx})" class="text-slate-300 hover:text-rose-500 text-lg cursor-pointer">×</button></div></div><div id="edit-${cat}" class="space-y-2.5 item-drag-container ${isCollapsed?'hidden':''}" data-cat="${cat}"></div><button onclick="addInvItem('${cat}')" class="w-full text-xs font-bold bg-white mt-2.5 py-2 rounded-xl border border-dashed border-slate-300 text-slate-500 hover:text-slate-700 cursor-pointer ${isCollapsed?'hidden':''}">+ 新增零件</button>`; 
+            sec.innerHTML = `
+                <div class="flex justify-between items-center ${isCollapsed?'':'mb-2.5'}">
+                    <div class="flex items-center gap-1.5">
+                        <div class="flex items-center gap-0.5 flex-shrink-0">
+                            <button onclick="moveCatUp(${cIdx})" class="w-6 h-6 bg-white border border-slate-200 hover:bg-blue-100 hover:text-blue-600 rounded-md font-bold text-xs text-slate-600 flex items-center justify-center cursor-pointer ${cIdx===0?'opacity-20 pointer-events-none':''}" title="大項上移">▲</button>
+                            <button onclick="moveCatDown(${cIdx})" class="w-6 h-6 bg-white border border-slate-200 hover:bg-blue-100 hover:text-blue-600 rounded-md font-bold text-xs text-slate-600 flex items-center justify-center cursor-pointer ${cIdx===(catOrder.length-1)?'opacity-20 pointer-events-none':''}" title="大項下移">▼</button>
+                        </div>
+                        <span class="drag-handle cat-drag-handle">≡</span>
+                        <input class="font-bold text-sm text-slate-800 border-none bg-transparent p-0 w-36" value="${cat}" onchange="renameCat(${cIdx}, this.value)">
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="toggleSelectCat('${cat}')" class="px-2 py-1 bg-white border border-slate-200 rounded-lg font-bold text-xs text-blue-600 shadow-xs cursor-pointer">☑️ 全選</button>
+                        <button onclick="collapsedCats['${cat}']=!collapsedCats['${cat}'];renderInventoryEditor();" class="px-2.5 py-1 bg-white border border-slate-200 rounded-lg font-bold text-xs text-slate-600 shadow-xs cursor-pointer">${isCollapsed?'展開 +':'收合 -'}</button>
+                        <button onclick="removeCat(${cIdx})" class="text-slate-300 hover:text-rose-500 text-lg cursor-pointer">×</button>
+                    </div>
+                </div>
+                <div id="edit-${cat}" class="space-y-2.5 item-drag-container ${isCollapsed?'hidden':''}" data-cat="${cat}"></div>
+                <button onclick="addInvItem('${cat}')" class="w-full text-xs font-bold bg-white mt-2.5 py-2 rounded-xl border border-dashed border-slate-300 text-slate-500 hover:text-slate-700 cursor-pointer ${isCollapsed?'hidden':''}">+ 新增零件</button>
+            `; 
             area.appendChild(sec); 
             if(!isCollapsed) {
+                const totalItems = (inv[cat] || []).length;
                 (inv[cat] || []).forEach((item, idx) => { 
                     const row = document.createElement('div'); row.className = `inv-item-card item-drag-row`; row.dataset.originalidx = idx; row.dataset.itemid = item.id;
                     const sups = ['原', '速', '裕']; let supHtml = sups.map(s => `<button onclick="toggleSup('${cat}', ${idx}, '${s}')" class="sup-btn ${(item.sups||[]).includes(s)?'active':''}">${s}</button>`).join(''); 
@@ -846,7 +911,14 @@
                     row.innerHTML = `
                         <div class="inv-card-top">
                             <input type="checkbox" class="inv-batch-check w-4 h-4 rounded cursor-pointer flex-shrink-0" data-cat="${cat}" data-idx="${idx}" onchange="updateBatchBar()">
+                            
+                            <div class="flex items-center gap-0.5 flex-shrink-0">
+                                <button onclick="moveItemUp('${cat}', ${idx})" class="w-7 h-7 bg-slate-100 hover:bg-blue-100 hover:text-blue-600 rounded-lg font-bold text-xs text-slate-600 flex items-center justify-center cursor-pointer ${idx===0?'opacity-20 pointer-events-none':''}" title="上移">▲</button>
+                                <button onclick="moveItemDown('${cat}', ${idx})" class="w-7 h-7 bg-slate-100 hover:bg-blue-100 hover:text-blue-600 rounded-lg font-bold text-xs text-slate-600 flex items-center justify-center cursor-pointer ${idx===(totalItems-1)?'opacity-20 pointer-events-none':''}" title="下移">▼</button>
+                            </div>
+
                             <span class="drag-handle item-drag-handle">≡</span>
+                            
                             <div class="inv-title-wrap">
                                 <textarea class="inv-name-textarea" rows="1">${item.name}</textarea>
                             </div>
@@ -1066,7 +1138,6 @@
 
         const currentDisplayTotal = document.getElementById('ui-totalSale').innerText || "$0";
 
-        // 對 A/B 方案內的所有品項補全 ID 與名稱獨立快照
         ['A', 'B'].forEach(pKey => {
             if (plansData[pKey] && plansData[pKey].selections) {
                 catOrder.forEach(cat => {
@@ -1086,7 +1157,6 @@
             }
         });
 
-        // 當前方案Selections補全
         catOrder.forEach(cat => {
             if (currentSelections[cat]) {
                 currentSelections[cat].forEach(s => {
@@ -1730,7 +1800,7 @@
 
     function goBack() { resetForm(); showTab('calc'); }
     function enterScreenshotMode() { 
-        document.getElementById('ss-time').innerText = '日期：' + new Date().toLocaleString(); 
+        document.getElementById('ss-time').innerText = '日期：' + new Date().toLocaleDateString(); 
         document.getElementById('ss-plan-name').innerText = `【方案 ${currentPlan} 報價】`;
         document.getElementById('ss-val-disc').innerText = '$' + Number(document.getElementById('discountAmt').value).toLocaleString(); 
         document.getElementById('ss-val-total').innerText = document.getElementById('ui-totalSale').innerText; 
@@ -1866,7 +1936,7 @@
         const diff = resB.finalTotal - resA.finalTotal;
         let diffStr = (diff > 0) ? `(方案 B 較高 +$${diff.toLocaleString()})` : (diff < 0 ? `(方案 B 較省 -$${Math.abs(diff).toLocaleString()})` : `(兩方案金額相同)`);
 
-        let text = `🐚【神奇海螺電競 | 雙方案報價對比】\n日期：${new Date().toLocaleDateString()}\n==============================\n🔹【方案 A 內容】\n${resA.listStr || '  (未選擇項目)\n'}👉 方案 A 總計：$${resA.finalTotal.toLocaleString()}\n------------------------------\n🔸【方案 B 內容】\n${resB.listStr || '  (未選擇項目)\n'}👉 方案 B 總計：$${resB.finalTotal.toLocaleString()}\n==============================\n💡 兩方案價差：${diffStr}\n歡迎告訴我們您偏好哪一個方案，我們立即為您備貨與安排組裝！`;
+        let text = `🐚【神奇海螺電競 | 雙方案報價對比】\n日期：${new Date().toLocaleDateString()}\n==============================\n🔹【方案 A 內容】\n${resA.listStr || '  (未選擇項目)\n'}👉 方案 A 總計：$${resA.finalTotal.toLocaleString()}\n------------------------------\n🔸【方案 B 內容】\n${resB.listStr || '  (未選擇項目)\n'}👉 方案 B 總计：$${resB.finalTotal.toLocaleString()}\n==============================\n💡 兩方案價差：${diffStr}\n歡迎告訴我們您偏好哪一個方案，我們立即為您備貨與安排組裝！`;
         navigator.clipboard.writeText(text).then(() => alert('📋 已成功複製【雙方案 A/B LINE 對比報價】！'));
     }
     
