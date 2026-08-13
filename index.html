@@ -6,7 +6,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>神奇海螺電競 | 專業報價與庫存系統 v16.04</title>
+    <title>神奇海螺電競 | 專業報價與庫存系統 v16.06</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -90,7 +90,7 @@
 
     <div class="no-screenshot fixed right-4 bottom-10 z-[2000] flex flex-col gap-3">
         <button id="floatingSaveBtn" onclick="saveInventory()" class="hidden bg-green-600 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl cursor-pointer">💾</button>
-        <button onclick="if(confirm('重新整理系統？')) { window.location.reload(); }" class="bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl cursor-pointer">🔄</button>
+        <button onclick="if(confirm('重新整理系統？')) { window.location.reload(true); }" class="bg-orange-500 text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl cursor-pointer">🔄</button>
         <button onclick="goBack()" class="bg-black text-white shadow-xl w-14 h-14 rounded-full flex items-center justify-center text-2xl cursor-pointer">🔙</button>
     </div>
 
@@ -548,7 +548,7 @@
         }; 
 
         db.ref('records/' + id).update(rawData).then(() => { 
-            alert(`💾 成功儲存草稿！`); 
+            alert(`💾 成功儲存修訂！`); 
             resetForm(); 
             showTab(status === 'draft' ? 'drafts' : (status === 'order' ? 'orders' : 'completed')); 
         });
@@ -812,7 +812,7 @@
         <div class="bg-white p-4 rounded-2xl border shadow-sm mb-4 space-y-4">
             <div class="flex justify-between items-center flex-wrap gap-3 border-b pb-3">
                 <div>
-                    <h2 class="font-black text-gray-800 text-base">📊 月度結算與業務抽成戰情室</h2>
+                    <h2 class="font-black text-gray-800 text-base">📊 月度結算與業務抽成戰情室 v16.06</h2>
                     <p class="text-xs text-gray-400">公司 60% ｜ 業務 40% 自動結算 (支援跨月歷史保留與人員篩選)</p>
                 </div>
                 <button onclick="exportCompletedOrdersCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-black text-xs shadow flex items-center gap-1 cursor-pointer">
@@ -881,7 +881,7 @@
 
         html += `
         <div class="card p-4 mt-4 space-y-3">
-            <h3 class="font-black text-gray-800 text-sm">🏁 符合條件的結案訂單明細 (${filteredCompletedRecords.length} 筆)</h3>
+            <h3 class="font-black text-gray-800 text-sm">🏁 符合條件的結案訂單明細 (${filteredCompletedRecords.length} 筆) <span class="text-xs text-blue-500 font-normal ml-2">💡 點擊下方任意訂單可直接載入檢視</span></h3>
             <div class="space-y-2 max-h-96 overflow-y-auto">
         `;
         if(filteredCompletedRecords.length === 0) {
@@ -889,12 +889,14 @@
         } else {
             filteredCompletedRecords.sort((a,b)=>b.id-a.id).forEach(r => {
                 html += `
-                <div class="p-3 border rounded-xl bg-gray-50 flex justify-between items-center text-xs">
+                <div onclick="editRecord('${r.id}')" class="p-3 border rounded-xl bg-gray-50 hover:bg-blue-50 hover:border-blue-400 transition-all flex justify-between items-center text-xs cursor-pointer shadow-sm">
                     <div>
                         <div class="font-black text-gray-800">${r.time} ｜ ${r.name || '無名氏'} (${r.custPhone || '無電話'})</div>
                         <div class="text-gray-500 mt-0.5">業務：<span class="font-bold text-blue-600">${r.seller || '朱冠穎'}</span> ｜ 總金額：<span class="font-black text-indigo-600">${r.total}</span></div>
                     </div>
-                    <span class="bg-gray-200 text-gray-700 px-2 py-1 rounded font-black text-[10px]">已結案</span>
+                    <div class="flex items-center gap-2">
+                        <span class="bg-blue-600 text-white px-2.5 py-1 rounded-lg font-black text-[10px]">查看訂單</span>
+                    </div>
                 </div>`;
             });
         }
